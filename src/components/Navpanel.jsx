@@ -42,36 +42,36 @@ const NavPanel = ({ workspaceId, openFile }) => {
   const fileInputRef = useRef(null);
 
   const ALLOWED_EXTENSIONS = [
-    ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp", 
+    ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp",
     ".html", ".css", ".json", ".md", ".txt", ".xml", ".yml", ".yaml"
   ];
 
   const handleFileUpload = async (e) => {
     const uploadedFiles = Array.from(e.target.files);
-    
-    for (const file of uploadedFiles) {
-        const extension = "." + file.name.split(".").pop().toLowerCase();
-        
-        if (!ALLOWED_EXTENSIONS.includes(extension)) {
-            alert(`File type ${extension} not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`);
-            continue;
-        }
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const content = event.target.result;
-            try {
-                await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
-                    name: file.name,
-                    content: content,
-                    workspaceId: workspaceId,
-                    folderId: null, // Uploads to root for now
-                });
-            } catch (error) {
-                console.error("Error uploading file:", error);
-            }
-        };
-        reader.readAsText(file);
+    for (const file of uploadedFiles) {
+      const extension = "." + file.name.split(".").pop().toLowerCase();
+
+      if (!ALLOWED_EXTENSIONS.includes(extension)) {
+        alert(`File type ${extension} not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`);
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const content = event.target.result;
+        try {
+          await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+            name: file.name,
+            content: content,
+            workspaceId: workspaceId,
+            folderId: null, // Uploads to root for now
+          });
+        } catch (error) {
+          console.error("Error uploading file:", error);
+        }
+      };
+      reader.readAsText(file);
     }
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -431,12 +431,12 @@ const NavPanel = ({ workspaceId, openFile }) => {
             >
               <Upload size={14} className="text-zinc-400" />
             </button>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                className="hidden" 
-                multiple 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              multiple
             />
           </div>
         </div>

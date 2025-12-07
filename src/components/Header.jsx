@@ -11,6 +11,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { LayoutDashboard, Users } from "lucide-react";
 import InviteNotification from "./InviteNotification";
 
+
 const Header = ({ workspaceId }) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -67,12 +68,12 @@ const Header = ({ workspaceId }) => {
   };
 
   return (
-    <header className="flex items-center justify-between px-8 py-4 bg-zinc-900/50 backdrop-blur-xl border-b border-white/10 shadow-lg">
+    <header className="flex items-center justify-between px-8 py-4 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 shadow-lg">
       {/* Logo & Title */}
       <Link href="/dashboard" className="flex items-center gap-3 group">
-   
 
-        <h1 className="text-xl font-semibold text-white">
+
+        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">
           CodeRev
         </h1>
       </Link>
@@ -82,34 +83,35 @@ const Header = ({ workspaceId }) => {
       <div className="flex items-center gap-6">
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-4">
-          <Link 
-            href="/dashboard" 
-            className={`text-sm font-medium transition-colors ${
-              pathname === "/dashboard" 
-                ? "text-white" 
-                : "text-zinc-400 hover:text-white"
-            }`}
+          <Link
+            href="/dashboard"
+            className={`text-sm font-medium transition-colors ${pathname === "/dashboard"
+              ? "text-zinc-900 dark:text-white"
+              : "text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              }`}
           >
             Dashboard
           </Link>
-          <Link 
-            href="/roadmap" 
-            className={`text-sm font-medium transition-colors flex items-center gap-2 ${
-              pathname === "/roadmap" 
-                ? "text-white" 
-                : "text-zinc-400 hover:text-white"
-            }`}
+          <Link
+            href="/roadmap"
+            className={`text-sm font-medium transition-colors flex items-center gap-2 ${pathname === "/roadmap"
+              ? "text-zinc-900 dark:text-white"
+              : "text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              }`}
           >
             <Users size={16} />
             Roadmap
           </Link>
         </nav>
 
+        {/* Theme Toggle */}
+
+
         {/* Dashboard Button */}
         {pathname.startsWith("/workspace/") && (
           <Button
             onClick={goToDashboard}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 border border-white/10 hover:bg-zinc-800 hover:border-white/20 text-white font-medium rounded-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-800/50 border border-zinc-300 dark:border-white/10 hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-white/20 text-zinc-900 dark:text-white font-medium rounded-lg transition-all"
           >
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
@@ -117,18 +119,18 @@ const Header = ({ workspaceId }) => {
         )}
 
         {/* Welcome Message */}
-        <p className="text-sm text-zinc-400">
-          Welcome, <span className="font-medium text-white">{userName}</span>
+        <p className="text-sm text-zinc-700 dark:text-zinc-400">
+          Welcome, <span className="font-medium text-zinc-900 dark:text-white">{userName}</span>
         </p>
 
         {/* Profile Avatar */}
         <Link href="/profile">
-          <Avatar className="w-9 h-9 cursor-pointer border border-white/20 transition-all duration-300 hover:border-white/40 hover:scale-105">
+          <Avatar className="w-9 h-9 cursor-pointer border border-zinc-300 dark:border-white/20 transition-all duration-300 hover:border-zinc-400 dark:hover:border-white/40 hover:scale-105">
             <AvatarImage
               src={auth.currentUser?.photoURL || "/robotic.png"}
               alt="Profile"
             />
-            <AvatarFallback className="bg-zinc-800 text-white">U</AvatarFallback>
+            <AvatarFallback className="bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white">U</AvatarFallback>
           </Avatar>
         </Link>
       </div>

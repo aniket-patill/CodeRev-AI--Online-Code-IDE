@@ -328,13 +328,13 @@ const LanguageSupport = () => {
   const languages = [
     { name: "JavaScript", icon: "JS", color: "text-yellow-400" },
     { name: "TypeScript", icon: "TS", color: "text-blue-400" },
-    { name: "Python", icon: "🐍", color: "text-green-400" },
+    { name: "Python", icon: "PY", color: "text-green-400" },
     { name: "C#", icon: "C#", color: "text-purple-400" },
     { name: "C++", icon: "C++", color: "text-blue-300" },
     { name: "HTML", icon: "</>", color: "text-orange-400" },
-    { name: "Java", icon: "☕", color: "text-red-400" },
+    { name: "Java", icon: "JV", color: "text-red-400" },
     { name: "JSON", icon: "{}", color: "text-yellow-300" },
-    { name: "PHP", icon: "🐘", color: "text-indigo-400" },
+    { name: "PHP", icon: "PHP", color: "text-indigo-400" },
     { name: "Markdown", icon: "MD", color: "text-zinc-400" },
     { name: "PowerShell", icon: ">_", color: "text-blue-400" },
     { name: "YAML", icon: "YML", color: "text-red-300" },
@@ -360,7 +360,7 @@ const LanguageSupport = () => {
             </p>
             <div className="flex items-center gap-2.5">
               <div className="flex -space-x-2">
-                {["JS", "TS", "🐍"].map((icon, i) => (
+                {["JS", "TS", "PY"].map((icon, i) => (
                   <div key={i} className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-white dark:border-black flex items-center justify-center text-xs font-bold text-zinc-900 dark:text-white">
                     {icon}
                   </div>
@@ -834,7 +834,7 @@ export default function HomePage() {
         </div>
       </section>
 
-   
+
 
       {/* HOW IT WORKS */}
       <HowItWorks />

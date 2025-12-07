@@ -110,7 +110,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       if (aiPrompt) {
         // Get current code from editor
         const codeContext = editorInstance ? editorInstance.getValue() : "";
-        
+
         const aiResponse = await generateAIResponse(aiPrompt, codeContext);
         await addDoc(messagesRef, {
           text: `🤖 ${aiResponse}`,
@@ -199,7 +199,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
 
     return (
       <div className={`flex flex-col gap-1 ${isCurrentUser ? "items-end" :
-          isAI ? "items-center w-full" : "items-start"
+        isAI ? "items-center w-full" : "items-start"
         }`}>
         {!isAI && (
           <span className="text-xs text-zinc-400">
@@ -217,7 +217,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
           )}
 
           <div className={`py-3 px-4 text-sm rounded-2xl max-w-[85%] break-words ${isAI ? "bg-zinc-800/50 border border-white/10 w-full" :
-              isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
+            isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
             }`}>
             {isAI && <span className="text-white mr-2">⚡</span>}
 

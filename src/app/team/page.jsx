@@ -122,7 +122,7 @@ const Navbar = () => {
         { label: "Features", href: "/#features" },
         { label: "How It Works", href: "/#howitworks" },
         { label: "Team", href: "/team" },
-        { label: "Testimonials", href: "/#testimonials" },
+      
     ];
 
     return (

@@ -25,7 +25,7 @@ const Workspace = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [workspaceName, setWorkspaceName] = useState("");
   const [membersCount, setMembersCount] = useState(0);
-  const [isChatOpen, setIsChatOpen] = useState(true); 
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,7 +83,7 @@ const Workspace = () => {
       setDocumentation(docs);
     } catch (error) {
       console.error("Failed to generate documentation:", error);
-      throw error; 
+      throw error;
     }
   };
 
@@ -99,144 +99,144 @@ const Workspace = () => {
         </div>
 
         <div className="relative z-10 flex flex-1 overflow-hidden">
-            <PanelGroup direction="horizontal">
-                {/* Left Side - File & Folder Panel */}
-                {isNavOpen ? (
-                    <>
-                        <Panel 
-                            defaultSize={20} 
-                            minSize={15} 
-                            maxSize={30} 
-                            collapsible 
-                            onCollapse={() => setIsNavOpen(false)}
-                            order={1}
-                            id="left-panel"
-                            className="bg-zinc-900/40 backdrop-blur-md border-r border-white/5"
-                        >
-                            <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
-                        </Panel>
-                        <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
-                             <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
-                        </PanelResizeHandle>
-                    </>
-                ) : null}
+          <PanelGroup direction="horizontal">
+            {/* Left Side - File & Folder Panel */}
+            {isNavOpen ? (
+              <>
+                <Panel
+                  defaultSize={20}
+                  minSize={15}
+                  maxSize={30}
+                  collapsible
+                  onCollapse={() => setIsNavOpen(false)}
+                  order={1}
+                  id="left-panel"
+                  className="bg-zinc-900/40 backdrop-blur-md border-r border-white/5"
+                >
+                  <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
+                </Panel>
+                <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
+                  <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
+                </PanelResizeHandle>
+              </>
+            ) : null}
 
-                {/* Center - Editor & Output */}
-                <Panel order={2} minSize={30}>
-                    <PanelGroup direction="vertical">
-                         <Panel order={1} minSize={30}>
-                            <main className="flex flex-col h-full min-w-0 relative">
-                                {/* Workspace Header */}
-                                <div className="relative z-40 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-zinc-900/30 backdrop-blur-sm shrink-0">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    {!isNavOpen && (
-                                        <button
-                                            onClick={() => setIsNavOpen(true)}
-                                            className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors text-zinc-400 hover:text-white"
-                                            title="Open Sidebar"
-                                        >
-                                            <PanelLeftOpen size={20} />
-                                        </button>
-                                    )}
-                                    {isNavOpen && (
-                                         <button
-                                            onClick={() => setIsNavOpen(false)}
-                                            className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors text-zinc-400 hover:text-white"
-                                            title="Close Sidebar"
-                                         >
-                                            <PanelLeftOpen size={20} className="rotate-180" />
-                                        </button>
-                                    )}
+            {/* Center - Editor & Output */}
+            <Panel order={2} minSize={30}>
+              <PanelGroup direction="vertical">
+                <Panel order={1} minSize={30}>
+                  <main className="flex flex-col h-full min-w-0 relative">
+                    {/* Workspace Header */}
+                    <div className="relative z-40 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-zinc-900/30 backdrop-blur-sm shrink-0">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {!isNavOpen && (
+                          <button
+                            onClick={() => setIsNavOpen(true)}
+                            className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                            title="Open Sidebar"
+                          >
+                            <PanelLeftOpen size={20} />
+                          </button>
+                        )}
+                        {isNavOpen && (
+                          <button
+                            onClick={() => setIsNavOpen(false)}
+                            className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                            title="Close Sidebar"
+                          >
+                            <PanelLeftOpen size={20} className="rotate-180" />
+                          </button>
+                        )}
 
-                                    <h1 className="text-sm font-medium text-zinc-400 truncate">
-                                        <span className="text-zinc-500">Space:</span>{" "}
-                                        <span className="text-white">
-                                        {error ? "Error" : isLoading ? "Loading..." : workspaceName}
-                                        </span>
-                                    </h1>
-                                </div>
+                        <h1 className="text-sm font-medium text-zinc-400 truncate">
+                          <span className="text-zinc-500">Space:</span>{" "}
+                          <span className="text-white">
+                            {error ? "Error" : isLoading ? "Loading..." : workspaceName}
+                          </span>
+                        </h1>
+                      </div>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg hover:border-white/20 transition-colors">
-                                    <SearchBar workspaceId={workspaceId} />
-                                    </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg hover:border-white/20 transition-colors">
+                          <SearchBar workspaceId={workspaceId} />
+                        </div>
 
-                                    <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg">
-                                    <ShowMembers workspaceId={workspaceId} />
-                                    </div>
-                                    
-                                    {!isChatOpen && (
-                                    <button
-                                        onClick={() => setIsChatOpen(true)}
-                                        className="p-1.5 bg-zinc-900/40 backdrop-blur-sm border border-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                                        title="Open Chat"
-                                    >
-                                        <PanelRightOpen size={18} />
-                                    </button>
-                                    )}
-                                </div>
-                                </div>
+                        <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg">
+                          <ShowMembers workspaceId={workspaceId} />
+                        </div>
 
-                                {/* Content Area */}
-                                {error ? (
-                                <div className="flex items-center justify-center p-8 flex-1">
-                                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm max-w-md">
-                                    {error}
-                                    </div>
-                                </div>
-                                ) : (
-                                <div className="flex flex-col flex-1 overflow-hidden relative">
-                                    <Editor 
-                                        file={selectedFile} 
-                                        onEditorMounted={setEditorInstance}
-                                        language={language} 
-                                        setLanguage={setLanguage}
-                                        onGenerateDocs={handleGenerateDocs}
-                                    />
-                                </div>
-                                )}
-                            </main>
-                        </Panel>
-                        
-                        <PanelResizeHandle className="h-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-row-resize z-50 relative flex justify-center items-center group">
-                            <div className="w-8 h-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
-                        </PanelResizeHandle>
+                        {!isChatOpen && (
+                          <button
+                            onClick={() => setIsChatOpen(true)}
+                            className="p-1.5 bg-zinc-900/40 backdrop-blur-sm border border-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                            title="Open Chat"
+                          >
+                            <PanelRightOpen size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-                        <Panel order={2} defaultSize={30} minSize={10} collapsible>
-                             <div className="h-full flex flex-col overflow-hidden bg-[#1e1e1e]">
-                                <BottomPanel 
-                                    editorRef={{ current: editorInstance }} 
-                                    language={language}
-                                    documentation={documentation}
-                                />
-                             </div>
-                        </Panel>
-                    </PanelGroup>
+                    {/* Content Area */}
+                    {error ? (
+                      <div className="flex items-center justify-center p-8 flex-1">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm max-w-md">
+                          {error}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col flex-1 overflow-hidden relative">
+                        <Editor
+                          file={selectedFile}
+                          onEditorMounted={setEditorInstance}
+                          language={language}
+                          setLanguage={setLanguage}
+                          onGenerateDocs={handleGenerateDocs}
+                        />
+                      </div>
+                    )}
+                  </main>
                 </Panel>
 
-                {isChatOpen ? (
-                    <>
-                        <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
-                            <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
-                        </PanelResizeHandle>
-                        <Panel 
-                            defaultSize={25} 
-                            minSize={20} 
-                            maxSize={40} 
-                            collapsible 
-                            onCollapse={() => setIsChatOpen(false)}
-                            order={3}
-                            className="bg-zinc-900/40 backdrop-blur-md border-l border-white/5"
-                        >
-                             <Chat
-                                workspaceId={workspaceId}
-                                setIsChatOpen={setIsChatOpen} 
-                                editorInstance={editorInstance}
-                              />
-                        </Panel>
-                    </>
-                ) : null}
-            </PanelGroup>
+                <PanelResizeHandle className="h-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-row-resize z-50 relative flex justify-center items-center group">
+                  <div className="w-8 h-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
+                </PanelResizeHandle>
+
+                <Panel order={2} defaultSize={30} minSize={10} collapsible>
+                  <div className="h-full flex flex-col overflow-hidden bg-[#1e1e1e]">
+                    <BottomPanel
+                      editorRef={{ current: editorInstance }}
+                      language={language}
+                      documentation={documentation}
+                    />
+                  </div>
+                </Panel>
+              </PanelGroup>
+            </Panel>
+
+            {isChatOpen ? (
+              <>
+                <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
+                  <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
+                </PanelResizeHandle>
+                <Panel
+                  defaultSize={25}
+                  minSize={20}
+                  maxSize={40}
+                  collapsible
+                  onCollapse={() => setIsChatOpen(false)}
+                  order={3}
+                  className="bg-zinc-900/40 backdrop-blur-md border-l border-white/5"
+                >
+                  <Chat
+                    workspaceId={workspaceId}
+                    setIsChatOpen={setIsChatOpen}
+                    editorInstance={editorInstance}
+                  />
+                </Panel>
+              </>
+            ) : null}
+          </PanelGroup>
         </div>
 
         {/* Live Cursor (Overlay) */}

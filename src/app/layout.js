@@ -10,7 +10,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata = {
-  title: "⚡ CodeRev - AI Code Editor",
+  title: "CodeRev - AI Code Editor",
   description: "New generated code editor with AI-powered suggestions.",
 };
 

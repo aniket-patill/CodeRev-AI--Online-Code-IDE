@@ -18,21 +18,19 @@ const BottomPanel = ({ editorRef, language, documentation }) => {
       {/* Tab Switcher */}
       <div className="flex border-b border-white/10 bg-zinc-900/50">
         <button
-          className={`px-4 py-2 text-xs font-medium transition-colors ${
-            activeTab === "output"
+          className={`px-4 py-2 text-xs font-medium transition-colors ${activeTab === "output"
               ? "text-white border-b-2 border-white bg-white/5"
               : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
-          }`}
+            }`}
           onClick={() => setActiveTab("output")}
         >
           Output
         </button>
         <button
-          className={`px-4 py-2 text-xs font-medium transition-colors ${
-            activeTab === "docs"
+          className={`px-4 py-2 text-xs font-medium transition-colors ${activeTab === "docs"
               ? "text-white border-b-2 border-white bg-white/5"
               : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
-          }`}
+            }`}
           onClick={() => setActiveTab("docs")}
         >
           Docs
