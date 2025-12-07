@@ -15,21 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import Link from "next/link";
 import Image from "next/image";
-import { toast, ToastContainer } from "react-toastify";
-import { auth, db } from "@/config/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
-const toastOptions = {
-  position: "top-right",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  theme: "dark",
-};
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -43,30 +32,30 @@ const Login = () => {
     e.preventDefault();
     try {
       const user = await loginWithEmailAndPassword(email, password);
-      console.log("Logged in as:", user.email);
+
 
       if (user) {
-        toast.success("Login successful!", toastOptions);
+        toast.success("Login successful!");
         router.push("/dashboard");
       }
     } catch (error) {
       setError(error.message);
-      toast.error("Login failed ", toastOptions);
+      toast.error("Login failed");
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       const user = await loginWithGoogle();
-      console.log("Logged in with Google:", user.displayName);
+
 
       if (user) {
-        toast.success("Logged in with Google!", toastOptions);
+        toast.success("Logged in with Google!");
         router.push("/dashboard");
       }
     } catch (error) {
       setError(error.message);
-      toast.error("Google login failed ", toastOptions);
+      toast.error("Google login failed");
     }
   };
 
@@ -99,7 +88,7 @@ const Login = () => {
       {/* Gradient Blur */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-zinc-200/20 via-zinc-500/5 to-zinc-200/20 dark:from-white/5 dark:via-zinc-500/5 dark:to-white/5 rounded-full blur-[120px]" />
 
-      <ToastContainer theme="dark" />
+
 
       {/* Login Card */}
       <Card className="relative w-full max-w-md bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-white/10 shadow-2xl rounded-2xl overflow-hidden">

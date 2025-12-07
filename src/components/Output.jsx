@@ -159,7 +159,7 @@ const Output = ({ editorRef, language }) => {
         setIsError(false);
       }
     } catch (error) {
-      console.log(error);
+
       setIsError(true);
       setOutput([`Error while running the code: ${error.message || 'Unknown error'}`]);
     } finally {

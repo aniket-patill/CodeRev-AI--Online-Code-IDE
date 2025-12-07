@@ -9,7 +9,7 @@ export async function POST(request) {
         }
 
         const documentation = await autoComplete(code, language);
-        console.log(documentation);
+
         
         return NextResponse.json(
             { documentation }, 

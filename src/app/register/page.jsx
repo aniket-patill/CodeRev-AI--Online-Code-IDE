@@ -17,18 +17,9 @@ import {
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 
-const toastOptions = {
-  position: "top-right",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  theme: "dark",
-};
+
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -44,13 +35,13 @@ export default function SignUpPage() {
     try {
       const res = await signUpUser(email, password, displayName);
       if (!res.success) {
-        toast.error(res.message, toastOptions);
+        toast.error(res.message);
       } else {
-        toast.success(res.message, toastOptions);
+        toast.success(res.message);
         setShowVerification(true);
       }
     } catch (error) {
-      toast.error("Sign-up failed: " + error.message, toastOptions);
+      toast.error("Sign-up failed: " + error.message);
     }
     setLoading(false);
   };
@@ -62,15 +53,15 @@ export default function SignUpPage() {
     try {
       const res = await verifyEmailCode(email, verificationCode, password, displayName);
       if (res.success) {
-        toast.success("Account created successfully! Redirecting...", toastOptions);
+        toast.success("Account created successfully! Redirecting...");
         setVerificationCode("");
         router.push("/dashboard");
       } else {
-        toast.error(res.message, toastOptions);
+        toast.error(res.message);
         setVerificationCode("");
       }
     } catch (error) {
-      toast.error("Verification failed: " + error.message, toastOptions);
+      toast.error("Verification failed: " + error.message);
       setVerificationCode("");
     }
     setLoading(false);
@@ -83,10 +74,10 @@ export default function SignUpPage() {
       if (res.success) {
         router.push("/dashboard");
       } else {
-        toast.error(res.error, toastOptions);
+        toast.error(res.error);
       }
     } catch (error) {
-      toast.error("Google sign-in failed: " + error.message, toastOptions);
+      toast.error("Google sign-in failed: " + error.message);
     }
     setLoading(false);
   };
@@ -99,7 +90,7 @@ export default function SignUpPage() {
       {/* Gradient Blur */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-white/5 via-zinc-500/5 to-white/5 rounded-full blur-[120px]" />
 
-      <ToastContainer theme="dark" />
+
 
       {/* Signup Card */}
       <Card className="relative w-full max-w-md bg-zinc-900/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden">

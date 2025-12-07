@@ -5,7 +5,7 @@ const logout = async () => {
   const auth = getAuth();
   try {
     await signOut(auth);
-    console.log("User logged out");
+
     // Redirect to login page after logout
     window.location.href = "/login";
   } catch (error) {

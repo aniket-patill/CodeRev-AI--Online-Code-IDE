@@ -2,6 +2,7 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { Provider } from "@/components/ui/provider";
 import { AuthProvider } from "@/context/AuthProvider";
+import { Toaster } from "sonner";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Provider>
             {children}
+            <Toaster richColors closeButton position="top-right" theme="system" />
           </Provider>
         </AuthProvider>
       </body>

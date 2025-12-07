@@ -50,7 +50,7 @@ export async function POST(req) {
     if(result.rejected.length > 0){
         return NextResponse.json({ success: false, message: "Verification email not sent!" });
     }
-    console.log ("iam in send emai -api")
+
     return NextResponse.json({ success: true, message: "Verification email sent!" });
   } catch (error) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

@@ -23,7 +23,7 @@ const rtdb = getDatabase(app);  // ✅ Initialize Realtime Database
 
 // Set Auth Persistence
 setPersistence(auth, browserLocalPersistence)
-  .then(() => console.log("Firebase Auth Persistence Set to Local"))
+  .then(() => {})
   .catch((error) => console.error("Firebase Auth Persistence Error:", error));
 
 export { auth, db, rtdb, firestore };

@@ -13,8 +13,7 @@ import {
 } from "firebase/firestore";
 import { Globe, Lock, Loader2, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -30,15 +29,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
 
-const toastOptions = {
-  position: "top-right",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  theme: "dark",
-};
+
 
 const Dashboard = () => {
   // Router
@@ -125,11 +116,11 @@ const Dashboard = () => {
         { id: workspaceRef.id, name: workspaceName, isPublic, role: "owner" },
       ]);
 
-      toast.success("Space created successfully!", toastOptions);
+      toast.success("Space created successfully!");
       setIsOpen(false);
       setWorkspaceName("");
     } catch (error) {
-      toast.error("Failed to create space.", toastOptions);
+      toast.error("Failed to create space.");
     } finally {
       setIsCreating(false);
     }
@@ -147,9 +138,9 @@ const Dashboard = () => {
                 setDeletingWorkspaceId(workspaceId);
                 await deleteDoc(doc(db, `workspaces/${workspaceId}`));
                 setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
-                toast.success("Space deleted successfully!", toastOptions);
+                toast.success("Space deleted successfully!");
               } catch (error) {
-                toast.error("Failed to delete space.", toastOptions);
+                toast.error("Failed to delete space.");
               } finally {
                 setDeletingWorkspaceId(null);
                 toast.dismiss(confirmationToast);
@@ -192,7 +183,7 @@ const Dashboard = () => {
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <ToastContainer theme="dark" />
+
 
       {/* Header */}
       <div className="relative z-10">

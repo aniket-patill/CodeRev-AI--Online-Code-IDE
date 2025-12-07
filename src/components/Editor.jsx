@@ -118,7 +118,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
 
       if (res.data.fixedCode) {
         if (!res.data.aiFixed) {
-          console.log("No fixes were needed");
+
           // Optionally show a toast here
         } else {
           setOriginalCode(updatedCode);
