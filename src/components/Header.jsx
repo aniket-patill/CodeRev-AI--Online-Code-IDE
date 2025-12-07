@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { auth, db } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Users } from "lucide-react";
 import InviteNotification from "./InviteNotification";
 
 const Header = ({ workspaceId }) => {
@@ -80,6 +80,31 @@ const Header = ({ workspaceId }) => {
       <InviteNotification />
 
       <div className="flex items-center gap-6">
+        {/* Navigation Links */}
+        <nav className="hidden md:flex items-center gap-4">
+          <Link 
+            href="/dashboard" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === "/dashboard" 
+                ? "text-white" 
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Dashboard
+          </Link>
+          <Link 
+            href="/roadmap" 
+            className={`text-sm font-medium transition-colors flex items-center gap-2 ${
+              pathname === "/roadmap" 
+                ? "text-white" 
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Users size={16} />
+            Roadmap
+          </Link>
+        </nav>
+
         {/* Dashboard Button */}
         {pathname.startsWith("/workspace/") && (
           <Button

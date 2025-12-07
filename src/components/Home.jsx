@@ -43,7 +43,8 @@ const Navbar = () => {
   const navLinks = [
     { label: "Features", href: "#features" },
     { label: "How It Works", href: "#howitworks" },
-    { label: "Testimonials", href: "#testimonials" },
+    { label: "Team", href: "/team" }
+
   ];
 
   const scrollToSection = (href) => {
@@ -74,14 +75,25 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => scrollToSection(item.href)}
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors relative group"
-            >
-              {item.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-px bg-zinc-900 dark:bg-white transition-all duration-300 group-hover:w-full" />
-            </button>
+            item.href.startsWith('#') ? (
+              <button
+                key={item.label}
+                onClick={() => scrollToSection(item.href)}
+                className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors relative group"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-zinc-900 dark:bg-white transition-all duration-300 group-hover:w-full" />
+              </button>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors relative group"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-zinc-900 dark:bg-white transition-all duration-300 group-hover:w-full" />
+              </Link>
+            )
           ))}
         </div>
 
@@ -112,13 +124,24 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white/95 dark:bg-black/95 backdrop-blur-2xl border-t border-zinc-200 dark:border-white/5 p-6 flex flex-col gap-4">
           {navLinks.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => scrollToSection(item.href)}
-              className="text-sm text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors text-left"
-            >
-              {item.label}
-            </button>
+            item.href.startsWith('#') ? (
+              <button
+                key={item.label}
+                onClick={() => scrollToSection(item.href)}
+                className="text-sm text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors text-left"
+              >
+                {item.label}
+              </button>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-sm text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors text-left"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            )
           ))}
           <div className="flex flex-col gap-3 mt-2 border-t border-zinc-200 dark:border-white/10 pt-4">
             <div className="flex justify-between items-center">
@@ -811,8 +834,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <Testimonials />
+   
 
       {/* HOW IT WORKS */}
       <HowItWorks />
