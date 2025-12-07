@@ -122,7 +122,6 @@ const Navbar = () => {
         { label: "Features", href: "/#features" },
         { label: "How It Works", href: "/#howitworks" },
         { label: "Team", href: "/team" },
-      
     ];
 
     return (
@@ -280,7 +279,7 @@ export default function TeamPage() {
                 <div className="relative max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-6 backdrop-blur-sm">
-                           
+
                             Meet Our Team
                         </div>
 
@@ -381,19 +380,19 @@ export default function TeamPage() {
                                 </div>
                             ))}
                         </div>
-                        
+
                     </div>
-                    
-    
+
+
                     <div className="my-16 text-center">
                         <p className="text-xl font-medium text-zinc-900 dark:text-white">
                             Whether you're learning your first loop , CodeRev is built to support you.
                         </p>
-                    </div> 
+                    </div>
                 </div>
             </section>
 
-          
+
         </div>
     );
 }
