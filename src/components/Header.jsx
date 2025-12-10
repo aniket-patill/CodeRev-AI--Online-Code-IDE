@@ -77,30 +77,32 @@ const Header = ({ workspaceId }) => {
       </Link>
 
       <div className="flex items-center gap-6">
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            className={`text-sm font-medium transition-colors ${pathname === "/dashboard"
+        {/* Navigation Links - Hide on workspace pages */}
+        {!pathname.startsWith("/workspace/") && (
+          <nav className="hidden md:flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className={`text-sm font-medium transition-colors ${pathname === "/dashboard"
                 ? "text-white"
                 : "text-zinc-400 hover:text-white"
-              }`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/roadmap"
-            className={`text-sm  hidden font-medium transition-colors flex items-center gap-2 ${pathname === "/roadmap"
+                }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/roadmap"
+              className={`text-sm hidden font-medium transition-colors flex items-center gap-2 ${pathname === "/roadmap"
                 ? "text-white"
                 : "text-zinc-400 hover:text-white"
-              }`}
-          >
-            <Users size={16} />
-            Roadmap
-          </Link>
-        </nav>
+                }`}
+            >
+              <Users size={16} />
+              Roadmap
+            </Link>
+          </nav>
+        )}
 
-        {/* Dashboard Button */}
+        {/* Dashboard Button - Only show on workspace pages */}
         {pathname.startsWith("/workspace/") && (
           <Button
             onClick={goToDashboard}
