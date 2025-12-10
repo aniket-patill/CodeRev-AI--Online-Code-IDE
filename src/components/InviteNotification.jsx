@@ -1,28 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onSnapshot, doc, updateDoc, arrayRemove, setDoc } from "firebase/firestore";
+import { onSnapshot, doc, updateDoc, arrayRemove, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/config/firebase";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthProvider";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail } from "lucide-react";
+import { X, Users, Loader2 } from "lucide-react";
 
 const InviteNotification = () => {
   const { user } = useAuth();
   const [invites, setInvites] = useState([]);
+  const [workspaceNames, setWorkspaceNames] = useState({});
+  const [loadingAccept, setLoadingAccept] = useState(null);
+  const [loadingDecline, setLoadingDecline] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
 
     const userRef = doc(db, "users", user.uid);
-    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+    const unsubscribe = onSnapshot(userRef, async (docSnap) => {
       if (docSnap.exists()) {
-        setInvites(docSnap.data().invites || []);
+        const inviteIds = docSnap.data().invites || [];
+        setInvites(inviteIds);
+
+        // Fetch workspace names
+        const names = {};
+        for (const id of inviteIds) {
+          try {
+            const workspaceRef = doc(db, "workspaces", id);
+            const workspaceSnap = await getDoc(workspaceRef);
+            if (workspaceSnap.exists()) {
+              names[id] = workspaceSnap.data().name || id;
+            } else {
+              names[id] = id;
+            }
+          } catch {
+            names[id] = id;
+          }
+        }
+        setWorkspaceNames(names);
       }
     });
 
@@ -30,7 +50,12 @@ const InviteNotification = () => {
   }, [user]);
 
   const handleAcceptInvite = async (workspaceId) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("You must be logged in to accept invites");
+      return;
+    }
+
+    setLoadingAccept(workspaceId);
 
     try {
       const membersRef = doc(db, `workspaces/${workspaceId}/members`, user.uid);
@@ -47,15 +72,20 @@ const InviteNotification = () => {
       });
 
       setInvites((prev) => prev.filter((id) => id !== workspaceId));
-      toast.success("Joined space successfully");
+      toast.success("Joined workspace successfully");
       router.push("/workspace/" + workspaceId);
     } catch (error) {
       console.error("Error accepting invite:", error);
+      toast.error("Failed to accept invite");
+    } finally {
+      setLoadingAccept(null);
     }
   };
 
   const handleDeleteInvite = async (workspaceId) => {
     if (!user) return;
+
+    setLoadingDecline(workspaceId);
 
     try {
       const userRef = doc(db, "users", user.uid);
@@ -67,62 +97,77 @@ const InviteNotification = () => {
       toast.info("Invite declined");
     } catch (error) {
       console.error("Error deleting invite:", error);
+      toast.error("Failed to decline invite");
+    } finally {
+      setLoadingDecline(null);
     }
   };
 
+  if (invites.length === 0) return null;
+
   return (
-    <div className="fixed top-[80px] right-5 space-y-3 z-[100]">
+    <div className="fixed bottom-8 right-8 z-[9999] flex flex-col gap-4">
       <AnimatePresence>
         {invites.map((workspaceId) => (
           <motion.div
             key={workspaceId}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative"
+            initial={{ opacity: 0, y: 100, x: 0 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ type: "spring", stiffness: 500, damping: 40 }}
           >
-            <div className="w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-              <CardHeader className="p-4 pb-2 border-b border-white/5">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-white/10 rounded-lg">
-                      <Mail size={14} className="text-white" />
-                    </div>
-                    <CardTitle className="text-sm font-semibold text-white">
-                      Space Invite
-                    </CardTitle>
+            <div className="w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-zinc-700 rounded-lg">
+                    <Users size={16} className="text-white" />
                   </div>
-                  <button
-                    onClick={() => setInvites((prev) => prev.filter((id) => id !== workspaceId))}
-                    className="text-zinc-500 hover:text-white transition-colors"
-                  >
-                    <X size={16} />
-                  </button>
+                  <span className="text-sm font-semibold text-white">Workspace Invite</span>
                 </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
-                  You have been invited to join space:
-                  <span className="block font-mono text-white mt-1.5 p-2 bg-zinc-800 rounded-lg border border-white/5 truncate text-xs">
-                    {workspaceId}
+                <button
+                  onClick={() => setInvites((prev) => prev.filter((id) => id !== workspaceId))}
+                  className="p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                <p className="text-zinc-400 text-sm mb-3">You&apos;ve been invited to join:</p>
+                <div className="px-4 py-3 bg-zinc-800 rounded-lg border border-zinc-700 mb-4">
+                  <span className="text-white text-base font-semibold truncate block">
+                    {workspaceNames[workspaceId] || workspaceId}
                   </span>
-                </p>
-                <div className="flex gap-2">
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
                   <Button
                     onClick={() => handleDeleteInvite(workspaceId)}
-                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-white/10 rounded-lg h-8 text-xs font-medium transition-all"
+                    disabled={loadingDecline === workspaceId || loadingAccept === workspaceId}
+                    className="flex-1 h-10 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg border border-zinc-700 disabled:opacity-50"
                   >
-                    Decline
+                    {loadingDecline === workspaceId ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      "Decline"
+                    )}
                   </Button>
                   <Button
                     onClick={() => handleAcceptInvite(workspaceId)}
-                    className="flex-1 bg-white hover:bg-zinc-200 text-black rounded-lg h-8 text-xs font-medium transition-all shadow-lg shadow-white/5"
+                    disabled={loadingAccept === workspaceId || loadingDecline === workspaceId}
+                    className="flex-1 h-10 bg-white hover:bg-zinc-200 text-black text-sm font-semibold rounded-lg disabled:opacity-50"
                   >
-                    Accept
+                    {loadingAccept === workspaceId ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      "Accept"
+                    )}
                   </Button>
                 </div>
-              </CardContent>
+              </div>
             </div>
           </motion.div>
         ))}

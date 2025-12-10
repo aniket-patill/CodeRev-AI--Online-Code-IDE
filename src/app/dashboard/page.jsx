@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
+import InviteNotification from "@/components/InviteNotification";
 
 
 
@@ -193,8 +194,8 @@ const Dashboard = () => {
       {/* Page Header */}
       <div className="relative z-10 flex justify-between items-center px-8 py-8 container mx-auto max-w-7xl">
         <div className="flex flex-col gap-1">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Your Spaces</h1>
-            <p className="text-zinc-400">Manage and create your development environments</p>
+          <h1 className="text-4xl font-bold text-white tracking-tight">Your Spaces</h1>
+          <p className="text-zinc-400">Manage and create your development environments</p>
         </div>
 
         <Button
@@ -225,7 +226,7 @@ const Dashboard = () => {
             {workspaces.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center h-[400px] text-center border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
                 <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                     <Globe className="w-8 h-8 text-zinc-500 opacity-50" />
+                  <Globe className="w-8 h-8 text-zinc-500 opacity-50" />
                 </div>
                 <p className="text-zinc-300 text-xl font-medium mb-2">No spaces found</p>
                 <p className="text-zinc-500 mb-6 max-w-sm">You haven't created any development spaces yet. Start by creating one to begin coding.</p>
@@ -243,52 +244,52 @@ const Dashboard = () => {
                   className="relative group border border-white/5 bg-zinc-900/40 backdrop-blur-xl rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden"
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <CardContent className="p-6 flex flex-col h-full justify-between gap-6">
                     <Link href={`/workspace/${ws.id}`} className="block flex-1 group/link">
                       <div className="flex flex-col gap-4">
                         <div className="flex justify-between items-start">
-                            <div className="p-3 bg-zinc-800/50 rounded-xl group-hover/link:bg-blue-500/10 group-hover/link:text-blue-400 transition-colors">
-                                {ws.isPublic ? <Globe size={24} /> : <Lock size={24} />}
-                            </div>
-                            {ws.role === "owner" && (
-                                <button
-                                    className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-20"
-                                    onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    deleteWorkspace(ws.id);
-                                    }}
-                                    disabled={deletingWorkspaceId === ws.id}
-                                >
-                                    {deletingWorkspaceId === ws.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                    <Trash2 size={16} />
-                                    )}
-                                </button>
-                             )}
+                          <div className="p-3 bg-zinc-800/50 rounded-xl group-hover/link:bg-blue-500/10 group-hover/link:text-blue-400 transition-colors">
+                            {ws.isPublic ? <Globe size={24} /> : <Lock size={24} />}
+                          </div>
+                          {ws.role === "owner" && (
+                            <button
+                              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-20"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                deleteWorkspace(ws.id);
+                              }}
+                              disabled={deletingWorkspaceId === ws.id}
+                            >
+                              {deletingWorkspaceId === ws.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 size={16} />
+                              )}
+                            </button>
+                          )}
                         </div>
 
                         <div>
-                            <h2 className="text-xl font-bold text-white tracking-wide group-hover/link:text-blue-400 transition-colors mb-1 truncate">
+                          <h2 className="text-xl font-bold text-white tracking-wide group-hover/link:text-blue-400 transition-colors mb-1 truncate">
                             {ws.name}
-                            </h2>
-                            <p className="text-sm text-zinc-500 font-medium flex items-center gap-2">
-                                {ws.isPublic ? "Public Environment" : "Private Environment"}
-                            </p>
+                          </h2>
+                          <p className="text-sm text-zinc-500 font-medium flex items-center gap-2">
+                            {ws.isPublic ? "Public Environment" : "Private Environment"}
+                          </p>
                         </div>
                       </div>
                     </Link>
 
                     <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Role</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ws.role === 'owner' ? 'bg-blue-500/10 text-blue-400' : 'bg-zinc-800 text-zinc-400'}`}>
-                                {ws.role}
-                            </span>
-                        </div>
-                        <ShowMembers workspaceId={ws.id} />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Role</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ws.role === 'owner' ? 'bg-blue-500/10 text-blue-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                          {ws.role}
+                        </span>
+                      </div>
+                      <ShowMembers workspaceId={ws.id} />
                     </div>
                   </CardContent>
                 </Card>
@@ -302,14 +303,14 @@ const Dashboard = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild />
         <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-md shadow-2xl">
-            <div className="p-6 border-b border-white/5 bg-zinc-900/30">
-                <DialogTitle className="text-2xl font-bold text-white mb-1">
-                    Create New Space
-                </DialogTitle>
-                <DialogDescription className="text-zinc-400">
-                    Set up a new development environment.
-                </DialogDescription>
-            </div>
+          <div className="p-6 border-b border-white/5 bg-zinc-900/30">
+            <DialogTitle className="text-2xl font-bold text-white mb-1">
+              Create New Space
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              Set up a new development environment.
+            </DialogDescription>
+          </div>
 
           <div className="p-6 space-y-6">
             {/* Workspace Name Input */}
@@ -327,26 +328,26 @@ const Dashboard = () => {
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">Visibility</label>
               <div className="grid grid-cols-2 gap-3">
-                <div 
-                    onClick={() => setIsPublic(true)}
-                    className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-2 transition-all ${isPublic ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/30' : 'bg-zinc-900 border-white/5 hover:bg-zinc-800'}`}
+                <div
+                  onClick={() => setIsPublic(true)}
+                  className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-2 transition-all ${isPublic ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/30' : 'bg-zinc-900 border-white/5 hover:bg-zinc-800'}`}
                 >
-                    <div className="flex items-center gap-2 text-sm font-medium text-white">
-                        <Globe size={16} className={isPublic ? "text-blue-400" : "text-zinc-400"} />
-                        Public
-                    </div>
-                    <p className="text-[10px] text-zinc-400 leading-tight">Visible to anyone with the link.</p>
+                  <div className="flex items-center gap-2 text-sm font-medium text-white">
+                    <Globe size={16} className={isPublic ? "text-blue-400" : "text-zinc-400"} />
+                    Public
+                  </div>
+                  <p className="text-[10px] text-zinc-400 leading-tight">Visible to anyone with the link.</p>
                 </div>
 
-                <div 
-                     onClick={() => setIsPublic(false)}
-                     className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-2 transition-all ${!isPublic ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/30' : 'bg-zinc-900 border-white/5 hover:bg-zinc-800'}`}
+                <div
+                  onClick={() => setIsPublic(false)}
+                  className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-2 transition-all ${!isPublic ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/30' : 'bg-zinc-900 border-white/5 hover:bg-zinc-800'}`}
                 >
-                     <div className="flex items-center gap-2 text-sm font-medium text-white">
-                        <Lock size={16} className={!isPublic ? "text-blue-400" : "text-zinc-400"} />
-                        Private
-                    </div>
-                     <p className="text-[10px] text-zinc-400 leading-tight">Only visible to you and members.</p>
+                  <div className="flex items-center gap-2 text-sm font-medium text-white">
+                    <Lock size={16} className={!isPublic ? "text-blue-400" : "text-zinc-400"} />
+                    Private
+                  </div>
+                  <p className="text-[10px] text-zinc-400 leading-tight">Only visible to you and members.</p>
                 </div>
               </div>
             </div>
@@ -377,6 +378,9 @@ const Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Notifications - Bottom Right */}
+      <InviteNotification />
     </div>
   );
 };

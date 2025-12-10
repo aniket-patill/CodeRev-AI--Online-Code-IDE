@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "@/config/firebase";
-import { UserPlus, X, Search, Mail } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import { UserPlus, X, Search, Mail, Check } from "lucide-react";
 
 export default function SearchBar({ workspaceId }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +11,7 @@ export default function SearchBar({ workspaceId }) {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [workspaceMembers, setWorkspaceMembers] = useState(new Set());
+  const [invitedUsers, setInvitedUsers] = useState(new Set()); // Track invited users
   const auth = getAuth();
   const currentUserEmail = auth.currentUser?.email;
   const searchRef = useRef(null);
@@ -44,6 +44,13 @@ export default function SearchBar({ workspaceId }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Reset invited users when popup closes
+  useEffect(() => {
+    if (!isOpen) {
+      setInvitedUsers(new Set());
+    }
+  }, [isOpen]);
+
   const fetchWorkspaceMembers = async () => {
     try {
       const membersQuery = collection(db, `workspaces/${workspaceId}/members`);
@@ -52,7 +59,6 @@ export default function SearchBar({ workspaceId }) {
       setWorkspaceMembers(membersSet);
     } catch (error) {
       console.error("Error fetching space members:", error);
-      toast.error("Failed to fetch space members");
     }
   };
 
@@ -76,7 +82,6 @@ export default function SearchBar({ workspaceId }) {
       setUsers(matchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -89,20 +94,10 @@ export default function SearchBar({ workspaceId }) {
         invites: arrayUnion(workspaceId),
       });
 
-      toast.success(`${userEmail} invited`, {
-        style: {
-          background: '#18181b',
-          color: '#fff',
-          border: '1px solid #27272a',
-        },
-        iconTheme: {
-          primary: '#fff',
-          secondary: '#18181b',
-        },
-      });
+      // Mark user as invited
+      setInvitedUsers(prev => new Set([...prev, userId]));
     } catch (error) {
       console.error("Error sending invitation:", error);
-      toast.error("Failed to send invitation");
     }
   };
 
@@ -153,12 +148,19 @@ export default function SearchBar({ workspaceId }) {
                     </div>
                     <span className="text-zinc-300 text-sm truncate">{user.email}</span>
                   </div>
-                  <button
-                    className="px-3 py-1 bg-white text-black text-xs font-medium rounded-md hover:bg-zinc-200 transition-colors opacity-0 group-hover:opacity-100"
-                    onClick={() => inviteUser(user.id, user.email)}
-                  >
-                    Add
-                  </button>
+                  {invitedUsers.has(user.id) ? (
+                    <span className="flex items-center gap-1 px-3 py-1 bg-zinc-800 text-zinc-400 text-xs font-medium rounded-md">
+                      <Check className="w-3 h-3" />
+                      Done
+                    </span>
+                  ) : (
+                    <button
+                      className="px-3 py-1 bg-white text-black text-xs font-medium rounded-md hover:bg-zinc-200 transition-colors opacity-0 group-hover:opacity-100"
+                      onClick={() => inviteUser(user.id, user.email)}
+                    >
+                      Add
+                    </button>
+                  )}
                 </div>
               ))
             ) : searchTerm.length > 0 && !loading ? (
@@ -169,8 +171,6 @@ export default function SearchBar({ workspaceId }) {
           </div>
         </div>
       )}
-
-      <Toaster position="bottom-right" />
     </div>
   );
 }
