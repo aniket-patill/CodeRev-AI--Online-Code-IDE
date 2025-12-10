@@ -230,10 +230,7 @@ server.listen(3000, () => {
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             Live
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium">
-            <Mic className="w-3 h-3" />
-            Voice
-          </div>
+        
         </div>
       </div>
 
@@ -437,10 +434,7 @@ const CTASection = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/5 dark:from-white/5 via-transparent to-transparent" />
 
           <div className="relative text-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-900 dark:text-white mb-6 backdrop-blur-sm">
-              <Zap className="w-3.5 h-3.5 text-yellow-500 dark:text-yellow-400" />
-              Limited Time Offer
-            </div>
+           
 
             <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
               Ready to Transform Your Coding?
@@ -773,31 +767,13 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-3">
                 <Link href="/register">
                   <Button className="h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-zinc-900/20 dark:hover:shadow-white/20 rounded-xl group">
-                    Start Building Free
+                    Start Building 
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
 
-                <Button className="h-12 px-8 border border-zinc-200 dark:border-white/20 bg-white/50 dark:bg-transparent text-zinc-900 dark:text-white font-semibold hover:bg-zinc-100 dark:hover:bg-white/10 backdrop-blur-sm rounded-xl transition-all duration-300">
-                  <Github className="mr-2 w-4 h-4" />
-                  Star on GitHub
-                </Button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-500 pt-2">
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-green-400" />
-                  <span className="font-medium">Free forever</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-green-400" />
-                  <span className="font-medium">No credit card</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-green-400" />
-                  <span className="font-medium">10K+ developers</span>
-                </div>
-              </div>
             </div>
 
             <div className="lg:pl-8">

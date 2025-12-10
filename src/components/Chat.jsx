@@ -110,14 +110,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       if (aiPrompt) {
         // Get current code from editor
         const codeContext = editorInstance ? editorInstance.getValue() : "";
-        
+
         const aiResponse = await generateAIResponse(aiPrompt, codeContext);
         await addDoc(messagesRef, {
           text: `🤖 ${aiResponse}`,
           createdAt: serverTimestamp(),
           imageUrl: "/ai-avatar.png",
           userId: "AI_BOT",
-          name: "CodeBot",
+          name: "CodeRev AI",
           workspaceId,
         });
       }
@@ -199,7 +199,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
 
     return (
       <div className={`flex flex-col gap-1 ${isCurrentUser ? "items-end" :
-          isAI ? "items-center w-full" : "items-start"
+        isAI ? "items-center w-full" : "items-start"
         }`}>
         {!isAI && (
           <span className="text-xs text-zinc-400">
@@ -217,7 +217,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
           )}
 
           <div className={`py-3 px-4 text-sm rounded-2xl max-w-[85%] break-words ${isAI ? "bg-zinc-800/50 border border-white/10 w-full" :
-              isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
+            isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
             }`}>
             {isAI && <span className="text-white mr-2">⚡</span>}
 
@@ -299,12 +299,10 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/5 rounded-lg border border-white/10">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
+        
           <div>
-            <h2 className="text-sm font-semibold text-white">AI Assistant</h2>
-            <p className="text-xs text-zinc-500">Powered by Gemini</p>
+            <h2 className="text-sm font-semibold text-white">CodeRev AI</h2>
+            <p className="text-xs text-zinc-500">Your AI coding assistant</p>
           </div>
         </div>
         <div className="flex gap-2">
