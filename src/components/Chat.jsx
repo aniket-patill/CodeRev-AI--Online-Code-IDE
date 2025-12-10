@@ -27,13 +27,23 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
   const [loading, setLoading] = useState(true);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
 
-  const userId = auth.currentUser.uid;
-  const name = auth.currentUser.displayName;
+  // Null-safe auth access (prevents crash during hydration)
+  const userId = auth.currentUser?.uid;
+  const name = auth.currentUser?.displayName || "User";
 
   const messagesRef = collection(firestore, "messages");
   const messagesQuery = query(messagesRef, orderBy("createdAt"));
 
   const messagesEndRef = useRef(null);
+
+  // Guard: If user is not authenticated, show message
+  if (!userId) {
+    return (
+      <div className="flex flex-col h-full bg-zinc-900/95 backdrop-blur-xl border-l border-white/10 items-center justify-center p-6">
+        <p className="text-zinc-400 text-sm">Please log in to access chat.</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -299,7 +309,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-        
+
           <div>
             <h2 className="text-sm font-semibold text-white">CodeRev AI</h2>
             <p className="text-xs text-zinc-500">Your AI coding assistant</p>

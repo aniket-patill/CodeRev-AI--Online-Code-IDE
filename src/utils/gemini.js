@@ -1,11 +1,22 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Lazy-initialized Gemini client (prevents cold start crashes)
+let genAI = null;
 
-// Helper to get model
+const getGenAI = () => {
+    if (!genAI) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY environment variable is not configured. Please add it to your Vercel environment variables.");
+        }
+        genAI = new GoogleGenerativeAI(apiKey);
+    }
+    return genAI;
+};
+
+// Helper to get model - now uses lazy initialization
 const getModel = (modelName = "gemini-2.5-flash") => {
-    return genAI.getGenerativeModel({ model: modelName });
+    return getGenAI().getGenerativeModel({ model: modelName });
 };
 
 // Clean up response text

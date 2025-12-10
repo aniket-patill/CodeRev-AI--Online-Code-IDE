@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { autoComplete } from "@/utils/gemini";
 
+// Extend timeout for AI responses
+export const maxDuration = 30;
+
 export async function POST(request) {
     try {
         const { code, language } = await request.json();
@@ -10,10 +13,10 @@ export async function POST(request) {
 
         const documentation = await autoComplete(code, language);
 
-        
+
         return NextResponse.json(
-            { documentation }, 
-            { 
+            { documentation },
+            {
                 status: 200,
                 headers: {
                     'Cache-Control': 'no-store, max-age=0',

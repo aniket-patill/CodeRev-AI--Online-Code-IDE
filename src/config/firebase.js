@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getDatabase } from "firebase/database";  // ✅ Import Realtime Database
+import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,14 +17,15 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
-const firestore = getFirestore(app);
-const rtdb = getDatabase(app);  // ✅ Initialize Realtime Database
+const db = getFirestore(app);  // Single Firestore instance
+const rtdb = getDatabase(app);
 
 // Set Auth Persistence
 setPersistence(auth, browserLocalPersistence)
-  .then(() => {})
+  .then(() => { })
   .catch((error) => console.error("Firebase Auth Persistence Error:", error));
 
-export { auth, db, rtdb, firestore };
+// Export db and firestore as same instance (backward compatibility)
+export { auth, db, rtdb, db as firestore };
 export default app;
+

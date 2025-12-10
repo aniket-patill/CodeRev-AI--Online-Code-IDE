@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { fixCode } from "@/utils/gemini";
 
+// Extend timeout for AI responses
+export const maxDuration = 30;
+
 export async function POST(request) {
   try {
     const { code } = await request.json();
