@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { MessageCircle, PanelLeftOpen, PanelRightOpen, PanelRightClose } from "lucide-react";
 import axios from "axios";
@@ -16,6 +16,7 @@ import ShowMembers from "@/components/Members";
 import LiveCursor from "@/components/LiveCursor";
 import NavPanel from "@/components/Navpanel";
 import BottomPanel from "@/components/BottomPanel";
+// import VoiceChat from "@/components/VoiceChat"; // Hidden for now - can be enabled later
 import { WorkspaceStateProvider } from "@/context/WorkspaceStateContext";
 import { getLanguageFromFilename } from "@/utils/fileExtensionUtils";
 
@@ -30,6 +31,8 @@ const Workspace = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasFiles, setHasFiles] = useState(false);
+  const [showCreateFilePrompt, setShowCreateFilePrompt] = useState(false);
 
   // Lifted Editor State
   const [editorInstance, setEditorInstance] = useState(null);
@@ -59,6 +62,17 @@ const Workspace = () => {
           const membersRef = collection(db, `workspaces/${workspaceId}/members`);
           const membersSnap = await getDocs(membersRef);
           setMembersCount(membersSnap.size);
+
+          // Check if workspace has any files
+          const filesRef = collection(db, `workspaces/${workspaceId}/files`);
+          const filesSnap = await getDocs(filesRef);
+          const filesExist = filesSnap.size > 0;
+          setHasFiles(filesExist);
+          
+          // Show prompt if no files exist (only after loading is complete)
+          if (!filesExist && !error) {
+            setShowCreateFilePrompt(true);
+          }
         } else {
           setError("Space not found");
         }
@@ -80,6 +94,30 @@ const Workspace = () => {
       setLanguage(detectedLanguage);
     }
   }, [selectedFile]);
+
+  // Listen for file changes to update hasFiles state
+  useEffect(() => {
+    if (!workspaceId || isLoading) return;
+
+    const filesRef = collection(db, `workspaces/${workspaceId}/files`);
+    const unsubscribe = onSnapshot(filesRef, (snapshot) => {
+      const filesExist = snapshot.size > 0;
+      setHasFiles(filesExist);
+      
+      // Hide prompt if files now exist, show if they don't
+      if (filesExist) {
+        setShowCreateFilePrompt(false);
+      } else {
+        // If all files are deleted, clear selected file and show prompt
+        if (!isLoading) {
+          setSelectedFile(null);
+          setShowCreateFilePrompt(true);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [workspaceId, isLoading]);
 
   const handleGenerateDocs = async (code, lang) => {
     try {
@@ -122,7 +160,19 @@ const Workspace = () => {
                   id="left-panel"
                   className="bg-zinc-900/40 backdrop-blur-md border-r border-white/5"
                 >
-                  <NavPanel workspaceId={workspaceId} openFile={setSelectedFile} />
+                  <NavPanel 
+                    workspaceId={workspaceId} 
+                    openFile={setSelectedFile}
+                    onFileCreated={(file) => {
+                      // If this was the first file, auto-open it and hide prompt
+                      if (!hasFiles && file) {
+                        setSelectedFile(file);
+                        setHasFiles(true);
+                        setShowCreateFilePrompt(false);
+                      }
+                    }}
+                    hasFiles={hasFiles}
+                  />
                 </Panel>
                 <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
                   <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
@@ -193,6 +243,23 @@ const Workspace = () => {
                           {error}
                         </div>
                       </div>
+                    ) : showCreateFilePrompt ? (
+                      <div className="flex items-center justify-center p-8 flex-1">
+                        <div className="bg-zinc-900/90 border border-white/10 rounded-lg p-6 text-center max-w-md backdrop-blur-md">
+                          <h3 className="text-lg font-semibold text-white mb-2">
+                            No files in workspace
+                          </h3>
+                          <p className="text-sm text-zinc-400 mb-4">
+                            Create a file to get started. Click the "File" button in the sidebar to create your first file.
+                          </p>
+                          <button
+                            onClick={() => setIsNavOpen(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Open Sidebar
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <div className="flex flex-col flex-1 overflow-hidden relative">
                         <Editor
@@ -252,6 +319,11 @@ const Workspace = () => {
         <div className="pointer-events-none fixed inset-0 z-50">
           <LiveCursor workspaceId={workspaceId} />
         </div>
+
+        {/* Voice Chat (Overlay) - Hidden for now */}
+        {/* {workspaceId && (
+          <VoiceChat workspaceId={workspaceId} />
+        )} */}
 
       </div>
     </WorkspaceStateProvider>

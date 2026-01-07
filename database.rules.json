@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "workspaces": {
+      "$workspaceId": {
+        "voice": {
+          "participants": {
+            "$userId": {
+              ".read": "auth != null",
+              ".write": "auth != null && auth.uid == $userId"
+            }
+          },
+          "signaling": {
+            "$userId": {
+              "$fromUserId": {
+                ".read": "auth != null && (auth.uid == $userId || auth.uid == $fromUserId)",
+                ".write": "auth != null && (auth.uid == $userId || auth.uid == $fromUserId)"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

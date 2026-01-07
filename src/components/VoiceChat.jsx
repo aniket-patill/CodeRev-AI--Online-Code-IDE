@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthProvider";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { ref, set, onValue, remove } from "firebase/database";
+import { ref, set, onValue, remove, off } from "firebase/database";
 import { db, rtdb } from "@/config/firebase";
 import { Mic, MicOff, Users } from "lucide-react";
 
@@ -14,11 +14,14 @@ const VoiceChat = ({ workspaceId }) => {
   const [participants, setParticipants] = useState({});
   const [localStream, setLocalStream] = useState(null);
   const [remoteAudioStreams, setRemoteAudioStreams] = useState({});
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   const localAudioRef = useRef(null);
 
   // WebRTC references
   const peerConnectionsRef = useRef({});
   const localStreamRef = useRef(null);
+  const signalingListenersRef = useRef({});
+  const participantsListenerRef = useRef(null);
 
   // Check if user is a member of this workspace
   useEffect(() => {
@@ -50,40 +53,50 @@ const VoiceChat = ({ workspaceId }) => {
     checkWorkspaceMembership();
   }, [user, workspaceId]);
 
-  // Initialize audio capture
-  useEffect(() => {
-    if (!hasAccess || !user) return;
+  // Initialize audio capture - only when user explicitly requests it
+  const initAudio = useCallback(async () => {
+    if (!hasAccess || !user) return false;
 
-    const initAudio = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-        setLocalStream(stream);
-        localStreamRef.current = stream;
-        if (localAudioRef.current) {
-          localAudioRef.current.srcObject = stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
         }
-      } catch (err) {
-        console.error("Error accessing microphone:", err);
+      });
+      setLocalStream(stream);
+      localStreamRef.current = stream;
+      setMicPermissionDenied(false);
+      if (localAudioRef.current) {
+        localAudioRef.current.srcObject = stream;
       }
-    };
-
-    initAudio();
-
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-    };
+      return true;
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      setMicPermissionDenied(true);
+      setIsMuted(true); // Keep muted if permission denied
+      return false;
+    }
   }, [hasAccess, user]);
 
+  // Cleanup audio stream on unmount
+  useEffect(() => {
+    return () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+    };
+  }, []);
+
   // Create peer connection
-  const createPeerConnection = (userId) => {
+  const createPeerConnection = useCallback((userId) => {
+    // Close existing connection if any
+    if (peerConnectionsRef.current[userId]) {
+      peerConnectionsRef.current[userId].close();
+    }
+
     const configuration = {
       iceServers: [
         {
@@ -113,6 +126,23 @@ const VoiceChat = ({ workspaceId }) => {
       }));
     };
 
+    // Handle connection state changes
+    peerConnection.onconnectionstatechange = () => {
+      if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'disconnected') {
+        console.log(`Connection with ${userId} ${peerConnection.connectionState}`);
+        // Clean up failed connection
+        if (peerConnection.connectionState === 'failed') {
+          peerConnection.close();
+          delete peerConnectionsRef.current[userId];
+          setRemoteAudioStreams(prev => {
+            const updated = { ...prev };
+            delete updated[userId];
+            return updated;
+          });
+        }
+      }
+    };
+
     // Handle ICE candidates
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
@@ -121,15 +151,17 @@ const VoiceChat = ({ workspaceId }) => {
         set(signalingRef, {
           candidate: event.candidate.toJSON(),
           timestamp: Date.now()
+        }).catch(err => {
+          console.error("Error sending ICE candidate:", err);
         });
       }
     };
 
     return peerConnection;
-  };
+  }, [workspaceId, user]);
 
   // Handle incoming offers
-  const handleOffer = async (offer, fromUserId) => {
+  const handleOffer = useCallback(async (offer, fromUserId) => {
     if (!peerConnectionsRef.current[fromUserId]) {
       peerConnectionsRef.current[fromUserId] = createPeerConnection(fromUserId);
     }
@@ -137,6 +169,12 @@ const VoiceChat = ({ workspaceId }) => {
     const peerConnection = peerConnectionsRef.current[fromUserId];
 
     try {
+      // Check if already have a remote description
+      if (peerConnection.remoteDescription) {
+        console.log(`Already have remote description for ${fromUserId}, skipping offer`);
+        return;
+      }
+
       await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
@@ -146,16 +184,28 @@ const VoiceChat = ({ workspaceId }) => {
       set(answerRef, {
         answer: answer.toJSON(),
         timestamp: Date.now()
+      }).catch(err => {
+        console.error("Error sending answer:", err);
       });
     } catch (error) {
       console.error("Error handling offer:", error);
+      // Clean up failed connection
+      if (peerConnectionsRef.current[fromUserId]) {
+        peerConnectionsRef.current[fromUserId].close();
+        delete peerConnectionsRef.current[fromUserId];
+      }
     }
-  };
+  }, [workspaceId, user, createPeerConnection]);
 
   // Handle incoming answers
-  const handleAnswer = async (answer, fromUserId) => {
+  const handleAnswer = useCallback(async (answer, fromUserId) => {
     if (peerConnectionsRef.current[fromUserId]) {
       try {
+        // Check if already have a remote description
+        if (peerConnectionsRef.current[fromUserId].remoteDescription) {
+          console.log(`Already have remote description for ${fromUserId}, skipping answer`);
+          return;
+        }
         await peerConnectionsRef.current[fromUserId].setRemoteDescription(
           new RTCSessionDescription(answer)
         );
@@ -163,23 +213,31 @@ const VoiceChat = ({ workspaceId }) => {
         console.error("Error handling answer:", error);
       }
     }
-  };
+  }, []);
 
   // Handle incoming ICE candidates
-  const handleIceCandidate = async (candidate, fromUserId) => {
+  const handleIceCandidate = useCallback(async (candidate, fromUserId) => {
     if (peerConnectionsRef.current[fromUserId]) {
       try {
         await peerConnectionsRef.current[fromUserId].addIceCandidate(
           new RTCIceCandidate(candidate)
         );
       } catch (error) {
-        console.error("Error handling ICE candidate:", error);
+        // Ignore errors for duplicate or already processed candidates
+        if (error.name !== 'OperationError') {
+          console.error("Error handling ICE candidate:", error);
+        }
       }
     }
-  };
+  }, []);
 
   // Create offer for new participant
-  const createOffer = async (toUserId) => {
+  const createOffer = useCallback(async (toUserId) => {
+    if (!localStreamRef.current) {
+      console.log("No local stream available, cannot create offer");
+      return;
+    }
+
     if (!peerConnectionsRef.current[toUserId]) {
       peerConnectionsRef.current[toUserId] = createPeerConnection(toUserId);
     }
@@ -187,6 +245,12 @@ const VoiceChat = ({ workspaceId }) => {
     const peerConnection = peerConnectionsRef.current[toUserId];
 
     try {
+      // Check if already have a local description
+      if (peerConnection.localDescription) {
+        console.log(`Already have local description for ${toUserId}, skipping offer`);
+        return;
+      }
+
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
@@ -195,11 +259,18 @@ const VoiceChat = ({ workspaceId }) => {
       set(offerRef, {
         offer: offer.toJSON(),
         timestamp: Date.now()
+      }).catch(err => {
+        console.error("Error sending offer:", err);
       });
     } catch (error) {
       console.error("Error creating offer:", error);
+      // Clean up failed connection
+      if (peerConnectionsRef.current[toUserId]) {
+        peerConnectionsRef.current[toUserId].close();
+        delete peerConnectionsRef.current[toUserId];
+      }
     }
-  };
+  }, [workspaceId, user, createPeerConnection]);
 
   // Manage user's voice status in Firebase
   useEffect(() => {
@@ -207,30 +278,37 @@ const VoiceChat = ({ workspaceId }) => {
 
     const userVoiceRef = ref(rtdb, `workspaces/${workspaceId}/voice/participants/${user.uid}`);
 
-    // Update user's voice status
+    // Update user's voice status periodically
     const updateStatus = () => {
       set(userVoiceRef, {
         isMuted: isMuted,
         displayName: user.displayName || "Anonymous",
         userId: user.uid,
         timestamp: Date.now()
+      }).catch(err => {
+        console.error("Error updating voice status:", err);
       });
     };
 
     updateStatus();
+    // Update status every 10 seconds to keep connection alive
+    const statusInterval = setInterval(updateStatus, 10000);
 
     // Update audio track mute status
-    if (localStream) {
-      localStream.getAudioTracks().forEach(track => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(track => {
         track.enabled = !isMuted;
       });
     }
 
     // Clean up when component unmounts
     return () => {
-      remove(userVoiceRef);
+      clearInterval(statusInterval);
+      remove(userVoiceRef).catch(err => {
+        console.error("Error removing voice status:", err);
+      });
     };
-  }, [user, workspaceId, isMuted, hasAccess, localStream]);
+  }, [user, workspaceId, isMuted, hasAccess]);
 
   // Listen for other participants and establish connections
   useEffect(() => {
@@ -240,36 +318,64 @@ const VoiceChat = ({ workspaceId }) => {
 
     const unsubscribe = onValue(participantsRef, (snapshot) => {
       const data = snapshot.val() || {};
+      const now = Date.now();
+      
       // Filter out stale connections (older than 30 seconds)
       const activeParticipants = Object.fromEntries(
         Object.entries(data).filter(([_, participant]) =>
-          Date.now() - participant.timestamp < 30000
+          now - participant.timestamp < 30000
         )
       );
+      
       setParticipants(activeParticipants);
+
+      // Clean up connections for participants who left
+      Object.keys(peerConnectionsRef.current).forEach(userId => {
+        if (userId !== user.uid && !activeParticipants[userId]) {
+          // Participant left, clean up connection
+          if (peerConnectionsRef.current[userId]) {
+            peerConnectionsRef.current[userId].close();
+            delete peerConnectionsRef.current[userId];
+          }
+          setRemoteAudioStreams(prev => {
+            const updated = { ...prev };
+            delete updated[userId];
+            return updated;
+          });
+        }
+      });
 
       // Create connections with new participants
       Object.keys(activeParticipants).forEach(userId => {
         if (userId !== user.uid && !peerConnectionsRef.current[userId]) {
-          peerConnectionsRef.current[userId] = createPeerConnection(userId);
-          // Create offer for new participant
-          createOffer(userId);
+          // Only create offer if we have a local stream
+          if (localStreamRef.current) {
+            createOffer(userId);
+          }
         }
       });
     });
 
-    return () => unsubscribe();
-  }, [workspaceId, hasAccess, user]);
+    participantsListenerRef.current = unsubscribe;
+
+    return () => {
+      if (participantsListenerRef.current) {
+        participantsListenerRef.current();
+      }
+    };
+  }, [workspaceId, hasAccess, user, createOffer]);
 
   // Listen for signaling messages (offers, answers, ICE candidates)
   useEffect(() => {
     if (!workspaceId || !hasAccess || !user) return;
 
-    // Listen for offers
-    const offersRef = ref(rtdb, `workspaces/${workspaceId}/voice/signaling/${user.uid}`);
-    const unsubscribeOffers = onValue(offersRef, (snapshot) => {
+    // Listen for signaling messages
+    const signalingRef = ref(rtdb, `workspaces/${workspaceId}/voice/signaling/${user.uid}`);
+    const unsubscribeSignaling = onValue(signalingRef, (snapshot) => {
       const data = snapshot.val() || {};
       Object.entries(data).forEach(([fromUserId, signalingData]) => {
+        if (!signalingData) return;
+        
         if (signalingData.offer) {
           handleOffer(signalingData.offer, fromUserId);
         }
@@ -277,26 +383,74 @@ const VoiceChat = ({ workspaceId }) => {
           handleAnswer(signalingData.answer, fromUserId);
         }
         if (signalingData.iceCandidate) {
-          handleIceCandidate(signalingData.iceCandidate, fromUserId);
+          handleIceCandidate(signalingData.iceCandidate.candidate, fromUserId);
         }
       });
+    }, (error) => {
+      console.error("Error listening to signaling:", error);
     });
 
-    return () => unsubscribeOffers();
-  }, [workspaceId, hasAccess, user]);
+    signalingListenersRef.current[user.uid] = unsubscribeSignaling;
+
+    return () => {
+      if (signalingListenersRef.current[user.uid]) {
+        signalingListenersRef.current[user.uid]();
+        delete signalingListenersRef.current[user.uid];
+      }
+    };
+  }, [workspaceId, hasAccess, user, handleOffer, handleAnswer, handleIceCandidate]);
 
   // Cleanup peer connections on unmount
   useEffect(() => {
     return () => {
       // Close all peer connections
       Object.values(peerConnectionsRef.current).forEach(pc => {
-        pc.close();
+        try {
+          pc.close();
+        } catch (err) {
+          console.error("Error closing peer connection:", err);
+        }
       });
-    };
-  }, []);
+      peerConnectionsRef.current = {};
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+      // Stop local stream
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+
+      // Remove all signaling listeners
+      Object.values(signalingListenersRef.current).forEach(unsubscribe => {
+        if (unsubscribe) unsubscribe();
+      });
+      signalingListenersRef.current = {};
+
+      // Remove participants listener
+      if (participantsListenerRef.current) {
+        participantsListenerRef.current();
+        participantsListenerRef.current = null;
+      }
+
+      // Clean up user's voice status
+      if (user && workspaceId) {
+        const userVoiceRef = ref(rtdb, `workspaces/${workspaceId}/voice/participants/${user.uid}`);
+        remove(userVoiceRef).catch(err => {
+          console.error("Error cleaning up voice status:", err);
+        });
+      }
+    };
+  }, [user, workspaceId]);
+
+  const toggleMute = async () => {
+    if (isMuted && !localStreamRef.current) {
+      // User wants to unmute, but we don't have a stream yet - request permission
+      const success = await initAudio();
+      if (success && localStreamRef.current) {
+        setIsMuted(false);
+      }
+    } else {
+      setIsMuted(!isMuted);
+    }
   };
 
   if (!hasAccess) return null;
@@ -327,13 +481,20 @@ const VoiceChat = ({ workspaceId }) => {
 
       <button
         onClick={toggleMute}
-        className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all border ${isMuted
+        disabled={micPermissionDenied}
+        className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all border ${
+          micPermissionDenied
+            ? "bg-red-900/50 hover:bg-red-900/70 text-red-400 border-red-500/30 cursor-not-allowed"
+            : isMuted
             ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border-white/10"
             : "bg-white text-black hover:bg-zinc-200 border-transparent shadow-white/10"
-          }`}
+        }`}
+        title={micPermissionDenied ? "Microphone permission denied. Please allow microphone access in your browser settings." : ""}
       >
         {isMuted ? <MicOff size={16} /> : <Mic size={16} className="animate-pulse" />}
-        <span className="text-sm font-medium">{isMuted ? "Muted" : "Live"}</span>
+        <span className="text-sm font-medium">
+          {micPermissionDenied ? "Permission Denied" : isMuted ? "Muted" : "Live"}
+        </span>
       </button>
 
       {/* Hidden audio element for local playback */}

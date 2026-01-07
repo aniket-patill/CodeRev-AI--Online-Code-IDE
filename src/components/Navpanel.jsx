@@ -24,7 +24,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useWorkspaceState } from "@/context/WorkspaceStateContext";
 
-const NavPanel = ({ workspaceId, openFile }) => {
+const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
   const router = useRouter();
   const { canUndo, canRedo, undo, redo } = useWorkspaceState();
 
@@ -40,6 +40,8 @@ const NavPanel = ({ workspaceId, openFile }) => {
   const [renamingItem, setRenamingItem] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileInputRef = useRef(null);
+  const isCreatingRef = useRef(false);
+  const enterPressedRef = useRef(false);
 
   const ALLOWED_EXTENSIONS = [
     ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp", 
@@ -61,12 +63,26 @@ const NavPanel = ({ workspaceId, openFile }) => {
         reader.onload = async (event) => {
             const content = event.target.result;
             try {
-                await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+                const fileRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
                     name: file.name,
                     content: content,
                     workspaceId: workspaceId,
                     folderId: null, // Uploads to root for now
                 });
+                
+                // If this is the first file and onFileCreated callback exists, notify parent
+                if (!hasFiles && onFileCreated) {
+                    const newFile = {
+                        id: fileRef.id,
+                        name: file.name,
+                        content: content,
+                        workspaceId: workspaceId,
+                        folderId: null,
+                    };
+                    // Auto-open the first file
+                    openFile(newFile);
+                    onFileCreated(newFile);
+                }
             } catch (error) {
                 console.error("Error uploading file:", error);
             }
@@ -163,7 +179,10 @@ const NavPanel = ({ workspaceId, openFile }) => {
   };
 
   const createItem = async (folderId) => {
-    if (!newItemName) return;
+    if (!newItemName || isCreatingRef.current) return;
+
+    // Prevent duplicate creation
+    isCreatingRef.current = true;
 
     try {
       if (creatingType === "folder") {
@@ -172,11 +191,26 @@ const NavPanel = ({ workspaceId, openFile }) => {
           parentFolderId: creatingParentFolderId,
         });
       } else {
-        await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+        const fileRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
           name: newItemName,
           folderId: creatingParentFolderId,
           workspaceId,
+          content: "", // Initialize with empty content
         });
+        
+        // If this is the first file and onFileCreated callback exists, notify parent
+        if (!hasFiles && onFileCreated) {
+          const newFile = {
+            id: fileRef.id,
+            name: newItemName,
+            folderId: creatingParentFolderId,
+            workspaceId,
+            content: "",
+          };
+          // Auto-open the first file
+          openFile(newFile);
+          onFileCreated(newFile);
+        }
       }
       setNewItemName("");
       setCreatingType(null);
@@ -188,6 +222,8 @@ const NavPanel = ({ workspaceId, openFile }) => {
       }
     } catch (error) {
       console.error("Error creating item:", error);
+    } finally {
+      isCreatingRef.current = false;
     }
   };
 
@@ -325,8 +361,18 @@ const NavPanel = ({ workspaceId, openFile }) => {
                   placeholder={`New ${creatingType} name`}
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  onBlur={() => createItem(folder.id)}
-                  onKeyPress={(e) => e.key === "Enter" && createItem(folder.id)}
+                  onBlur={() => {
+                    if (!enterPressedRef.current) {
+                      createItem(folder.id);
+                    }
+                    enterPressedRef.current = false;
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      enterPressedRef.current = true;
+                      createItem(folder.id);
+                    }
+                  }}
                   autoFocus
                 />
               </div>
@@ -487,8 +533,18 @@ const NavPanel = ({ workspaceId, openFile }) => {
                 placeholder={`New ${creatingType} name`}
                 value={newItemName}
                 onChange={(e) => setNewItemName(e.target.value)}
-                onBlur={createItem}
-                onKeyPress={(e) => e.key === "Enter" && createItem()}
+                onBlur={() => {
+                  if (!enterPressedRef.current) {
+                    createItem();
+                  }
+                  enterPressedRef.current = false;
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    enterPressedRef.current = true;
+                    createItem();
+                  }
+                }}
                 autoFocus
               />
             </div>
