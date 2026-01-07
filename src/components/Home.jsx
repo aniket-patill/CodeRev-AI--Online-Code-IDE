@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Lenis from "@studio-freight/lenis";
 import { Button } from "@/components/ui/button";
 import {
   Zap,
@@ -51,7 +52,12 @@ const Navbar = () => {
     const id = href.replace("#", "");
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      // Use Lenis for smooth scroll if available
+      if (window.lenis) {
+        window.lenis.scrollTo(element, { offset: -80 });
+      } else {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
       setIsMobileMenuOpen(false);
     }
   };
@@ -696,6 +702,40 @@ const FAQ = () => {
 
 // ---------------- PAGE ----------------
 export default function HomePage() {
+  const lenisRef = useRef(null);
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    });
+
+    lenisRef.current = lenis;
+    window.lenis = lenis; // Make it globally accessible for scrollToSection
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+      if (window.lenis) {
+        delete window.lenis;
+      }
+    };
+  }, []);
+
   const features = [
     {
       icon: Code2,
