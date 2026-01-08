@@ -59,7 +59,7 @@ const LiveCursor = ({ workspaceId }) => {
         userId !== user?.uid && cursor ? (
           <div
             key={userId}
-            className="absolute transition-all duration-100 ease-linear will-change-transform"
+            className="absolute transition-all duration-300 ease-out will-change-transform"
             style={{
               left: 0,
               top: 0,

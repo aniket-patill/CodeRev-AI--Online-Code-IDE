@@ -16,7 +16,7 @@ import ShowMembers from "@/components/Members";
 import LiveCursor from "@/components/LiveCursor";
 import NavPanel from "@/components/Navpanel";
 import BottomPanel from "@/components/BottomPanel";
-import VoiceChat from "@/components/VoiceChat";
+// import VoiceChat from "@/components/VoiceChat";
 import { WorkspaceStateProvider } from "@/context/WorkspaceStateContext";
 import { getLanguageFromFilename } from "@/utils/fileExtensionUtils";
 
@@ -315,10 +315,10 @@ const Workspace = () => {
           <LiveCursor workspaceId={workspaceId} />
         </div>
 
-        {/* Voice Chat (Overlay) */}
-        {workspaceId && (
+        {/* Voice Chat (Overlay) - Hidden for now */}
+        {/* {workspaceId && (
           <VoiceChat workspaceId={workspaceId} />
-        )}
+        )} */}
 
       </div>
     </WorkspaceStateProvider>

@@ -748,11 +748,6 @@ export default function HomePage() {
       description: "Get intelligent suggestions and optimizations powered by Gemini AI."
     },
     {
-      icon: Mic,
-      title: "Voice Chat",
-      description: "Discuss code with teammates in real-time voice communication."
-    },
-    {
       icon: Play,
       title: "Instant Execution",
       description: "Run Python, JavaScript, Java, C++ instantly in your browser."
