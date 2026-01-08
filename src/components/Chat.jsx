@@ -20,6 +20,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { ClipboardDocumentIcon, CheckIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { MessageSquarePlus, Sparkles, Trash, X } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
   const [messages, setMessages] = useState([]);
@@ -79,12 +80,16 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
         body: JSON.stringify({ message: prompt, codeContext }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('API request failed');
+        // Use error message from API if available
+        const errorMsg = data?.error || 'Request failed';
+        console.error("API Error:", response.status, errorMsg);
+        return `Sorry, I couldn't process that request. ${errorMsg}`;
       }
 
-      const data = await response.json();
-      return data.aiResponse;
+      return data.aiResponse || "Sorry, I received an empty response. Please try again.";
     } catch (error) {
       console.error("API Error:", error);
       return "Sorry, I couldn't process that request. Please try again.";
@@ -229,51 +234,133 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
             }`}>
             {isAI && <span className="text-white mr-2">⚡</span>}
 
-            {parseMessage(msg.text).map((part, index) => {
-              if (part.type === 'text') {
-                return (
-                  <span key={index} className="whitespace-pre-wrap">
-                    {part.content}
-                  </span>
-                );
-              }
+            {isAI ? (
+              <ReactMarkdown
+                components={{
+                  // Headings
+                  h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-3 mb-2">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm font-bold text-white mt-2 mb-1">{children}</h3>,
+                  // Paragraphs
+                  p: ({ children }) => <p className="text-zinc-200 mb-2 last:mb-0">{children}</p>,
+                  // Bold and italic
+                  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                  em: ({ children }) => <em className="italic text-zinc-300">{children}</em>,
+                  // Lists
+                  ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-2 text-zinc-200">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-2 text-zinc-200">{children}</ol>,
+                  li: ({ children }) => <li className="text-zinc-200">{children}</li>,
+                  // Inline code
+                  code: ({ inline, className, children }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const codeString = String(children).replace(/\n$/, '');
+                    
+                    if (!inline && match) {
+                      return (
+                        <div className="relative my-3 group">
+                          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button
+                              onClick={() => copyToClipboard(codeString, codeString.slice(0, 20))}
+                              className="p-1.5 rounded bg-zinc-700/80 hover:bg-zinc-600/80 backdrop-blur-sm transition-colors"
+                            >
+                              {copiedCode === codeString.slice(0, 20) ? (
+                                <CheckIcon className="h-3.5 w-3.5 text-green-400" />
+                              ) : (
+                                <ClipboardDocumentIcon className="h-3.5 w-3.5 text-zinc-300" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="rounded-lg overflow-hidden border border-white/10">
+                            <SyntaxHighlighter
+                              language={match[1]}
+                              style={vscDarkPlus}
+                              customStyle={{
+                                background: '#09090b',
+                                padding: '1rem',
+                                margin: 0,
+                                fontSize: '0.875rem',
+                              }}
+                              codeTagProps={{ style: { fontFamily: 'Fira Code, monospace' } }}
+                            >
+                              {codeString}
+                            </SyntaxHighlighter>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // Inline code
+                    return (
+                      <code className="px-1.5 py-0.5 bg-zinc-700/50 rounded text-zinc-200 text-xs font-mono">
+                        {children}
+                      </code>
+                    );
+                  },
+                  // Code blocks without language
+                  pre: ({ children }) => <div className="my-2">{children}</div>,
+                  // Links
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                      {children}
+                    </a>
+                  ),
+                  // Blockquotes
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-2 border-zinc-600 pl-3 my-2 text-zinc-400 italic">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
+            ) : (
+              parseMessage(msg.text).map((part, index) => {
+                if (part.type === 'text') {
+                  return (
+                    <span key={index} className="whitespace-pre-wrap">
+                      {part.content}
+                    </span>
+                  );
+                }
 
-              if (part.type === 'code') {
-                return (
-                  <div key={index} className="relative my-3 group">
-                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        onClick={() => copyToClipboard(part.code, index)}
-                        className="p-1.5 rounded bg-zinc-700/80 hover:bg-zinc-600/80 backdrop-blur-sm transition-colors"
-                      >
-                        {copiedCode === index ? (
-                          <CheckIcon className="h-3.5 w-3.5 text-green-400" />
-                        ) : (
-                          <ClipboardDocumentIcon className="h-3.5 w-3.5 text-zinc-300" />
-                        )}
-                      </button>
+                if (part.type === 'code') {
+                  return (
+                    <div key={index} className="relative my-3 group">
+                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                          onClick={() => copyToClipboard(part.code, index)}
+                          className="p-1.5 rounded bg-zinc-700/80 hover:bg-zinc-600/80 backdrop-blur-sm transition-colors"
+                        >
+                          {copiedCode === index ? (
+                            <CheckIcon className="h-3.5 w-3.5 text-green-400" />
+                          ) : (
+                            <ClipboardDocumentIcon className="h-3.5 w-3.5 text-zinc-300" />
+                          )}
+                        </button>
+                      </div>
+                      <div className="rounded-lg overflow-hidden border border-white/10">
+                        <SyntaxHighlighter
+                          language={part.lang}
+                          style={vscDarkPlus}
+                          customStyle={{
+                            background: '#09090b',
+                            padding: '1rem',
+                            margin: 0,
+                            fontSize: '0.875rem',
+                          }}
+                          codeTagProps={{ style: { fontFamily: 'Fira Code, monospace' } }}
+                        >
+                          {part.code}
+                        </SyntaxHighlighter>
+                      </div>
                     </div>
-                    <div className="rounded-lg overflow-hidden border border-white/10">
-                      <SyntaxHighlighter
-                        language={part.lang}
-                        style={vscDarkPlus}
-                        customStyle={{
-                          background: '#09090b', // zinc-950
-                          padding: '1rem',
-                          margin: 0,
-                          fontSize: '0.875rem',
-                        }}
-                        codeTagProps={{ style: { fontFamily: 'Fira Code, monospace' } }}
-                      >
-                        {part.code}
-                      </SyntaxHighlighter>
-                    </div>
-                  </div>
-                );
-              }
+                  );
+                }
 
-              return null;
-            })}
+                return null;
+              })
+            )}
 
             {isAI && (
               <div className="text-[10px] text-zinc-500 mt-2 font-medium uppercase tracking-wider">

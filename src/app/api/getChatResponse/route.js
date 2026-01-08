@@ -13,6 +13,14 @@ export async function POST(request) {
 
         const aiResponse = await getChatResponse(message, codeContext);
 
+        if (!aiResponse) {
+            console.error("API Error: Empty response from Gemini");
+            return NextResponse.json(
+                { error: "AI returned empty response. Please try again." },
+                { status: 503 }
+            );
+        }
+
         return NextResponse.json(
             { aiResponse },
             {
@@ -23,7 +31,33 @@ export async function POST(request) {
             }
         );
     } catch (error) {
-        console.error("API Error:", error.message);
-        return NextResponse.json({ error: "Failed to generate response" }, { status: 500 });
+        const errorMessage = error?.message || 'Unknown error';
+        const isRateLimit = errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate');
+        const isApiKeyError = errorMessage.includes('API key') || errorMessage.includes('configured');
+        
+        console.error("API Error:", {
+            message: errorMessage,
+            type: isRateLimit ? 'RATE_LIMIT' : isApiKeyError ? 'API_KEY' : 'GENERAL',
+            timestamp: new Date().toISOString()
+        });
+
+        if (isRateLimit) {
+            return NextResponse.json(
+                { error: "AI service is busy. Please wait a moment and try again." },
+                { status: 429 }
+            );
+        }
+
+        if (isApiKeyError) {
+            return NextResponse.json(
+                { error: "AI service configuration error. Please contact support." },
+                { status: 503 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: "Failed to generate response. Please try again." },
+            { status: 500 }
+        );
     }
 }
