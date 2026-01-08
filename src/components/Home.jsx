@@ -25,6 +25,8 @@ import {
   Youtube,
   ChevronDown,
   Mail,
+  MousePointer2,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -457,11 +459,6 @@ const CTASection = () => {
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
-
-              <Button className="h-12 px-8 border border-zinc-200 dark:border-white/20 bg-white/50 dark:bg-white/5 text-zinc-900 dark:text-white font-semibold hover:bg-zinc-100 dark:hover:bg-white/10 backdrop-blur-sm rounded-xl transition-all duration-300">
-                <Github className="mr-2 w-4 h-4" />
-                View on GitHub
-              </Button>
             </div>
 
             <div className="flex items-center justify-center gap-6 mt-8 text-xs text-zinc-500">
@@ -475,87 +472,6 @@ const CTASection = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ---------------- TESTIMONIALS ----------------
-const Testimonials = () => {
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Full Stack Developer",
-      company: "@TechCorp",
-      avatar: "SC",
-      rating: 5,
-      text: "CodeRev has completely transformed how I collaborate with my team. The AI suggestions are incredibly accurate, and the real-time collaboration feels seamless."
-    },
-    {
-      name: "Marcus Johnson",
-      role: "Software Engineer",
-      company: "@StartupHub",
-      avatar: "MJ",
-      rating: 5,
-      text: "The voice chat feature is a game-changer! Being able to discuss code while seeing changes in real-time makes pair programming so much more effective."
-    },
-    {
-      name: "Priya Patel",
-      role: "Senior Developer",
-      company: "@DevStudio",
-      avatar: "PP",
-      rating: 5,
-      text: "I've tried many online editors, but CodeRev's instant execution and Monaco integration make it the best. It's now my go-to tool for quick prototyping."
-    }
-  ];
-
-  return (
-    <section id="testimonials" className="relative py-24 px-6 border-t border-zinc-200 dark:border-white/5">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
-
-      <div className="relative max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-6">
-            <Star className="w-3.5 h-3.5 text-yellow-500 dark:text-yellow-400" />
-            Testimonials
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
-            Loved by Developers
-          </h2>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            See what developers are saying about CodeRev
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, i) => (
-            <div key={i} className="group relative p-6 rounded-2xl border border-zinc-200 dark:border-white/5 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/30 dark:to-zinc-900/10 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-500">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-zinc-900/5 dark:from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              <div className="relative">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-6">
-                  "{testimonial.text}"
-                </p>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-white/20 dark:to-white/5 flex items-center justify-center text-zinc-900 dark:text-white text-sm font-bold border border-zinc-200 dark:border-white/10">
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-900 dark:text-white">{testimonial.name}</div>
-                    <div className="text-xs text-zinc-500">{testimonial.role} {testimonial.company}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>
@@ -613,7 +529,7 @@ const HowItWorks = () => {
           <div className="grid md:grid-cols-4 gap-8">
             {steps.map((item, i) => (
               <div key={i} className="relative group">
-                <div className="relative p-6 rounded-2xl border border-zinc-200 dark:border-white/5 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/30 dark:to-zinc-900/10 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-all duration-500">
+                <div className="relative h-full p-6 rounded-2xl border border-zinc-200 dark:border-white/5 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/30 dark:to-zinc-900/10 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-all duration-500">
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-zinc-900/5 dark:from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                   <div className="relative">
@@ -761,6 +677,11 @@ export default function HomePage() {
       icon: MessageSquare,
       title: "AI Chat Assistant",
       description: "Get code explanations and generate solutions with AI."
+    },
+    {
+      icon: FileText,
+      title: "AI Documentation",
+      description: "Auto-generate comprehensive documentation for your code with AI."
     },
   ];
 

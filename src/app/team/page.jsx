@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Lenis from "@studio-freight/lenis";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -122,7 +123,6 @@ const Navbar = () => {
         { label: "Features", href: "/#features" },
         { label: "How It Works", href: "/#howitworks" },
         { label: "Team", href: "/team" },
-        { label: "Testimonials", href: "/#testimonials" },
     ];
 
     return (
@@ -228,6 +228,40 @@ const Navbar = () => {
 };
 
 export default function TeamPage() {
+    const lenisRef = useRef(null);
+
+    // Initialize Lenis smooth scroll
+    useEffect(() => {
+        const lenis = new Lenis({
+            duration: 1.8,
+            easing: (t) => 1 - Math.pow(1 - t, 3),
+            orientation: 'vertical',
+            gestureOrientation: 'vertical',
+            smoothWheel: true,
+            wheelMultiplier: 0.8,
+            smoothTouch: true,
+            touchMultiplier: 1.5,
+            infinite: false,
+        });
+
+        lenisRef.current = lenis;
+        window.lenis = lenis;
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+
+        requestAnimationFrame(raf);
+
+        return () => {
+            lenis.destroy();
+            if (window.lenis) {
+                delete window.lenis;
+            }
+        };
+    }, []);
+
     const teamMembers = [
         {
             photo: "/teams/ayan.jpg",
