@@ -2,6 +2,10 @@
   "rules": {
     "workspaces": {
       "$workspaceId": {
+        "cursors": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
         "voice": {
           "participants": {
             "$userId": {
@@ -10,10 +14,11 @@
             }
           },
           "signaling": {
-            "$userId": {
+            "$toUserId": {
+              ".read": "auth != null && auth.uid == $toUserId",
               "$fromUserId": {
-                ".read": "auth != null && (auth.uid == $userId || auth.uid == $fromUserId)",
-                ".write": "auth != null && (auth.uid == $userId || auth.uid == $fromUserId)"
+                ".read": "auth != null && (auth.uid == $toUserId || auth.uid == $fromUserId)",
+                ".write": "auth != null && auth.uid == $fromUserId"
               }
             }
           }

@@ -252,12 +252,7 @@ const Workspace = () => {
                           <p className="text-sm text-zinc-400 mb-4">
                             Create a file to get started. Click the "File" button in the sidebar to create your first file.
                           </p>
-                          <button
-                            onClick={() => setIsNavOpen(true)}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                          >
-                            Open Sidebar
-                          </button>
+                        
                         </div>
                       </div>
                     ) : (

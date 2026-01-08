@@ -707,14 +707,14 @@ export default function HomePage() {
   // Initialize Lenis smooth scroll
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 1.8,
+      easing: (t) => 1 - Math.pow(1 - t, 3), // Smoother cubic ease-out
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1,
-      smoothTouch: false,
-      touchMultiplier: 2,
+      wheelMultiplier: 0.8, // Reduced for smoother wheel scrolling
+      smoothTouch: true, // Enable smooth touch scrolling
+      touchMultiplier: 1.5,
       infinite: false,
     });
 
