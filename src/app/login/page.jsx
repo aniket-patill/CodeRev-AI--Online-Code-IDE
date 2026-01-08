@@ -170,7 +170,7 @@ const Login = () => {
             Continue with Google
           </Button>
 
-          <div className="flex items-center justify-between text-sm pt-2">
+          <div className="flex items-center justify-center text-sm pt-2">
             <p className="text-zinc-600 dark:text-zinc-400">
               Don't have an account?{" "}
               <Link href="/register" className="text-zinc-900 dark:text-white hover:underline font-medium transition-colors">

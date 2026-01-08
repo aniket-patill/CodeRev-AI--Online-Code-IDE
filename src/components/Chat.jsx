@@ -123,7 +123,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
 
         const aiResponse = await generateAIResponse(aiPrompt, codeContext);
         await addDoc(messagesRef, {
-          text: `🤖 ${aiResponse}`,
+          text: `${aiResponse}`,
           createdAt: serverTimestamp(),
           imageUrl: "/ai-avatar.png",
           userId: "AI_BOT",
@@ -208,16 +208,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
     };
 
     return (
-      <div className={`flex flex-col gap-1 ${isCurrentUser ? "items-end" :
-        isAI ? "items-center w-full" : "items-start"
-        }`}>
+      <div className={`flex flex-col gap-1 ${isCurrentUser ? "items-end" : "items-start"}`}>
         {!isAI && (
           <span className="text-xs text-zinc-400">
             {isCurrentUser ? "You" : msg.name}
           </span>
         )}
 
-        <div className="flex justify-end gap-2 w-full">
+        <div className={`flex gap-2 ${isCurrentUser ? "flex-row-reverse" : "flex-row"} ${isAI ? "w-full" : "max-w-[85%]"}`}>
           {!isCurrentUser && !isAI && (
             <img
               src={msg.imageUrl || "/robotic.png"}
@@ -226,7 +224,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
             />
           )}
 
-          <div className={`py-3 px-4 text-sm rounded-2xl max-w-[85%] break-words ${isAI ? "bg-zinc-800/50 border border-white/10 w-full" :
+          <div className={`py-3 px-4 text-sm rounded-2xl break-words ${isAI ? "bg-zinc-800/50 border border-white/10 w-full" :
             isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
             }`}>
             {isAI && <span className="text-white mr-2">⚡</span>}
