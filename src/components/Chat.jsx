@@ -125,7 +125,23 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
         body: JSON.stringify({ message: prompt, codeContext }),
       });
 
-      const data = await response.json();
+      // Handle 504 Gateway Timeout before trying to parse JSON
+      if (response.status === 504) {
+        console.error("API Error: 504 Gateway Timeout");
+        return "The AI service took too long to respond. Please try a shorter question or try again in a moment.";
+      }
+
+      // Safely parse JSON - some error responses may not be JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        if (response.status >= 500) {
+          return "The server encountered an error. Please try again in a moment.";
+        }
+        return "Sorry, received an invalid response from the server. Please try again.";
+      }
 
       if (!response.ok) {
         // Handle rate limit error specially
@@ -156,6 +172,10 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       return data.aiResponse || "Sorry, I received an empty response. Please try again.";
     } catch (error) {
       console.error("API Error:", error);
+      // Check if it's a network error
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        return "Network error. Please check your connection and try again.";
+      }
       return "Sorry, I couldn't process that request. Please try again.";
     } finally {
       setIsAIProcessing(false);

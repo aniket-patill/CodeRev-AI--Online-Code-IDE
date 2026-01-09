@@ -80,12 +80,8 @@ const getModelForService = (service, modelName = "gemini-2.5-flash") => {
  * @param {number} baseDelay - Base delay in ms for exponential backoff
  * @returns {Promise<any>}
  */
-const executeWithRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
+const executeWithRetry = async (apiCall, maxRetries = 2, baseDelay = 1500) => {
     let lastError;
-    
-    // Add small random initial delay to reduce concurrent request collisions
-    const initialJitter = Math.random() * 500;
-    await new Promise(resolve => setTimeout(resolve, initialJitter));
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -109,10 +105,10 @@ const executeWithRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
                 errorMessage.includes('RESOURCE_EXHAUSTED');
             
             if (isRetryableError && attempt < maxRetries) {
-                // Exponential backoff with jitter: base * 2^attempt + random(0-1000ms)
-                const jitter = Math.random() * 1000;
-                const delay = (baseDelay * Math.pow(2, attempt)) + jitter;
-                console.log(`[Gemini] Retryable error, waiting ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries}): ${errorMessage.slice(0, 100)}`);
+                // Exponential backoff with small jitter, capped at 8 seconds
+                const jitter = Math.random() * 500;
+                const delay = Math.min((baseDelay * Math.pow(2, attempt)) + jitter, 8000);
+                console.log(`[Gemini] Retryable error, waiting ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
@@ -179,22 +175,41 @@ export const generateDocumentation = async (code, language) => {
 };
 
 /**
- * Get chat response
+ * Get chat response with model fallback
  * @param {string} message 
+ * @param {string} codeContext
  * @returns {Promise<string>}
  */
 export const getChatResponse = async (message, codeContext) => {
-    try {
-        const model = getModelForService(SERVICES.CHAT);
-        const contextPrompt = codeContext ? `\n\nHere is the current code in the editor for context:\n\`\`\`\n${codeContext}\n\`\`\`\n\n` : "";
-        const prompt = `you an ai chat bot , who helps people in giving code and solve their probems . your response will directly be shown in the text , so give the response like a chat  and your request is this  ${message}${contextPrompt},also if asked to generate code generate them with predefined inputs dont ask for inputs from user. if the message is not related to coding or technical stuff reply i am a coding assistant i can only help you with coding related stuff . be very concise and clear in your response dont make it very lengthy and if the message is not clear ask for more clarity dont make assumptions. `;
+    const candidateModels = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite"
+    ];
+    
+    const contextPrompt = codeContext ? `\n\nHere is the current code in the editor for context:\n\`\`\`\n${codeContext}\n\`\`\`\n\n` : "";
+    const prompt = `you an ai chat bot , who helps people in giving code and solve their probems . your response will directly be shown in the text , so give the response like a chat  and your request is this  ${message}${contextPrompt},also if asked to generate code generate them with predefined inputs dont ask for inputs from user. if the message is not related to coding or technical stuff reply i am a coding assistant i can only help you with coding related stuff . be very concise and clear in your response dont make it very lengthy and if the message is not clear ask for more clarity dont make assumptions. `;
 
-        const result = await executeWithRetry(() => model.generateContent(prompt));
-        return result.response.text().trim();
-    } catch (error) {
-        console.error("Gemini API Error (getChatResponse):", error);
-        throw new Error("Failed to generate response");
+    let lastError;
+    
+    for (const modelName of candidateModels) {
+        try {
+            console.log(`[Gemini Chat] Trying model: ${modelName}`);
+            const model = getModelForService(SERVICES.CHAT, modelName);
+            const result = await executeWithRetry(() => model.generateContent(prompt));
+            const response = result.response.text().trim();
+            
+            if (response) {
+                return response;
+            }
+        } catch (error) {
+            console.error(`[Gemini Chat] Error with ${modelName}:`, error?.message || error);
+            lastError = error;
+            // Continue to next model
+        }
     }
+    
+    // All models failed
+    throw lastError || new Error("Failed to generate response");
 };
 
 /**
