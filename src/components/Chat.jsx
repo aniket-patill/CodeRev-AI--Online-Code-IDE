@@ -27,6 +27,10 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const lastRequestTimeRef = useRef(0);
+  const cooldownIntervalRef = useRef(null);
 
   // Null-safe auth access (prevents crash during hydration)
   const userId = auth.currentUser?.uid;
@@ -69,8 +73,49 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
     }
   }, [messages, newMessage, isAIProcessing]);
 
-  const generateAIResponse = async (prompt, codeContext) => {
+  // Start cooldown timer
+  const startCooldown = (seconds) => {
+    setCooldownSeconds(seconds);
+    if (cooldownIntervalRef.current) {
+      clearInterval(cooldownIntervalRef.current);
+    }
+    cooldownIntervalRef.current = setInterval(() => {
+      setCooldownSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownIntervalRef.current);
+          cooldownIntervalRef.current = null;
+          setRateLimitError(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  // Clean up cooldown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownIntervalRef.current) {
+        clearInterval(cooldownIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const generateAIResponse = async (prompt, codeContext, retryCount = 0) => {
+    // Debounce: prevent rapid requests (min 2 seconds between requests)
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    const MIN_REQUEST_INTERVAL = 2000; // 2 seconds
+
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL && retryCount === 0) {
+      const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    lastRequestTimeRef.current = Date.now();
     setIsAIProcessing(true);
+    setRateLimitError(null);
+
     try {
       const response = await fetch('/api/getChatResponse', {
         method: 'POST',
@@ -80,10 +125,45 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
         body: JSON.stringify({ message: prompt, codeContext }),
       });
 
-      const data = await response.json();
+      // Handle 504 Gateway Timeout before trying to parse JSON
+      if (response.status === 504) {
+        console.error("API Error: 504 Gateway Timeout");
+        return "The AI service took too long to respond. Please try a shorter question or try again in a moment.";
+      }
+
+      // Safely parse JSON - some error responses may not be JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        if (response.status >= 500) {
+          return "The server encountered an error. Please try again in a moment.";
+        }
+        return "Sorry, received an invalid response from the server. Please try again.";
+      }
 
       if (!response.ok) {
-        // Use error message from API if available
+        // Handle rate limit error specially
+        if (response.status === 429) {
+          const maxRetries = 2;
+          if (retryCount < maxRetries) {
+            // Exponential backoff: 3s, 6s
+            const waitTime = 3000 * Math.pow(2, retryCount);
+            console.log(`Rate limited, retrying in ${waitTime / 1000}s (attempt ${retryCount + 1}/${maxRetries})`);
+            setRateLimitError(`Rate limited. Retrying in ${Math.ceil(waitTime / 1000)}s...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            setRateLimitError(null);
+            return await generateAIResponse(prompt, codeContext, retryCount + 1);
+          }
+          
+          // Max retries exceeded - show cooldown
+          const cooldownTime = 15; // 15 seconds cooldown
+          setRateLimitError(`AI service is busy. Please wait ${cooldownTime}s before trying again.`);
+          startCooldown(cooldownTime);
+          return "The AI service is currently rate-limited. Please wait a moment and try again. This usually happens when there are too many requests.";
+        }
+        
         const errorMsg = data?.error || 'Request failed';
         console.error("API Error:", response.status, errorMsg);
         return `Sorry, I couldn't process that request. ${errorMsg}`;
@@ -92,6 +172,10 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       return data.aiResponse || "Sorry, I received an empty response. Please try again.";
     } catch (error) {
       console.error("API Error:", error);
+      // Check if it's a network error
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        return "Network error. Please check your connection and try again.";
+      }
       return "Sorry, I couldn't process that request. Please try again.";
     } finally {
       setIsAIProcessing(false);
@@ -436,6 +520,20 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
           ))
         )}
 
+        {rateLimitError && (
+          <div className="flex justify-center">
+            <div className="flex items-center gap-3 text-amber-400 text-xs py-2 px-4 rounded-full bg-amber-900/30 border border-amber-500/30">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{rateLimitError}</span>
+              {cooldownSeconds > 0 && (
+                <span className="font-mono font-bold">{cooldownSeconds}s</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {isAIProcessing && (
           <div className="flex justify-center">
             <div className="flex items-center gap-3 text-zinc-400 text-xs py-2 px-4 rounded-full bg-zinc-800 border border-white/10">
@@ -444,7 +542,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
                 <div className="h-1.5 w-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                 <div className="h-1.5 w-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
               </div>
-              <span>Thinking...</span>
+              <span>{rateLimitError ? 'Waiting to retry...' : 'Thinking...'}</span>
             </div>
           </div>
         )}
@@ -469,7 +567,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
           />
           <Button
             type="submit"
-            disabled={isAIProcessing || !newMessage.trim()}
+            disabled={isAIProcessing || !newMessage.trim() || cooldownSeconds > 0}
             className="h-11 px-4 bg-white hover:bg-zinc-200 text-black rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PaperAirplaneIcon className="h-5 w-5" />

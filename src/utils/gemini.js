@@ -74,13 +74,13 @@ const getModelForService = (service, modelName = "gemini-2.5-flash") => {
 };
 
 /**
- * Execute API call with retry logic and exponential backoff
+ * Execute API call with retry logic and exponential backoff with jitter
  * @param {Function} apiCall - The API call function to execute
  * @param {number} maxRetries - Maximum retry attempts
  * @param {number} baseDelay - Base delay in ms for exponential backoff
  * @returns {Promise<any>}
  */
-const executeWithRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
+const executeWithRetry = async (apiCall, maxRetries = 2, baseDelay = 1500) => {
     let lastError;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -89,22 +89,31 @@ const executeWithRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
         } catch (error) {
             lastError = error;
             const errorMessage = error?.message || '';
+            const errorStatus = error?.status || error?.code;
             
-            // Check if it's a rate limit error (429) or quota exceeded
-            const isRateLimitError = 
-                error?.status === 429 || 
+            // Check if it's a retryable error (429, 503, 500, quota, overloaded)
+            const isRetryableError = 
+                errorStatus === 429 ||
+                errorStatus === 503 ||
+                errorStatus === 500 ||
                 errorMessage.includes('429') ||
+                errorMessage.includes('503') ||
                 errorMessage.includes('quota') ||
-                errorMessage.includes('rate limit');
+                errorMessage.includes('rate limit') ||
+                errorMessage.includes('overloaded') ||
+                errorMessage.includes('Resource has been exhausted') ||
+                errorMessage.includes('RESOURCE_EXHAUSTED');
             
-            if (isRateLimitError && attempt < maxRetries) {
-                const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
-                console.log(`[Gemini] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+            if (isRetryableError && attempt < maxRetries) {
+                // Exponential backoff with small jitter, capped at 8 seconds
+                const jitter = Math.random() * 500;
+                const delay = Math.min((baseDelay * Math.pow(2, attempt)) + jitter, 8000);
+                console.log(`[Gemini] Retryable error, waiting ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
             
-            // For non-rate-limit errors or final attempt, throw
+            // For non-retryable errors or final attempt, throw
             throw error;
         }
     }
@@ -177,8 +186,9 @@ export const generateDocumentation = async (code, language) => {
 };
 
 /**
- * Get chat response
+ * Get chat response with model fallback
  * @param {string} message 
+ * @param {string} codeContext
  * @returns {Promise<string>}
  */
 export const getChatResponse = async (message, codeContext) => {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getChatResponse } from "@/utils/gemini";
 
-// Extend timeout for AI responses (Vercel default is 10s, Gemini needs more)
-export const maxDuration = 30;
+// Extend timeout for AI responses (needs extra time for retries with backoff)
+export const maxDuration = 60;
 
 export async function POST(request) {
     try {
