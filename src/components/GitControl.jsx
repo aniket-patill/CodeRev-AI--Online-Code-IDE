@@ -208,6 +208,17 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
 
                     {step === "form" && (
                         <div className="space-y-4">
+                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex gap-3">
+                                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                                <div className="text-xs text-blue-200/80 space-y-1">
+                                    <p className="font-medium text-blue-100">Before pushing:</p>
+                                    <ul className="list-disc list-inside">
+                                        <li>Ensure the repository <strong>already exists</strong> on GitHub.</li>
+                                        <li>The repository should be <strong>empty</strong> to avoid conflicts.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Repository URL</label>
                                 <input

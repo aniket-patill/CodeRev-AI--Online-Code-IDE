@@ -69,9 +69,9 @@ const WorkspaceContent = () => {
     let message = "";
 
     if (typeof selectedContent === 'object' && selectedContent.text) {
-      const { text, startLine, endLine } = selectedContent;
+      const { startLine, endLine } = selectedContent;
       const fileName = selectedFile?.name || "current file";
-      message = `Explain this code from \`${fileName}\` (lines ${startLine}-${endLine}):\n\`\`\`\n${text}\n\`\`\``;
+      message = `Explain the code in \`${fileName}\` from line ${startLine} to ${endLine}`;
     } else {
       // Fallback for simple string selection
       message = `Explain this code:\n\`\`\`\n${selectedContent}\n\`\`\``;
