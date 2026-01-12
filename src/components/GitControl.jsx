@@ -15,11 +15,11 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
     const [error, setError] = useState("");
     const [logs, setLogs] = useState([]);
 
-    // Load token from session if available
+    // Load token from storage (local or session)
     useEffect(() => {
-        const cachedToken = sessionStorage.getItem("coderev_github_token");
-        if (cachedToken) {
-            setGithubToken(cachedToken);
+        const storedToken = localStorage.getItem("coderev_github_token") || sessionStorage.getItem("coderev_github_token");
+        if (storedToken) {
+            setGithubToken(storedToken);
             setStep("form");
         }
     }, [isOpen]);
@@ -38,7 +38,7 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
 
                 if (accessToken) {
                     setGithubToken(accessToken);
-                    sessionStorage.setItem("coderev_github_token", accessToken);
+                    localStorage.setItem("coderev_github_token", accessToken);
                     setStep("form");
                 }
             } else {
@@ -49,7 +49,7 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
                     const accessToken = credential.accessToken;
                     if (accessToken) {
                         setGithubToken(accessToken);
-                        sessionStorage.setItem("coderev_github_token", accessToken);
+                        localStorage.setItem("coderev_github_token", accessToken);
                         setStep("form");
                     }
                 } catch (linkError) {
@@ -67,7 +67,8 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
                             }
                         } catch (reAuthError) {
                             console.error("Re-auth failed:", reAuthError);
-                            setError(`Re-auth failed: ${reAuthError.code} - ${reAuthError.message}`);
+                            // If popup blocked or failed, show dedicated re-auth UI
+                            setStep("reauth");
                         }
                     } else {
                         throw linkError;
@@ -77,6 +78,24 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
         } catch (err) {
             console.error("GitHub Auth Error:", err);
             setError(err.message || "Failed to connect to GitHub");
+        }
+    };
+
+    const handleReAuth = async () => {
+        try {
+            setError("");
+            const result = await reauthenticateWithPopup(auth.currentUser, githubProvider);
+            const credential = GithubAuthProvider.credentialFromResult(result);
+            const accessToken = credential.accessToken;
+
+            if (accessToken) {
+                setGithubToken(accessToken);
+                localStorage.setItem("coderev_github_token", accessToken);
+                setStep("form");
+            }
+        } catch (err) {
+            console.error("Re-auth manual failed:", err);
+            setError(err.message);
         }
     };
 
@@ -163,6 +182,25 @@ const GitControl = ({ isOpen, onClose, workspaceId }) => {
                             >
                                 <Github className="w-5 h-5" />
                                 Connect GitHub
+                            </button>
+                            {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+                        </div>
+                    )}
+
+                    {step === "reauth" && (
+                        <div className="text-center py-4">
+                            <div className="w-12 h-12 bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertCircle className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Verification Required</h3>
+                            <p className="text-zinc-400 mb-6 text-sm">
+                                For security, GitHub requires you to verify your identity again to authorize the connection.
+                            </p>
+                            <button
+                                onClick={handleReAuth}
+                                className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold transition-colors"
+                            >
+                                Verify Identity
                             </button>
                             {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
                         </div>
