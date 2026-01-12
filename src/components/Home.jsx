@@ -349,17 +349,17 @@ const LanguageSupport = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center py-24 px-6 overflow-hidden bg-[#aa58f7]">
+    <section className="relative z-10 min-h-screen flex flex-col justify-center py-16 md:py-24 px-6 overflow-hidden bg-[#aa58f7]">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:40px_40px]" />
 
 
       <div className="relative max-w-7xl mx-auto w-full">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px", amount: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeIn" }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white mb-6 backdrop-blur-sm">
               <Code2 className="w-3.5 h-3.5" />
@@ -432,7 +432,7 @@ const Stats = () => {
   ];
 
   return (
-    <section className="relative hidden py-20 px-6 border-y border-zinc-200 dark:border-white/5">
+    <section className="relative z-10 hidden py-20 px-6 border-y border-zinc-200 dark:border-white/5">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
 
       <div className="relative max-w-7xl mx-auto">
@@ -484,7 +484,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section id="howitworks" className="relative py-24 px-6">
+    <section id="howitworks" className="relative z-10 py-24 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-6">
@@ -502,7 +502,7 @@ const HowItWorks = () => {
         <div className="relative">
           <div className="hidden md:block absolute top-16 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-zinc-200 dark:via-white/10 to-transparent" />
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((item, i) => (
               <div key={i} className="relative group">
                 <div className="relative h-full p-6 rounded-2xl border border-zinc-200 dark:border-white/5 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/30 dark:to-zinc-900/10 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-all duration-500">
@@ -603,7 +603,7 @@ const FAQ = () => {
   );
 
   return (
-    <section className="relative pt-4 pb-24 px-6 bg-[#fcfcfc] dark:bg-black/20">
+    <section className="relative z-10 pt-4 pb-24 px-6 bg-[#fcfcfc] dark:bg-black/20">
       {/* Reticle grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fcfcfc] dark:from-black to-transparent" />
@@ -723,12 +723,12 @@ export default function HomePage() {
   // Initialize Lenis smooth scroll
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.8,
+      duration: 0.8,
       easing: (t) => 1 - Math.pow(1 - t, 3), // Smoother cubic ease-out
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.8, // Reduced for smoother wheel scrolling
+      wheelMultiplier: 1.0, // Reduced for smoother wheel scrolling
       smoothTouch: true, // Enable smooth touch scrolling
       touchMultiplier: 1.5,
       infinite: false,
@@ -798,7 +798,7 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+            <div className="space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 backdrop-blur-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400 animate-pulse" />
                 <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">AI-Powered Development Platform</span>
@@ -812,7 +812,7 @@ export default function HomePage() {
                   </span>
                 </h1>
 
-                <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
+                <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
                   The next-generation code editor with{" "}
                   <span className="text-zinc-900 dark:text-white font-semibold">AI assistance</span>,{" "}
                   <span className="text-zinc-900 dark:text-white font-semibold">real-time collaboration</span>, and{" "}
@@ -820,7 +820,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <Link href="/register">
                   <Button className="h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-zinc-900/20 dark:hover:shadow-white/20 rounded-xl group">
                     Start Building
@@ -832,7 +832,7 @@ export default function HomePage() {
 
             </div>
 
-            <div className="lg:pl-8">
+            <div className="lg:pl-8 mt-12 lg:mt-0">
               <CodeEditorPreview />
             </div>
           </div>
@@ -849,9 +849,9 @@ export default function HomePage() {
         <Stats />
 
         {/* FEATURES CAROUSEL */}
-        <section id="features" className="relative py-24 border-b border-zinc-200 dark:border-white/5 overflow-hidden">
+        <section id="features" className="relative z-10 py-24 border-b border-zinc-200 dark:border-white/5 overflow-hidden">
           <div className="max-w-[1400px] mx-auto px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
               <div className="max-w-4xl">
                 <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-2 tracking-tight">
                   Engineered to perfection
