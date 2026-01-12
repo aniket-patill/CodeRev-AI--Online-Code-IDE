@@ -267,7 +267,6 @@ const WorkspaceContent = () => {
                     workspaceId={workspaceId}
                     openFile={handleFileSelect}
                     onFileCreated={(file) => {
-                      // If this was the first file, auto-open it and hide prompt
                       if (!hasFiles && file) {
                         handleFileSelect(file);
                         setHasFiles(true);
@@ -291,6 +290,7 @@ const WorkspaceContent = () => {
                     {/* Workspace Header */}
                     <div className="relative z-40 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-zinc-900/30 backdrop-blur-sm shrink-0">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Toggle Button for Left Panel */}
                         {!isNavOpen && (
                           <button
                             onClick={() => setIsNavOpen(true)}

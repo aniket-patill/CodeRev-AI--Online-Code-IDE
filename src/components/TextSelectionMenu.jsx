@@ -16,51 +16,10 @@ const TextSelectionMenu = ({ onAskAI, externalSelection }) => {
             setIsVisible(true);
             setIsSubmitted(false);
             return;
-        }
-
-        const handleSelectionChange = () => {
-            const selection = window.getSelection();
-            const text = selection.toString().trim();
-
-            if (text.length > 0) {
-                const range = selection.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
-
-                // Calculate position (centered above selection)
-                // Add scroll offsets
-                const top = rect.top + window.scrollY - 60; // Slightly higher
-                const left = rect.left + window.scrollX + (rect.width / 2);
-
-                // Only update if we have a valid distinct position
-                setPosition({ top, left });
-                setSelectedText(text);
-                setIsVisible(true);
-                setIsSubmitted(false);
-            } else {
-                setIsVisible(false);
-            }
-        };
-
-        // Use mouseup to finalize selection rather than selectionchange which fires rapidly
-        document.addEventListener("mouseup", handleSelectionChange);
-        // Also handle keyup for keyboard selection
-        document.addEventListener("keyup", handleSelectionChange);
-
-        // Hide on scroll to prevent floating weirdness
-        window.addEventListener("scroll", () => setIsVisible(false));
-
-        // Hide when clicking outside
-        document.addEventListener("mousedown", (e) => {
-            // If clicking the menu itself, don't hide immediately (handled by button click)
-            if (e.target.closest("#text-selection-menu")) return;
+        } else {
+            // If no external selection, ensure menu is hidden
             setIsVisible(false);
-        });
-
-        return () => {
-            document.removeEventListener("mouseup", handleSelectionChange);
-            document.removeEventListener("keyup", handleSelectionChange);
-            window.removeEventListener("scroll", () => setIsVisible(false));
-        };
+        }
     }, [externalSelection]);
 
     const handleAskAIClick = (e) => {
@@ -124,12 +83,12 @@ const TextSelectionMenu = ({ onAskAI, externalSelection }) => {
                     >
                         <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity rounded-full" />
                         <span className="relative z-10 flex items-center gap-2">
-                         
+
                             Ask AI
                         </span>
                     </button>
 
-                  
+
                 </motion.div>
             )}
         </AnimatePresence>
