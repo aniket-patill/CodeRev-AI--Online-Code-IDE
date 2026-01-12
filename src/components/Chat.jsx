@@ -311,29 +311,34 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
     };
 
     return (
-      <div className={`flex flex-col gap-1 ${isCurrentUser ? "items-end" : "items-start"}`}>
+      <div className={`flex flex-col gap-2 ${isCurrentUser ? "items-end" : "items-start"} w-full`}>
         {!isAI && (
-          <span className="text-xs text-zinc-400">
+          <span className="text-[11px] font-medium text-zinc-500 px-1">
             {isCurrentUser ? "You" : msg.name}
           </span>
         )}
 
-        <div className={`flex gap-2 ${isCurrentUser ? "flex-row-reverse" : "flex-row"} ${isAI ? "w-full" : "max-w-[85%]"}`}>
+        <div className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : "flex-row"} ${isAI ? "w-full" : "max-w-[90%]"}`}>
           {!isCurrentUser && !isAI && (
             <img
               src={msg.imageUrl || "/robotic.png"}
               alt="Avatar"
-              className="w-6 h-6 rounded-full flex-shrink-0 border border-white/10"
+              className="w-7 h-7 rounded-full flex-shrink-0 border border-white/10 ring-1 ring-white/5"
             />
           )}
 
-          <div className={`py-3 px-5 text-sm shadow-lg rounded-2xl break-words ${isAI ? "bg-white/5 backdrop-blur-sm border border-white/10 w-full" :
-            isCurrentUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/20" : "bg-zinc-800 text-white border border-white/10"
+          <div className={`py-3.5 px-4 text-[13px] leading-relaxed rounded-2xl break-words shadow-sm transition-all hover:shadow-md ${isAI
+            ? "bg-zinc-900/60 backdrop-blur-sm border border-white/5 w-full"
+            : isCurrentUser
+              ? "bg-gradient-to-br from-blue-600 via-blue-600 to-blue-700 text-white"
+              : "bg-zinc-800/80 text-white border border-white/5"
             }`}>
             {isAI && (
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
-
-                <span className="text-xs font-medium text-blue-400">CodeRev AI</span>
+              <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-white/10">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white">
+                  AI
+                </div>
+                <span className="text-xs font-semibold text-white">CodeRev AI</span>
               </div>
             )}
 
@@ -466,8 +471,8 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
             )}
 
             {isAI && (
-              <div className="text-[10px] text-zinc-500 mt-2 font-medium uppercase tracking-wider">
-                AI-generated response
+              <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 mt-3 pt-2 border-t border-white/5">
+                <span className="font-medium uppercase tracking-wider">AI-generated response</span>
               </div>
             )}
           </div>
@@ -524,14 +529,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-sm">
-            <div className="mb-4 p-4 bg-zinc-800/50 rounded-full border border-white/5">
-              <MessageSquarePlus className="h-8 w-8 opacity-50" />
+            <div className="mb-5 p-5 bg-zinc-800/40 rounded-2xl border border-white/5">
+              <MessageSquarePlus className="h-10 w-10 opacity-40" />
             </div>
-            <p className="font-medium text-zinc-400">Start a conversation</p>
-            <p className="text-xs mt-1 text-zinc-600">Type @ followed by your query for AI</p>
+            <p className="font-semibold text-zinc-400 text-base">Start a conversation</p>
+            <p className="text-xs mt-2 text-zinc-600">Type <kbd className="px-2 py-0.5 bg-zinc-800 rounded text-blue-400 font-mono text-[11px]">@</kbd> followed by your query for AI</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -543,14 +548,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
         )}
 
         {rateLimitError && (
-          <div className="flex justify-center">
-            <div className="flex items-center gap-3 text-amber-400 text-xs py-2 px-4 rounded-full bg-amber-900/30 border border-amber-500/30">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex justify-center animate-in fade-in duration-300">
+            <div className="flex items-center gap-3 text-amber-400 text-xs py-2.5 px-4 rounded-xl bg-amber-900/20 border border-amber-500/20 backdrop-blur-sm">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <span>{rateLimitError}</span>
+              <span className="font-medium">{rateLimitError}</span>
               {cooldownSeconds > 0 && (
-                <span className="font-mono font-bold">{cooldownSeconds}s</span>
+                <span className="font-mono font-bold text-amber-300">{cooldownSeconds}s</span>
               )}
             </div>
           </div>
@@ -558,14 +563,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
 
         {isAIProcessing && (
           <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex gap-2 max-w-[85%] items-end">
-              <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30 flex-shrink-0">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+            <div className="flex gap-3 max-w-[90%] items-start">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 ring-2 ring-blue-500/20">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               </div>
-              <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+              <div className="bg-zinc-900/60 border border-white/5 px-4 py-3 rounded-2xl flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
               </div>
             </div>
           </div>
@@ -574,31 +579,31 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       </div>
 
       {/* Input Section */}
-      <div className="p-4 border-t border-white/10 bg-zinc-900/50 backdrop-blur-lg">
+      <div className="p-4 border-t border-white/5 bg-zinc-900/50 backdrop-blur-lg">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage();
           }}
-          className="relative flex gap-2 items-end"
+          className="relative flex gap-2.5 items-end"
         >
           <div className="relative flex-1 group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-20 group-focus-within:opacity-50 transition duration-300 blur-sm pointer-events-none" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-300 blur-sm pointer-events-none" />
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask anything... (starts with @ for AI)"
-              className="relative bg-zinc-900 border-white/10 text-white placeholder:text-zinc-600 rounded-xl focus:border-white/20 focus:ring-0 h-12 pr-12 transition-all"
+              className="relative bg-zinc-900 border-white/10 text-white placeholder:text-zinc-500 rounded-xl focus:border-white/20 focus:ring-0 h-11 pr-14 transition-all text-[13px]"
             />
-            {/* AI Toggle Hint - Visual only for now since logic detects @ */}
+            {/* AI Toggle Hint */}
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               {newMessage.trim().startsWith("@") ? (
-                <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20 animate-in fade-in">
+                <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 animate-in fade-in">
                   AI Mode
                 </span>
               ) : (
-                <span className="text-zinc-600 text-[10px] font-bold">@</span>
+                <span className="text-zinc-600 text-xs font-semibold">@</span>
               )}
             </div>
           </div>
@@ -606,20 +611,20 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
           <Button
             type="submit"
             disabled={isAIProcessing || !newMessage.trim() || cooldownSeconds > 0}
-            className={`h-12 w-12 p-0 rounded-xl transition-all duration-300 ${newMessage.trim()
-              ? "bg-white hover:bg-zinc-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            className={`h-11 w-11 p-0 rounded-xl transition-all duration-300 flex items-center justify-center ${newMessage.trim()
+              ? "bg-white hover:bg-zinc-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
               : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"
               }`}
           >
             {isAIProcessing ? (
-              <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Send className="h-5 w-5 -rotate-45 translate-x-0.5 -translate-y-0.5" />
+              <Send className="h-4 w-4 -rotate-45 translate-x-0.5 -translate-y-0.5" />
             )}
           </Button>
         </form>
-        <p className="text-[10px] text-zinc-500 text-center mt-3">
-          AI can access your current file context. Press <kbd className="font-mono bg-zinc-800 px-1 rounded text-zinc-400">Enter</kbd> to send.
+        <p className="text-[10px] text-zinc-600 text-center mt-3 flex items-center justify-center gap-2">
+          AI can access your current file context. Press <kbd className="font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 border border-white/5">Enter</kbd> to send.
         </p>
       </div>
     </div>
