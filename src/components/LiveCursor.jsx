@@ -22,7 +22,7 @@ const LiveCursor = ({ workspaceId }) => {
         x: clientX,
         y: clientY,
         displayName: user.displayName || "Anonymous",
-        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
+        color: "#18181b", // Minimal dark color
         timestamp: Date.now(),
       });
     };
@@ -70,12 +70,12 @@ const LiveCursor = ({ workspaceId }) => {
             <svg
               className="w-5 h-5 drop-shadow-lg"
               viewBox="0 0 24 24"
-              fill={cursor?.color || "#ffffff"}
+              fill="#18181b"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z"
-                stroke="white"
+                stroke="#ffffff"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -84,8 +84,7 @@ const LiveCursor = ({ workspaceId }) => {
 
             {/* User Display Name - Always visible */}
             <div
-              className="absolute left-5 top-0 px-2 py-1 rounded-md text-[11px] font-semibold text-white shadow-lg whitespace-nowrap pointer-events-auto"
-              style={{ backgroundColor: cursor?.color || "#000" }}
+              className="absolute left-5 top-0 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-zinc-900 border border-white/10 shadow-lg whitespace-nowrap"
             >
               {cursor?.displayName || "User"}
             </div>
