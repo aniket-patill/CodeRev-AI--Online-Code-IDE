@@ -59,7 +59,7 @@ const LiveCursor = ({ workspaceId }) => {
         userId !== user?.uid && cursor ? (
           <div
             key={userId}
-            className="absolute transition-all duration-300 ease-out will-change-transform"
+            className="absolute transition-all duration-300 ease-out will-change-transform group"
             style={{
               left: 0,
               top: 0,
@@ -68,7 +68,7 @@ const LiveCursor = ({ workspaceId }) => {
           >
             {/* Cursor SVG */}
             <svg
-              className="w-4 h-4 drop-shadow-md"
+              className="w-5 h-5 drop-shadow-lg"
               viewBox="0 0 24 24"
               fill={cursor?.color || "#ffffff"}
               xmlns="http://www.w3.org/2000/svg"
@@ -82,9 +82,9 @@ const LiveCursor = ({ workspaceId }) => {
               />
             </svg>
 
-            {/* User Display Name */}
+            {/* User Display Name - Always visible */}
             <div
-              className="absolute left-4 top-4 px-2 py-1 rounded-md text-[10px] font-medium text-white shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute left-5 top-0 px-2 py-1 rounded-md text-[11px] font-semibold text-white shadow-lg whitespace-nowrap pointer-events-auto"
               style={{ backgroundColor: cursor?.color || "#000" }}
             >
               {cursor?.displayName || "User"}
