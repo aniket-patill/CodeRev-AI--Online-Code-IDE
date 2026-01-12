@@ -18,13 +18,35 @@ import NavPanel from "@/components/Navpanel";
 import BottomPanel from "@/components/BottomPanel";
 // import VoiceChat from "@/components/VoiceChat";
 import { WorkspaceStateProvider } from "@/context/WorkspaceStateContext";
+import { WorkspaceSettingsProvider, useWorkspaceSettings, MODES } from "@/context/WorkspaceSettingsContext";
+import ModeSelectionModal from "@/components/modals/ModeSelectionModal";
 import { getLanguageFromFilename } from "@/utils/fileExtensionUtils";
 
-const Workspace = () => {
+const WorkspaceContent = () => {
   const { workspaceId } = useParams();
+  const { mode, setMode, isFocusMode, activeFiles, updateActiveFile } = useWorkspaceSettings();
 
   // State management
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileSelect = (file) => {
+    setSelectedFile(file);
+    if (mode) {
+      updateActiveFile(mode, file);
+    }
+  };
+
+  // ... (rest of state)
+
+  // Separate File State Logic: Switch selected file when mode changes
+  useEffect(() => {
+    if (mode && activeFiles) {
+      const savedFile = activeFiles[mode];
+      setSelectedFile(savedFile || null);
+    }
+  }, [mode, activeFiles]);
+
+
   const [workspaceName, setWorkspaceName] = useState("");
   const [membersCount, setMembersCount] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -38,6 +60,15 @@ const Workspace = () => {
   const [editorInstance, setEditorInstance] = useState(null);
   const [language, setLanguage] = useState("javascript");
   const [documentation, setDocumentation] = useState("");
+
+  // Effect to handle chat visibility based on mode
+  useEffect(() => {
+    if (isFocusMode) {
+      setIsChatOpen(false);
+    } else {
+      setIsChatOpen(true);
+    }
+  }, [isFocusMode]);
 
   // Fetch workspace data
   useEffect(() => {
@@ -68,7 +99,7 @@ const Workspace = () => {
           const filesSnap = await getDocs(filesRef);
           const filesExist = filesSnap.size > 0;
           setHasFiles(filesExist);
-          
+
           // Show prompt if no files exist (only after loading is complete)
           if (!filesExist && !error) {
             setShowCreateFilePrompt(true);
@@ -103,7 +134,7 @@ const Workspace = () => {
     const unsubscribe = onSnapshot(filesRef, (snapshot) => {
       const filesExist = snapshot.size > 0;
       setHasFiles(filesExist);
-      
+
       // Hide prompt if files now exist, show if they don't
       if (filesExist) {
         setShowCreateFilePrompt(false);
@@ -134,6 +165,11 @@ const Workspace = () => {
     }
   };
 
+  // If mode is not selected yet, show the modal
+  if (!mode) {
+    return <ModeSelectionModal onSelect={setMode} />;
+  }
+
   return (
     <WorkspaceStateProvider>
       <div className="flex flex-col h-screen bg-black text-white min-w-[1024px] relative overflow-hidden">
@@ -160,13 +196,13 @@ const Workspace = () => {
                   id="left-panel"
                   className="bg-zinc-900/40 backdrop-blur-md border-r border-white/5"
                 >
-                  <NavPanel 
-                    workspaceId={workspaceId} 
-                    openFile={setSelectedFile}
+                  <NavPanel
+                    workspaceId={workspaceId}
+                    openFile={handleFileSelect}
                     onFileCreated={(file) => {
                       // If this was the first file, auto-open it and hide prompt
                       if (!hasFiles && file) {
-                        setSelectedFile(file);
+                        handleFileSelect(file);
                         setHasFiles(true);
                         setShowCreateFilePrompt(false);
                       }
@@ -224,7 +260,7 @@ const Workspace = () => {
                           <ShowMembers workspaceId={workspaceId} />
                         </div>
 
-                        {!isChatOpen && (
+                        {!isFocusMode && !isChatOpen && (
                           <button
                             onClick={() => setIsChatOpen(true)}
                             className="p-1.5 bg-zinc-900/40 backdrop-blur-sm border border-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
@@ -252,7 +288,7 @@ const Workspace = () => {
                           <p className="text-sm text-zinc-400 mb-4">
                             Create a file to get started. Click the "File" button in the sidebar to create your first file.
                           </p>
-                        
+
                         </div>
                       </div>
                     ) : (
@@ -279,13 +315,14 @@ const Workspace = () => {
                       editorRef={{ current: editorInstance }}
                       language={language}
                       documentation={documentation}
+                      workspaceId={workspaceId}
                     />
                   </div>
                 </Panel>
               </PanelGroup>
             </Panel>
 
-            {isChatOpen ? (
+            {!isFocusMode && isChatOpen ? (
               <>
                 <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize z-50 relative flex items-center justify-center group">
                   <div className="h-8 w-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
@@ -322,6 +359,16 @@ const Workspace = () => {
 
       </div>
     </WorkspaceStateProvider>
+  );
+};
+
+const Workspace = () => {
+  const { workspaceId } = useParams();
+
+  return (
+    <WorkspaceSettingsProvider workspaceId={workspaceId}>
+      <WorkspaceContent />
+    </WorkspaceSettingsProvider>
   );
 };
 

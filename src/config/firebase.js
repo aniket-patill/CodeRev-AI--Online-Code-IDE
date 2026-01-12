@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, GithubAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
@@ -25,7 +25,11 @@ setPersistence(auth, browserLocalPersistence)
   .then(() => { })
   .catch((error) => console.error("Firebase Auth Persistence Error:", error));
 
+// Providers
+const githubProvider = new GithubAuthProvider();
+githubProvider.addScope('repo'); // Request access to repositories
+
 // Export db and firestore as same instance (backward compatibility)
-export { auth, db, rtdb, db as firestore };
+export { auth, db, rtdb, db as firestore, githubProvider };
 export default app;
 

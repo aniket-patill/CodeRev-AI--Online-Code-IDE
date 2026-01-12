@@ -43,7 +43,8 @@
     "remark-gfm": "^4.0.1",
     "sonner": "^1.7.3",
     "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@octokit/rest": "^21.1.0"
   },
   "devDependencies": {
     "postcss": "^8",

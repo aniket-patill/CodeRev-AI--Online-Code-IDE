@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Lenis from "@studio-freight/lenis";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Zap,
@@ -238,7 +239,7 @@ server.listen(3000, () => {
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             Live
           </div>
-        
+
         </div>
       </div>
 
@@ -346,13 +347,18 @@ const LanguageSupport = () => {
   ];
 
   return (
-    <section className="relative py-24 px-6">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent" />
+    <section className="relative py-24 px-6 overflow-hidden">
+
 
       <div className="relative max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-zinc-400 mb-6">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-300 mb-6">
               <Code2 className="w-3.5 h-3.5" />
               Language Support
             </div>
@@ -360,40 +366,53 @@ const LanguageSupport = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-5 tracking-tight">
               Code in Any Language
             </h2>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6">
+            <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed mb-8">
               CodeRev supports almost every major programming language. Several ship in the box, like JavaScript, TypeScript, CSS, and HTML.
             </p>
-            <div className="flex items-center gap-2.5">
-              <div className="flex -space-x-2">
+
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
                 {["JS", "TS", "🐍"].map((icon, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-white dark:border-black flex items-center justify-center text-xs font-bold text-zinc-900 dark:text-white">
+                  <div key={i} className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-white dark:border-black flex items-center justify-center text-xs font-bold text-zinc-900 dark:text-white shadow-lg">
                     {icon}
                   </div>
                 ))}
               </div>
-              <span className="text-sm text-zinc-600 dark:text-zinc-500 font-medium">20+ Languages</span>
+              <div className="flex flex-col">
+                <span className="text-base font-semibold text-zinc-900 dark:text-white">10+ Languages</span>
+                <span className="text-xs text-zinc-500 dark:text-zinc-500">Supported out of the box</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <motion.div
+            className="grid grid-cols-3 gap-3"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          >
             {languages.map((lang, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="group relative p-4 rounded-xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/30 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-500"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.1 + (i * 0.05) }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="group relative p-4 rounded-xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/30 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-300 cursor-default"
               >
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-zinc-900/5 dark:from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
                 <div className="relative text-center">
-                  <div className={`text-xl font-bold mb-1.5 ${lang.color} group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`text-xl font-bold mb-2 ${lang.color} drop-shadow-sm`}>
                     {lang.icon}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-medium">
+                  <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
                     {lang.name}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -442,7 +461,7 @@ const CTASection = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/5 dark:from-white/5 via-transparent to-transparent" />
 
           <div className="relative text-center">
-           
+
 
             <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
               Ready to Transform Your Coding?
@@ -686,17 +705,17 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white">
       <Navbar />
 
       {/* HERO */}
-      <section className="relative pt-28 pb-20 px-6 bg-gradient-to-b from-white via-purple-50/50 to-white dark:from-black dark:via-purple-950/30 dark:to-black">
+      <section className="sticky top-0 z-0 h-screen flex flex-col justify-center pt-28 pb-20 px-6 bg-gradient-to-b from-white via-purple-50/50 to-white dark:from-black dark:via-purple-950/30 dark:to-black">
         <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-purple-100/20 to-white/50 dark:from-black/50 dark:via-purple-900/20 dark:to-black/50" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-900/15 rounded-full blur-[100px]" />
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 backdrop-blur-sm">
@@ -723,7 +742,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-3">
                 <Link href="/register">
                   <Button className="h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-zinc-900/20 dark:hover:shadow-white/20 rounded-xl group">
-                    Start Building 
+                    Start Building
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -739,141 +758,145 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* LANGUAGE SUPPORT */}
-      <LanguageSupport />
+      {/* HERO CONTENT CURTAIN WRAPPER */}
+      <div className="relative z-10 bg-white dark:bg-black shadow-[0_-30px_80px_rgba(0,0,0,0.3)]">
 
-      {/* STATS */}
-      <Stats />
+        {/* LANGUAGE SUPPORT */}
+        <LanguageSupport />
 
-      {/* FEATURES */}
-      <section id="features" className="relative py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-xs text-zinc-500 tracking-widest uppercase font-semibold mb-4">Features</p>
-            <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
-              Everything You Need to Code
-            </h2>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              AI assistance, multiplayer collaboration, and instant execution—all seamlessly integrated.
-            </p>
-          </div>
+        {/* STATS */}
+        <Stats />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <FeatureCard key={i} {...f} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-   
-
-      {/* HOW IT WORKS */}
-      <HowItWorks />
-
-      {/* FAQ */}
-      <FAQ />
-      {/* CTA */}
-      <CTASection />
-
-      {/* ENHANCED FOOTER */}
-      <footer className="relative py-16 px-6 border-t border-zinc-200 dark:border-white/5">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            {/* Brand */}
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-2.5 mb-4">
-                <Image
-                  src="/CodeRev_Logo.png"
-                  alt="CodeRev Logo"
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 object-contain"
-                />
-                <span className="text-lg font-semibold text-zinc-900 dark:text-white">CodeRev</span>
-              </div>
-              <p className="text-sm text-zinc-500 mb-6">
-                The next-generation collaborative code editor for modern developers.
+        {/* FEATURES */}
+        <section id="features" className="relative py-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <p className="text-xs text-zinc-500 tracking-widest uppercase font-semibold mb-4">Features</p>
+              <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
+                Everything You Need to Code
+              </h2>
+              <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                AI assistance, multiplayer collaboration, and instant execution—all seamlessly integrated.
               </p>
-              <div className="flex items-center gap-3">
-                <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                  <Twitter className="w-4 h-4 text-zinc-400" />
-                </Link>
-                <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                  <Github className="w-4 h-4 text-zinc-400" />
-                </Link>
-                <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                  <Linkedin className="w-4 h-4 text-zinc-400" />
-                </Link>
-                <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                  <Youtube className="w-4 h-4 text-zinc-400" />
-                </Link>
-              </div>
             </div>
 
-            {/* Product */}
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Product</h3>
-              <ul className="space-y-3">
-                {["Features", "Pricing", "Security", "Roadmap", "Changelog"].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Resources</h3>
-              <ul className="space-y-3">
-                {["Documentation", "API Reference", "Blog", "Tutorials", "Community"].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Company</h3>
-              <ul className="space-y-3">
-                {["About", "Careers", "Contact", "Privacy", "Terms"].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {features.map((f, i) => (
+                <FeatureCard key={i} {...f} />
+              ))}
             </div>
           </div>
+        </section>
 
-          {/* Bottom */}
-          <div className="pt-8 border-t border-zinc-200 dark:border-white/5">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-zinc-500">
-                © 2025 CodeRev. All rights reserved. Empowering developers worldwide.
+
+
+        {/* HOW IT WORKS */}
+        <HowItWorks />
+
+        {/* FAQ */}
+        <FAQ />
+        {/* CTA */}
+        <CTASection />
+
+        {/* ENHANCED FOOTER */}
+        <footer className="relative py-16 px-6 border-t border-zinc-200 dark:border-white/5">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Brand */}
+              <div className="md:col-span-1">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <Image
+                    src="/CodeRev_Logo.png"
+                    alt="CodeRev Logo"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 object-contain"
+                  />
+                  <span className="text-lg font-semibold text-zinc-900 dark:text-white">CodeRev</span>
+                </div>
+                <p className="text-sm text-zinc-500 mb-6">
+                  The next-generation collaborative code editor for modern developers.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
+                    <Twitter className="w-4 h-4 text-zinc-400" />
+                  </Link>
+                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
+                    <Github className="w-4 h-4 text-zinc-400" />
+                  </Link>
+                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
+                    <Linkedin className="w-4 h-4 text-zinc-400" />
+                  </Link>
+                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
+                    <Youtube className="w-4 h-4 text-zinc-400" />
+                  </Link>
+                </div>
               </div>
 
-              <div className="flex items-center gap-6">
-                <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-green-400" />
-                  Status
-                </Link>
-                <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                  Support
-                </Link>
+              {/* Product */}
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Product</h3>
+                <ul className="space-y-3">
+                  {["Features", "Pricing", "Security", "Roadmap", "Changelog"].map((item) => (
+                    <li key={item}>
+                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                        {item}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Resources */}
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Resources</h3>
+                <ul className="space-y-3">
+                  {["Documentation", "API Reference", "Blog", "Tutorials", "Community"].map((item) => (
+                    <li key={item}>
+                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                        {item}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Company</h3>
+                <ul className="space-y-3">
+                  {["About", "Careers", "Contact", "Privacy", "Terms"].map((item) => (
+                    <li key={item}>
+                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                        {item}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom */}
+            <div className="pt-8 border-t border-zinc-200 dark:border-white/5">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-zinc-500">
+                  © 2025 CodeRev. All rights reserved. Empowering developers worldwide.
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                    Status
+                  </Link>
+                  <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    Support
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }

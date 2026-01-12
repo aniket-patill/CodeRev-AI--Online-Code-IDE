@@ -8,11 +8,40 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { auth, db } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Users, Zap, BookOpen, LayoutGrid, Share2 } from "lucide-react";
+import { useWorkspaceSettings, MODES } from "@/context/WorkspaceSettingsContext";
+import PomodoroTimer from "./PomodoroTimer";
+
+const ModeBadge = () => {
+  const { mode, setMode } = useWorkspaceSettings();
+
+  if (!mode) return null;
+
+  const isFocus = mode === MODES.FOCUS;
+
+  return (
+    <button
+      onClick={() => setMode(null)}
+      className={`
+        flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold
+        transition-all duration-300 hover:scale-105
+        ${isFocus
+          ? "bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-500"
+          : "bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40"
+        }
+      `}
+      title="Click to change mode"
+    >
+      {isFocus ? <Zap className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+      {isFocus ? "Focus Mode" : "Learning Mode"}
+    </button>
+  );
+};
 
 const Header = ({ workspaceId }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { isFocusMode } = useWorkspaceSettings();
 
   const [isPublic, setIsPublic] = useState(true);
   const [userName, setUserName] = useState("");
@@ -77,6 +106,9 @@ const Header = ({ workspaceId }) => {
       </Link>
 
       <div className="flex items-center gap-6">
+        {/* Pomodoro Timer - Only in Focus Mode */}
+        {isFocusMode && <PomodoroTimer />}
+
         {/* Navigation Links - Hide on workspace pages */}
         {!pathname.startsWith("/workspace/") && (
           <nav className="hidden md:flex items-center gap-4">
@@ -104,13 +136,19 @@ const Header = ({ workspaceId }) => {
 
         {/* Dashboard Button - Only show on workspace pages */}
         {pathname.startsWith("/workspace/") && (
-          <Button
-            onClick={goToDashboard}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 border border-white/10 hover:bg-zinc-800 hover:border-white/20 text-white font-medium rounded-lg transition-all"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </Button>
+          <div className="flex items-center gap-3">
+            <ModeBadge />
+
+
+
+            <Button
+              onClick={goToDashboard}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 border border-white/10 hover:bg-zinc-800 hover:border-white/20 text-white font-medium rounded-lg transition-all"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </Button>
+          </div>
         )}
 
         {/* Welcome Message */}
@@ -129,6 +167,8 @@ const Header = ({ workspaceId }) => {
           </Avatar>
         </Link>
       </div>
+
+
     </header>
   );
 };
