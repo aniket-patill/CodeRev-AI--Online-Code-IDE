@@ -861,48 +861,67 @@ export default function HomePage() {
         {/* CTA */}
         <CTASection />
 
-        {/* ENHANCED FOOTER */}
-        <footer className="relative py-16 px-6 border-t border-zinc-200 dark:border-white/5">
+        {/* WINTERFELL-STYLE FOOTER */}
+        <footer className="relative bg-zinc-950 py-20 px-6 border-t border-white/5">
           <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-12 mb-12">
-              {/* Brand */}
-              <div className="md:col-span-1">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <Image
-                    src="/CodeRev_Logo.png"
-                    alt="CodeRev Logo"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain"
-                  />
-                  <span className="text-lg font-semibold text-zinc-900 dark:text-white">CodeRev</span>
-                </div>
-                <p className="text-sm text-zinc-500 mb-6">
-                  The next-generation collaborative code editor for modern developers.
-                </p>
-                <div className="flex items-center gap-3">
-                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                    <Twitter className="w-4 h-4 text-zinc-400" />
-                  </Link>
-                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                    <Github className="w-4 h-4 text-zinc-400" />
-                  </Link>
-                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                    <Linkedin className="w-4 h-4 text-zinc-400" />
-                  </Link>
-                  <Link href="#" className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors">
-                    <Youtube className="w-4 h-4 text-zinc-400" />
-                  </Link>
+            {/* Top Section */}
+            <div className="grid md:grid-cols-12 gap-12 mb-16">
+              {/* Left: Tagline + User Greeting */}
+              <div className="md:col-span-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-8">
+                  Build Better Code,<br />
+                  Together.
+                </h2>
+
+                {/* User Greeting Card */}
+                <div className="bg-zinc-900 border border-white/10 rounded-xl p-4 inline-block">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
+                    <span className="text-white text-sm font-medium">Hey, Developer</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-500 text-xs">Rate your experience</span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button key={star} className="text-zinc-600 hover:text-amber-400 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Product */}
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Product</h3>
+              {/* Product Links */}
+              <div className="md:col-span-2">
+                <h3 className="text-white font-semibold mb-5">Product</h3>
                 <ul className="space-y-3">
-                  {["Features", "Pricing", "Security", "Roadmap", "Changelog"].map((item) => (
+                  {[
+                    { name: "Live Collaboration", badge: null },
+                    { name: "AI Code Assistant", badge: "✨" },
+                    { name: "Code Execution", badge: null },
+                    { name: "Focus Mode", badge: "🔒" },
+                    { name: "Version Control", badge: null },
+                  ].map((item) => (
+                    <li key={item.name}>
+                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5">
+                        {item.name}
+                        {item.badge && <span className="text-xs">{item.badge}</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Resources Links */}
+              <div className="md:col-span-2">
+                <h3 className="text-white font-semibold mb-5">Resources</h3>
+                <ul className="space-y-3">
+                  {["Documentation", "API Reference", "Tutorials", "Best Practices", "Community Forum"].map((item) => (
                     <li key={item}>
-                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">
                         {item}
                       </Link>
                     </li>
@@ -910,13 +929,13 @@ export default function HomePage() {
                 </ul>
               </div>
 
-              {/* Resources */}
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Resources</h3>
+              {/* Company Links */}
+              <div className="md:col-span-2">
+                <h3 className="text-white font-semibold mb-5">Company</h3>
                 <ul className="space-y-3">
-                  {["Documentation", "API Reference", "Blog", "Tutorials", "Community"].map((item) => (
+                  {["About Us", "Careers", "Blog", "Press Kit", "Contact"].map((item) => (
                     <li key={item}>
-                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">
                         {item}
                       </Link>
                     </li>
@@ -924,39 +943,35 @@ export default function HomePage() {
                 </ul>
               </div>
 
-              {/* Company */}
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Company</h3>
+              {/* Connect */}
+              <div className="md:col-span-2">
+                <h3 className="text-white font-semibold mb-5">Connect</h3>
                 <ul className="space-y-3">
-                  {["About", "Careers", "Contact", "Privacy", "Terms"].map((item) => (
-                    <li key={item}>
-                      <Link href="#" className="text-sm text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
+                  <li>
+                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
+                      <Twitter className="w-4 h-4" /> Twitter
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
+                      <Github className="w-4 h-4" /> GitHub
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
+                      <Linkedin className="w-4 h-4" /> LinkedIn
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
+                      <Youtube className="w-4 h-4" /> YouTube
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </div>
 
-            {/* Bottom */}
-            <div className="pt-8 border-t border-zinc-200 dark:border-white/5">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-zinc-500">
-                  © 2025 CodeRev. All rights reserved. Empowering developers worldwide.
-                </div>
 
-                <div className="flex items-center gap-6">
-                  <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                    Status
-                  </Link>
-                  <Link href="#" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                    Support
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
         </footer>
       </div>

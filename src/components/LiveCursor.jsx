@@ -22,7 +22,7 @@ const LiveCursor = ({ workspaceId }) => {
         x: clientX,
         y: clientY,
         displayName: user.displayName || "Anonymous",
-        color: "#18181b", // Minimal dark color
+        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
         timestamp: Date.now(),
       });
     };
@@ -59,7 +59,7 @@ const LiveCursor = ({ workspaceId }) => {
         userId !== user?.uid && cursor ? (
           <div
             key={userId}
-            className="absolute transition-all duration-300 ease-out will-change-transform group"
+            className="absolute transition-all duration-300 ease-out will-change-transform"
             style={{
               left: 0,
               top: 0,
@@ -68,23 +68,24 @@ const LiveCursor = ({ workspaceId }) => {
           >
             {/* Cursor SVG */}
             <svg
-              className="w-5 h-5 drop-shadow-lg"
+              className="w-4 h-4 drop-shadow-md"
               viewBox="0 0 24 24"
-              fill="#18181b"
+              fill={cursor?.color || "#ffffff"}
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z"
-                stroke="#ffffff"
+                stroke="white"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
 
-            {/* User Display Name - Always visible */}
+            {/* User Display Name */}
             <div
-              className="absolute left-5 top-0 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-zinc-900 border border-white/10 shadow-lg whitespace-nowrap"
+              className="absolute left-4 top-4 px-2 py-1 rounded-md text-[10px] font-medium text-white shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ backgroundColor: cursor?.color || "#000" }}
             >
               {cursor?.displayName || "User"}
             </div>
