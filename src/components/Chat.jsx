@@ -18,8 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { ClipboardDocumentIcon, CheckIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { MessageSquarePlus, Sparkles, Trash, X } from "lucide-react";
+import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
 function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
@@ -111,7 +110,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
+
     lastRequestTimeRef.current = Date.now();
     setIsAIProcessing(true);
     setRateLimitError(null);
@@ -156,14 +155,14 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
             setRateLimitError(null);
             return await generateAIResponse(prompt, codeContext, retryCount + 1);
           }
-          
+
           // Max retries exceeded - show cooldown
           const cooldownTime = 15; // 15 seconds cooldown
           setRateLimitError(`AI service is busy. Please wait ${cooldownTime}s before trying again.`);
           startCooldown(cooldownTime);
           return "The AI service is currently rate-limited. Please wait a moment and try again. This usually happens when there are too many requests.";
         }
-        
+
         const errorMsg = data?.error || 'Request failed';
         console.error("API Error:", response.status, errorMsg);
         return `Sorry, I couldn't process that request. ${errorMsg}`;
@@ -313,10 +312,15 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
             />
           )}
 
-          <div className={`py-3 px-4 text-sm rounded-2xl break-words ${isAI ? "bg-zinc-800/50 border border-white/10 w-full" :
-            isCurrentUser ? "bg-white text-black" : "bg-zinc-800 text-white border border-white/10"
+          <div className={`py-3 px-5 text-sm shadow-lg rounded-2xl break-words ${isAI ? "bg-white/5 backdrop-blur-sm border border-white/10 w-full" :
+            isCurrentUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-blue-500/20" : "bg-zinc-800 text-white border border-white/10"
             }`}>
-            {isAI && <span className="text-white mr-2">⚡</span>}
+            {isAI && (
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+
+                <span className="text-xs font-medium text-blue-400">CodeRev AI</span>
+              </div>
+            )}
 
             {isAI ? (
               <ReactMarkdown
@@ -338,7 +342,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
                   code: ({ inline, className, children }) => {
                     const match = /language-(\w+)/.exec(className || '');
                     const codeString = String(children).replace(/\n$/, '');
-                    
+
                     if (!inline && match) {
                       return (
                         <div className="relative my-3 group">
@@ -348,9 +352,9 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
                               className="p-1.5 rounded bg-zinc-700/80 hover:bg-zinc-600/80 backdrop-blur-sm transition-colors"
                             >
                               {copiedCode === codeString.slice(0, 20) ? (
-                                <CheckIcon className="h-3.5 w-3.5 text-green-400" />
+                                <Check className="h-3.5 w-3.5 text-green-400" />
                               ) : (
-                                <ClipboardDocumentIcon className="h-3.5 w-3.5 text-zinc-300" />
+                                <Copy className="h-3.5 w-3.5 text-zinc-300" />
                               )}
                             </button>
                           </div>
@@ -372,7 +376,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
                         </div>
                       );
                     }
-                    
+
                     // Inline code
                     return (
                       <code className="px-1.5 py-0.5 bg-zinc-700/50 rounded text-zinc-200 text-xs font-mono">
@@ -417,9 +421,9 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
                           className="p-1.5 rounded bg-zinc-700/80 hover:bg-zinc-600/80 backdrop-blur-sm transition-colors"
                         >
                           {copiedCode === index ? (
-                            <CheckIcon className="h-3.5 w-3.5 text-green-400" />
+                            <Check className="h-3.5 w-3.5 text-green-400" />
                           ) : (
-                            <ClipboardDocumentIcon className="h-3.5 w-3.5 text-zinc-300" />
+                            <Copy className="h-3.5 w-3.5 text-zinc-300" />
                           )}
                         </button>
                       </div>
@@ -478,10 +482,13 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-
+         
           <div>
             <h2 className="text-sm font-semibold text-white">CodeRev AI</h2>
-            <p className="text-xs text-zinc-500">Your AI coding assistant</p>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <p className="text-[10px] text-zinc-400 font-medium">Online</p>
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -535,14 +542,16 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
         )}
 
         {isAIProcessing && (
-          <div className="flex justify-center">
-            <div className="flex items-center gap-3 text-zinc-400 text-xs py-2 px-4 rounded-full bg-zinc-800 border border-white/10">
-              <div className="flex space-x-1">
-                <div className="h-1.5 w-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                <div className="h-1.5 w-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="h-1.5 w-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+          <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex gap-2 max-w-[85%] items-end">
+              <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
               </div>
-              <span>{rateLimitError ? 'Waiting to retry...' : 'Thinking...'}</span>
+              <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+              </div>
             </div>
           </div>
         )}
@@ -550,29 +559,53 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       </div>
 
       {/* Input Section */}
-      <div className="p-4 border-t border-white/10 bg-zinc-900/50">
+      <div className="p-4 border-t border-white/10 bg-zinc-900/50 backdrop-blur-lg">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage();
           }}
-          className="flex gap-2"
+          className="relative flex gap-2 items-end"
         >
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message... (@ for AI)"
-            className="flex-1 bg-zinc-800/50 border border-white/10 text-white placeholder:text-zinc-600 rounded-xl focus:border-white/20 focus:ring-0 h-11"
-          />
+          <div className="relative flex-1 group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-20 group-focus-within:opacity-50 transition duration-300 blur-sm pointer-events-none" />
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything... (starts with @ for AI)"
+              className="relative bg-zinc-900 border-white/10 text-white placeholder:text-zinc-600 rounded-xl focus:border-white/20 focus:ring-0 h-12 pr-12 transition-all"
+            />
+            {/* AI Toggle Hint - Visual only for now since logic detects @ */}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              {newMessage.trim().startsWith("@") ? (
+                <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20 animate-in fade-in">
+                  AI Mode
+                </span>
+              ) : (
+                <span className="text-zinc-600 text-[10px] font-bold">@</span>
+              )}
+            </div>
+          </div>
+
           <Button
             type="submit"
             disabled={isAIProcessing || !newMessage.trim() || cooldownSeconds > 0}
-            className="h-11 px-4 bg-white hover:bg-zinc-200 text-black rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`h-12 w-12 p-0 rounded-xl transition-all duration-300 ${newMessage.trim()
+              ? "bg-white hover:bg-zinc-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+              : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"
+              }`}
           >
-            <PaperAirplaneIcon className="h-5 w-5" />
+            {isAIProcessing ? (
+              <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="h-5 w-5 -rotate-45 translate-x-0.5 -translate-y-0.5" />
+            )}
           </Button>
         </form>
+        <p className="text-[10px] text-zinc-500 text-center mt-3">
+          AI can access your current file context. Press <kbd className="font-mono bg-zinc-800 px-1 rounded text-zinc-400">Enter</kbd> to send.
+        </p>
       </div>
     </div>
   );
