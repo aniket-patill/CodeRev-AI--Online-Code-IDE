@@ -768,22 +768,84 @@ export default function HomePage() {
         {/* STATS */}
         <Stats />
 
-        {/* FEATURES */}
-        <section id="features" className="relative py-24 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <p className="text-xs text-zinc-500 tracking-widest uppercase font-semibold mb-4">Features</p>
-              <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
-                Everything You Need to Code
-              </h2>
-              <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                AI assistance, multiplayer collaboration, and instant execution—all seamlessly integrated.
-              </p>
+        {/* FEATURES CAROUSEL */}
+        <section id="features" className="relative py-24 border-b border-zinc-200 dark:border-white/5 overflow-hidden">
+          <div className="max-w-[1400px] mx-auto px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
+              <div className="max-w-4xl">
+                <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-2 tracking-tight">
+                  Engineered to perfection
+                </h2>
+                <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Every feature is purposefully crafted to enhance your productivity and streamline your digital experience.
+                </p>
+              </div>
+
+              <div className="flex">
+                <button
+                  onClick={() => document.getElementById('features-scroll').scrollBy({ left: -400, behavior: 'smooth' })}
+                  className="w-10 h-10 rounded-lg border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <ArrowRight className="w-5 h-5 rotate-180 text-zinc-600 dark:text-zinc-400" />
+                </button>
+                <button
+                  onClick={() => document.getElementById('features-scroll').scrollBy({ left: 400, behavior: 'smooth' })}
+                  className="w-10 h-10 rounded-lg border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <ArrowRight className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {features.map((f, i) => (
-                <FeatureCard key={i} {...f} />
+            <div
+              id="features-scroll"
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-8 -mx-6 px-6 scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {[
+                {
+                  title: "AI Code Review",
+                  desc: "Get intelligent code suggestions, bug fixes, and performance optimizations powered by Gemini AI.",
+                  image: "/Features/fix_feature.png"
+                },
+                {
+                  title: "Workspace Modes",
+                  desc: "Customize your environment with flexible workspace modes designed for any coding task.",
+                  image: "/Features/modes_workspace.png"
+                },
+                {
+                  title: "Real-time Collaboration",
+                  desc: "True multiplayer coding with live cursors, shared terminals, and voice chat.",
+                  image: "/Features/File_explorer.png"
+                },
+                {
+                  title: "AI Chat Assistant",
+                  desc: "Ask complex coding questions and generate entire features with our context-aware AI assistant.",
+                  image: "/Features/Ai_chat.png"
+                },
+                {
+                  title: "GitHub Integration",
+                  desc: "Seamlessly push code, manage branches, and sync with your repositories directly from the editor.",
+                  image: "/Features/github.png"
+                }
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className="min-w-[300px] md:min-w-[480px] snap-center group"
+                >
+                  <div className="mb-4 pr-4">
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{feature.title}</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed h-[60px]">{feature.desc}</p>
+                  </div>
+
+                  <div className="aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-white/5 bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 hover:border-zinc-300 dark:hover:border-white/20 relative">
+                    <img
+                      src={feature.image}
+                      alt={feature.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
