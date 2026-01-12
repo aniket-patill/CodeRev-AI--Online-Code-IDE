@@ -9,7 +9,7 @@ import { CODE_SNIPPETS } from "@/constants";
 import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase";
 
-export default function CodeEditor({ file, onEditorMounted, language, setLanguage, onGenerateDocs }) {
+export default function CodeEditor({ file, onEditorMounted, language, setLanguage, onGenerateDocs, isFocusMode }) {
   const [selectedTheme, setSelectedTheme] = useState("vs-dark");
   const [fontSize, setFontSize] = useState(14);
   const [showSettings, setShowSettings] = useState(false);
@@ -302,7 +302,8 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                   <button
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-white/10 rounded-lg text-xs font-medium text-zinc-300 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleGenerateDocs}
-                    disabled={isLoading}
+                    disabled={isLoading || isFocusMode}
+                    title={isFocusMode ? "Disabled in Focus Mode" : "Generate Documentation"}
                   >
                     <Sparkles size={14} />
                     {isLoading ? "Generating..." : "Docs"}
@@ -310,7 +311,8 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                   <button
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-white/10 rounded-lg text-xs font-medium text-zinc-300 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={fixSyntaxErrors}
-                    disabled={isFixing}
+                    disabled={isFixing || isFocusMode}
+                    title={isFocusMode ? "Disabled in Focus Mode" : "Fix Syntax Errors"}
                   >
                     <Wrench size={12} />
                     {isFixing ? "Fixing..." : "Fix"}

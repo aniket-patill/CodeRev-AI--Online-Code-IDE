@@ -21,7 +21,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
-function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
+function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, onMessageConsumed }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -71,6 +71,21 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, newMessage, isAIProcessing]);
+
+  // Handle pending messages from parent (e.g., from TextSelectionMenu)
+  useEffect(() => {
+    if (pendingMessage) {
+      // Format as an AI query
+      const formattedMessage = `@ ${pendingMessage}`;
+      setNewMessage(formattedMessage);
+
+      // Optionally auto-focus the input if we had a ref to it, 
+      // but identifying the @ prefix is enough for the user to just hit enter or edit.
+      if (onMessageConsumed) {
+        onMessageConsumed();
+      }
+    }
+  }, [pendingMessage, onMessageConsumed]);
 
   // Start cooldown timer
   const startCooldown = (seconds) => {
@@ -482,7 +497,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance }) {
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-         
+
           <div>
             <h2 className="text-sm font-semibold text-white">CodeRev AI</h2>
             <div className="flex items-center gap-1.5">

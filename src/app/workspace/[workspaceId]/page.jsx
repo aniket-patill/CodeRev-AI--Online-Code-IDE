@@ -16,6 +16,7 @@ import ShowMembers from "@/components/Members";
 import LiveCursor from "@/components/LiveCursor";
 import NavPanel from "@/components/Navpanel";
 import BottomPanel from "@/components/BottomPanel";
+import TextSelectionMenu from "@/components/TextSelectionMenu";
 // import VoiceChat from "@/components/VoiceChat";
 import { WorkspaceStateProvider } from "@/context/WorkspaceStateContext";
 import { WorkspaceSettingsProvider, useWorkspaceSettings, MODES } from "@/context/WorkspaceSettingsContext";
@@ -58,6 +59,72 @@ const WorkspaceContent = () => {
 
   // Lifted Editor State
   const [editorInstance, setEditorInstance] = useState(null);
+
+  // Chat integration state
+  const [chatPendingMessage, setChatPendingMessage] = useState("");
+  const [editorSelection, setEditorSelection] = useState(null);
+
+  const handleAskAI = (selectedContent) => {
+    // Check if selectedContent is an object with metadata (from Monaco) or just string (from DOM)
+    let message = "";
+
+    if (typeof selectedContent === 'object' && selectedContent.text) {
+      const { text, startLine, endLine } = selectedContent;
+      const fileName = selectedFile?.name || "current file";
+      message = `Explain this code from \`${fileName}\` (lines ${startLine}-${endLine}):\n\`\`\`\n${text}\n\`\`\``;
+    } else {
+      // Fallback for simple string selection
+      message = `Explain this code:\n\`\`\`\n${selectedContent}\n\`\`\``;
+    }
+
+    setChatPendingMessage(message);
+    setIsChatOpen(true);
+    setEditorSelection(null); // Clear selection menu
+  };
+
+  // Monitor Editor Selection
+  useEffect(() => {
+    if (!editorInstance) return;
+
+    const disposable = editorInstance.onDidChangeCursorSelection((e) => {
+      const selection = editorInstance.getSelection();
+      const model = editorInstance.getModel();
+
+      if (selection && !selection.isEmpty()) {
+        const text = model.getValueInRange(selection);
+
+        // Debug logging
+        console.log('Selection object:', selection);
+        console.log('startLineNumber:', selection.startLineNumber);
+        console.log('endLineNumber:', selection.endLineNumber);
+
+        // Get coordinates for the selection
+        // We use the end position of the selection as a reference point
+        const position = editorInstance.getScrolledVisiblePosition(selection.getEndPosition());
+        const domNode = editorInstance.getDomNode();
+
+        if (position && domNode) {
+          const rect = domNode.getBoundingClientRect();
+          // Calculate absolute position
+          const top = rect.top + position.top - 40; // Position above the cursor
+          const left = rect.left + position.left;
+
+          setEditorSelection({
+            top,
+            left,
+            text,
+            startLine: selection.startLineNumber,
+            endLine: selection.endLineNumber
+          });
+        }
+      } else {
+        setEditorSelection(null);
+      }
+    });
+
+    return () => disposable.dispose();
+  }, [editorInstance]);
+
   const [language, setLanguage] = useState("javascript");
   const [documentation, setDocumentation] = useState("");
 
@@ -299,6 +366,7 @@ const WorkspaceContent = () => {
                           language={language}
                           setLanguage={setLanguage}
                           onGenerateDocs={handleGenerateDocs}
+                          isFocusMode={isFocusMode}
                         />
                       </div>
                     )}
@@ -340,6 +408,8 @@ const WorkspaceContent = () => {
                     workspaceId={workspaceId}
                     setIsChatOpen={setIsChatOpen}
                     editorInstance={editorInstance}
+                    pendingMessage={chatPendingMessage}
+                    onMessageConsumed={() => setChatPendingMessage("")}
                   />
                 </Panel>
               </>
@@ -351,6 +421,9 @@ const WorkspaceContent = () => {
         <div className="pointer-events-none fixed inset-0 z-50">
           <LiveCursor workspaceId={workspaceId} />
         </div>
+
+        {/* Text Selection Menu - Only in Learning Mode */}
+        {!isFocusMode && <TextSelectionMenu onAskAI={handleAskAI} externalSelection={editorSelection} />}
 
         {/* Voice Chat (Overlay) - Hidden for now */}
         {/* {workspaceId && (
