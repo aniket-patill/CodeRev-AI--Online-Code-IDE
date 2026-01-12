@@ -56,7 +56,8 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ["var(--font-montserrat)", "sans-serif"],
+				sans: ["var(--font-space-grotesk)", "var(--font-montserrat)", "sans-serif"],
+				"space-grotesk": ["var(--font-space-grotesk)", "sans-serif"],
 			},
 		}
 	},

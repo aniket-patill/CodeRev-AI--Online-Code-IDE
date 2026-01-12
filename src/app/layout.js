@@ -1,4 +1,4 @@
-import { Montserrat } from "next/font/google";
+import { Montserrat, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Provider } from "@/components/ui/provider";
 import { AuthProvider } from "@/context/AuthProvider";
@@ -7,6 +7,11 @@ import { Toaster } from "sonner";
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
 });
 
 export const metadata = {
@@ -18,7 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${montserrat.variable} font-sans antialiased`}
+        className={`${montserrat.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
         <AuthProvider>
           <Provider>
