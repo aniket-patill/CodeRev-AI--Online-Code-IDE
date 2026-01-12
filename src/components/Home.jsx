@@ -67,7 +67,9 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? "bg-white/70 dark:bg-black/70 backdrop-blur-xl border-b border-zinc-200 dark:border-white/5" : "bg-transparent"
+      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+        ? "bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200/50 dark:border-white/5"
+        : "bg-transparent"
         }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
@@ -450,53 +452,7 @@ const Stats = () => {
   );
 };
 
-// ---------------- CTA SECTION ----------------
-const CTASection = () => {
-  return (
-    <section className="relative py-32 px-6 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-100/50 dark:via-zinc-900/20 to-transparent" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-[100px]" />
 
-      <div className="relative max-w-4xl mx-auto">
-        <div className="relative rounded-3xl border border-zinc-200 dark:border-white/10 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/40 dark:to-zinc-900/20 backdrop-blur-xl p-12 md:p-16 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/5 dark:from-white/5 via-transparent to-transparent" />
-
-          <div className="relative text-center">
-
-
-            <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
-              Ready to Transform Your Coding?
-            </h2>
-
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-10 max-w-xl mx-auto leading-relaxed">
-              Join thousands of developers already shipping faster with AI-powered collaboration.
-            </p>
-
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/register">
-                <Button className="h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-zinc-900/20 dark:hover:shadow-white/20 rounded-xl">
-                  Start Coding Free
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="flex items-center justify-center gap-6 mt-8 text-xs text-zinc-500">
-              <div className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-green-400" />
-                No credit card
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-green-400" />
-                Free forever
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
 // ---------------- HOW IT WORKS ----------------
 const HowItWorks = () => {
@@ -573,6 +529,8 @@ const HowItWorks = () => {
 
 // ---------------- FAQ ----------------
 const FAQ = () => {
+  const [openIndex, setOpenIndex] = useState(null);
+
   const faqs = [
     {
       q: "Do I need to install anything?",
@@ -583,53 +541,175 @@ const FAQ = () => {
       a: "We support 20+ languages including JavaScript, Python, Java, C++, TypeScript, and many more. All with syntax highlighting and IntelliSense."
     },
     {
-      q: "Is my code private and secure?",
-      a: "Absolutely. Your code is encrypted and stored securely. You have full control over who can access your projects. We never share your code without permission."
+      q: "Can I collaborate with my team?",
+      a: "Absolutely! You can invite unlimited teammates to your workspace. Changes are synced in real-time, just like Google Docs for code."
     },
     {
-      q: "Can I use CodeRev offline?",
-      a: "CodeRev requires an internet connection for real-time collaboration and AI features. However, you can work on your code and it will sync when you're back online."
+      q: "Is there a free plan?",
+      a: "Yes, our Free plan includes unlimited public projects, 3 private projects, and community support. Perfect for hobbyists and students."
     },
     {
-      q: "Is CodeRev really free?",
-      a: "Yes! CodeRev is free forever for individual developers. We offer premium features for teams and enterprises, but the core features remain free."
-    },
-    {
-      q: "How does real-time collaboration work?",
-      a: "Multiple developers can edit the same file simultaneously with live cursors showing who's editing what. Changes appear instantly for all collaborators."
+      q: "How secure is my code?",
+      a: "Security is our top priority. We use enterprise-grade encryption for all data in transit and at rest. Your code is private and secure."
     }
   ];
 
-  return (
-    <section className="relative py-24 px-6 border-t border-zinc-200 dark:border-white/5">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
+  // Simple pixel grid for "FAQs"
+  // 1 = solid, 0 = transparent
+  const pixelMap = {
+    F: [
+      [1, 1, 1],
+      [1, 0, 0],
+      [1, 1, 0],
+      [1, 0, 0],
+      [1, 0, 0]
+    ],
+    A: [
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 0, 1]
+    ],
+    Q: [
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 0, 1],
+      [1, 1, 1],
+      [0, 0, 1]
+    ],
+    S: [
+      [1, 1, 1],
+      [1, 0, 0],
+      [1, 1, 1],
+      [0, 0, 1],
+      [1, 1, 1]
+    ]
+  };
 
-      <div className="relative max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-6">
-            <MessageSquare className="w-3.5 h-3.5" />
-            FAQ
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Everything you need to know about CodeRev
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <details key={i} className="group p-6 rounded-xl border border-zinc-200 dark:border-white/5 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900/30 dark:to-zinc-900/10 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-300">
-              <summary className="flex items-center justify-between cursor-pointer list-none">
-                <span className="text-base font-semibold text-zinc-900 dark:text-white">{faq.q}</span>
-                <ChevronDown className="w-5 h-5 text-zinc-400 transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                {faq.a}
-              </p>
-            </details>
+  const renderLetter = (letter) => (
+    <div className="flex flex-col gap-1">
+      {pixelMap[letter].map((row, i) => (
+        <div key={i} className="flex gap-1">
+          {row.map((cell, j) => (
+            <div
+              key={j}
+              className={`w-3 h-3 md:w-4 md:h-4 ${cell ? 'bg-zinc-900 dark:bg-white' : 'bg-transparent'}`}
+            />
           ))}
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <section className="relative pt-4 pb-24 px-6 bg-[#fcfcfc] dark:bg-black/20">
+      {/* Reticle grid background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fcfcfc] dark:from-black to-transparent" />
+
+      <div className="relative max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-12 gap-12 md:gap-24">
+          {/* Left Column: Title & CTA */}
+          <div className="md:col-span-5 flex flex-col justify-between">
+            <div>
+              {/* Pixelated Title */}
+              <div className="flex gap-4 md:gap-6 mb-12 select-none hover:scale-[1.02] transition-transform duration-300">
+                {renderLetter('F')}
+                {renderLetter('A')}
+                {renderLetter('Q')}
+                {renderLetter('S')}
+              </div>
+            </div>
+
+            {/* GitHub CTA (Moved here) */}
+            <div className="hidden md:block">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-1">
+                Spotted an issue?
+              </h3>
+              <p className="text-sm text-zinc-500 mb-4">
+                Help us improve — open it on GitHub.
+              </p>
+
+              <div className="flex items-center gap-4">
+                <Link
+                  href="https://github.com/ayaanshilledar/CodeRev--AI-Powered-Online-Code-Editor.git"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 bg-[#5765f2] hover:bg-[#4a58e0] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors shadow-sm shadow-indigo-500/20"
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  GitHub
+                </Link>
+
+                <Link
+                  href="#newsletter"
+                  className="text-xs text-[#5765f2] hover:underline font-medium"
+                >
+                  Stay in the loop
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Questions */}
+          <div className="md:col-span-7">
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <div
+                  key={i}
+                  className="group border-b border-zinc-200 dark:border-white/5 last:border-0"
+                >
+                  <button
+                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                    className="w-full text-left py-6 flex items-start justify-between gap-4 select-none"
+                  >
+                    <span className="text-lg font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                      {faq.q}
+                    </span>
+                    <div className={`relative flex-shrink-0 w-6 h-6 flex items-center justify-center transition-transform duration-300 ${openIndex === i ? 'rotate-45' : ''}`}>
+                      <div className="absolute w-4 h-0.5 bg-zinc-400 dark:bg-zinc-600 group-hover:bg-[#5765f2] transition-colors" />
+                      <div className="absolute h-4 w-0.5 bg-zinc-400 dark:bg-zinc-600 group-hover:bg-[#5765f2] transition-colors" />
+                    </div>
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === i ? 'max-h-40 opacity-100 mb-6' : 'max-h-0 opacity-0'
+                      }`}
+                  >
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed pr-8">
+                      {faq.a}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile CTA (shown at bottom on mobile) */}
+            <div className="md:hidden mt-12 pt-12 border-t border-zinc-200 dark:border-white/5">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-1">
+                Spotted an issue?
+              </h3>
+              <p className="text-sm text-zinc-500 mb-4">
+                Help us improve — open it on GitHub.
+              </p>
+              <div className="flex items-center gap-4">
+                <Link
+                  href="https://github.com/ayaanshilledar/CodeRev--AI-Powered-Online-Code-Editor.git"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 bg-[#5765f2] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors"
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  GitHub
+                </Link>
+                <Link
+                  href="#newsletter"
+                  className="text-xs text-[#5765f2] hover:underline font-medium"
+                >
+                  Stay in the loop
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -858,8 +938,7 @@ export default function HomePage() {
 
         {/* FAQ */}
         <FAQ />
-        {/* CTA */}
-        <CTASection />
+
 
         {/* WINTERFELL-STYLE FOOTER */}
         <footer className="relative bg-zinc-950 py-20 px-6 border-t border-white/5">
