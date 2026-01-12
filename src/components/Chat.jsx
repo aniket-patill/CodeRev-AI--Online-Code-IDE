@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown } from "lucide-react";
+import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown, ArrowUp, Sparkles, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
 function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, onMessageConsumed }) {
@@ -585,58 +585,81 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       </div>
 
       {/* Input Section */}
-      <div className="p-4 border-t border-white/5 bg-zinc-900/50 backdrop-blur-lg">
+      <div className="p-4 bg-zinc-900/50 backdrop-blur-lg">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage();
           }}
-          className="relative flex gap-2.5 items-end"
+          className="relative max-w-3xl mx-auto"
         >
-          <div className="relative flex-1 group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-300 blur-sm pointer-events-none" />
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything... (starts with @ for AI)"
-              className="relative bg-zinc-900 border-white/10 text-white placeholder:text-zinc-500 rounded-xl focus:border-white/20 focus:ring-0 h-11 pr-14 transition-all text-[13px]"
-            />
-            {/* AI Toggle Hint */}
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              {newMessage.trim().startsWith("@") ? (
-                <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 animate-in fade-in">
-                  AI Mode
-                </span>
-              ) : (
-                <span className="text-zinc-600 text-xs font-semibold">@</span>
-              )}
-            </div>
+          {/* Unified Capsule Container */}
+          <div className={`
+             relative flex items-center p-1.5 
+             bg-zinc-950 border border-white/10 
+             rounded-[28px] shadow-xl 
+             transition-all duration-300
+             group
+             focus-within:border-white/20 focus-within:shadow-white/5
+             ${isReceivingContext ? 'ring-2 ring-blue-500/50 border-blue-500/50' : ''}
+          `}>
 
             {/* Context Catch Animation Overlay */}
             {isReceivingContext && (
-              <div className="absolute inset-0 rounded-xl bg-blue-500/20 animate-pulse border-2 border-blue-400/50 pointer-events-none z-10" />
+              <div className="absolute inset-0 rounded-[28px] bg-blue-500/10 animate-pulse pointer-events-none z-0" />
             )}
+
+            {/* AI Mode Indicator (Inside, Left) */}
+            {newMessage.trim().startsWith("@") && (
+              <div className="pl-3 animate-in fade-in zoom-in slide-in-from-left-2 duration-300">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400 uppercase tracking-wider shadow-inner">
+                  <Sparkles className="w-3 h-3" />
+                  AI Mode
+                </div>
+              </div>
+            )}
+
+            {/* Input Field */}
+            <input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={newMessage.trim().startsWith("@") ? "Ask AI anything..." : "Type @ to ask AI, or just chat..."}
+              className={`
+                  flex-1 bg-transparent border-none outline-none 
+                  text-[13px] text-white placeholder-zinc-500 
+                  h-9 px-3 w-full min-w-0 font-medium z-10
+                  ${newMessage.trim().startsWith("@") ? "text-blue-100 placeholder-blue-500/40" : ""}
+               `}
+              autoComplete="off"
+            />
+
+            {/* Send Button (Right) */}
+            <div className="flex-shrink-0 z-10">
+              <button
+                type="submit"
+                disabled={isAIProcessing || !newMessage.trim() || cooldownSeconds > 0}
+                className={`
+                        w-8 h-8 rounded-full flex items-center justify-center 
+                        transition-all duration-300 ease-out
+                        ${newMessage.trim()
+                    ? "bg-white text-black hover:scale-110 hover:rotate-3 shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"}
+                    `}
+              >
+                {isAIProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 ml-[2px]" strokeWidth={2} />
+                )}
+              </button>
+            </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isAIProcessing || !newMessage.trim() || cooldownSeconds > 0}
-            className={`h-11 w-11 p-0 rounded-xl transition-all duration-300 flex items-center justify-center ${newMessage.trim()
-              ? "bg-white hover:bg-zinc-200 text-black shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-              : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"
-              }`}
-          >
-            {isAIProcessing ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Send className="h-4 w-4 -rotate-45 translate-x-0.5 -translate-y-0.5" />
-            )}
-          </Button>
+          <div className="text-[10px] text-zinc-600 text-center mt-3 font-medium opacity-60">
+            Press <kbd className="font-mono bg-zinc-800 px-1 py-0.5 rounded text-zinc-400">Enter</kbd> to send
+          </div>
         </form>
-        <p className="text-[10px] text-zinc-600 text-center mt-3 flex items-center justify-center gap-2">
-          AI can access your current file context. Press <kbd className="font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 border border-white/5">Enter</kbd> to send.
-        </p>
       </div>
     </div>
   );
