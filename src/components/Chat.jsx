@@ -72,12 +72,18 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
     }
   }, [messages, newMessage, isAIProcessing]);
 
+  const [isReceivingContext, setIsReceivingContext] = useState(false);
+
   // Handle pending messages from parent (e.g., from TextSelectionMenu)
   useEffect(() => {
     if (pendingMessage) {
       // Format as an AI query
       const formattedMessage = `@ ${pendingMessage}`;
       setNewMessage(formattedMessage);
+
+      // Trigger "Catch" animation
+      setIsReceivingContext(true);
+      setTimeout(() => setIsReceivingContext(false), 1500);
 
       // Optionally auto-focus the input if we had a ref to it, 
       // but identifying the @ prefix is enough for the user to just hit enter or edit.
@@ -606,6 +612,11 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
                 <span className="text-zinc-600 text-xs font-semibold">@</span>
               )}
             </div>
+
+            {/* Context Catch Animation Overlay */}
+            {isReceivingContext && (
+              <div className="absolute inset-0 rounded-xl bg-blue-500/20 animate-pulse border-2 border-blue-400/50 pointer-events-none z-10" />
+            )}
           </div>
 
           <Button
