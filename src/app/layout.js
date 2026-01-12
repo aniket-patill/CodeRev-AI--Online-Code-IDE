@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Provider>
             {children}
-            <Toaster richColors closeButton position="top-right" theme="system" />
+            <Toaster richColors closeButton position="bottom-right" theme="dark" />
           </Provider>
         </AuthProvider>
       </body>

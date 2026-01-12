@@ -130,47 +130,57 @@ const Dashboard = () => {
   // Delete workspace handler
   const deleteWorkspace = async (workspaceId) => {
     const confirmationToast = toast(
-      <div className="flex justify-between items-center gap-4">
-        <span>Are you sure you want to delete this space?</span>
-        <div className="flex space-x-2">
-          <Button
-            onClick={async () => {
-              try {
-                setDeletingWorkspaceId(workspaceId);
-                await deleteDoc(doc(db, `workspaces/${workspaceId}`));
-                setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
-                toast.success("Space deleted successfully!");
-              } catch (error) {
-                toast.error("Failed to delete space.");
-              } finally {
-                setDeletingWorkspaceId(null);
-                toast.dismiss(confirmationToast);
-              }
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white h-8 px-3 rounded-lg"
-            disabled={deletingWorkspaceId === workspaceId}
-          >
-            {deletingWorkspaceId === workspaceId ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Delete"
-            )}
-          </Button>
-          <Button
-            onClick={() => toast.dismiss(confirmationToast)}
-            className="bg-zinc-700 hover:bg-zinc-600 text-white h-8 px-3 rounded-lg"
-            disabled={deletingWorkspaceId === workspaceId}
-          >
-            Cancel
-          </Button>
+      <div className="flex flex-col gap-4 w-full">
+        {/* Backdrop Blur Overlay - Hacky but effective for "blur background while popup" */}
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] rounded-xl" style={{ margin: '-20px', pointerEvents: 'none' }} />
+
+        <div className="flex justify-between items-center gap-4 relative z-10">
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-white text-sm">Delete Space?</span>
+            <span className="text-xs text-zinc-400">This action cannot be undone.</span>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => toast.dismiss(confirmationToast)}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white h-7 px-3 text-xs rounded-lg border border-white/5"
+              disabled={deletingWorkspaceId === workspaceId}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  setDeletingWorkspaceId(workspaceId);
+                  await deleteDoc(doc(db, `workspaces/${workspaceId}`));
+                  setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
+                  toast.success("Space deleted");
+                } catch (error) {
+                  toast.error("Failed to delete");
+                } finally {
+                  setDeletingWorkspaceId(null);
+                  toast.dismiss(confirmationToast);
+                }
+              }}
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 h-7 px-3 text-xs rounded-lg"
+              disabled={deletingWorkspaceId === workspaceId}
+            >
+              {deletingWorkspaceId === workspaceId ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </div>
         </div>
       </div>,
       {
-        ...toastOptions,
         autoClose: false,
         closeOnClick: false,
         draggable: false,
-        hideProgressBar: true,
+        duration: Infinity,
+        position: "bottom-right",
+        className: "bg-zinc-950 border border-white/10 p-4 rounded-xl shadow-2xl min-w-[340px]",
+        unstyled: true,
       }
     );
   };
@@ -241,51 +251,49 @@ const Dashboard = () => {
               workspaces.map((ws) => (
                 <Card
                   key={ws.id}
-                  className="relative group border border-white/5 bg-zinc-900/40 backdrop-blur-xl rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden"
+                  className="relative group border border-white/10 bg-zinc-900 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:border-white/20 hover:shadow-2xl overflow-hidden flex flex-col"
                 >
-                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <CardContent className="p-6 flex flex-col h-full justify-between gap-6">
-                    <Link href={`/workspace/${ws.id}`} className="block flex-1 group/link">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex justify-between items-start">
-                          <div className="p-3 bg-zinc-800/50 rounded-xl group-hover/link:bg-blue-500/10 group-hover/link:text-blue-400 transition-colors">
-                            {ws.isPublic ? <Globe size={24} /> : <Lock size={24} />}
-                          </div>
-                          {ws.role === "owner" && (
-                            <button
-                              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-20"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                deleteWorkspace(ws.id);
-                              }}
-                              disabled={deletingWorkspaceId === ws.id}
-                            >
-                              {deletingWorkspaceId === ws.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 size={16} />
-                              )}
-                            </button>
+                  <CardContent className="p-6 flex flex-col h-full gap-6">
+                    {/* Header with Icons - Restored */}
+                    <div className="flex justify-between items-start">
+                      <div className="p-3 bg-zinc-950 border border-white/5 rounded-xl text-zinc-400 transition-colors">
+                        {ws.isPublic ? <Globe size={20} /> : <Lock size={20} />}
+                      </div>
+                      {/* Delete Button (Outside Link) */}
+                      {ws.role === "owner" && (
+                        <button
+                          className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-20"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteWorkspace(ws.id);
+                          }}
+                          disabled={deletingWorkspaceId === ws.id}
+                        >
+                          {deletingWorkspaceId === ws.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 size={16} />
                           )}
-                        </div>
+                        </button>
+                      )}
+                    </div>
 
-                        <div>
-                          <h2 className="text-xl font-bold text-white tracking-wide group-hover/link:text-blue-400 transition-colors mb-1 truncate">
-                            {ws.name}
-                          </h2>
-                          <p className="text-sm text-zinc-500 font-medium flex items-center gap-2">
-                            {ws.isPublic ? "Public Environment" : "Private Environment"}
-                          </p>
-                        </div>
+                    <Link href={`/workspace/${ws.id}`} className="block flex-1 group/link">
+                      <div>
+                        <h2 className="text-xl font-bold text-white tracking-tight mb-1 truncate group-hover/link:text-zinc-200 transition-colors">
+                          {ws.name}
+                        </h2>
+                        <p className="text-sm text-zinc-500 font-medium flex items-center gap-2">
+                          {ws.isPublic ? "Public Environment" : "Private Environment"}
+                        </p>
                       </div>
                     </Link>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                    <div className="flex justify-between items-center pt-4 border-t border-white/5 mt-auto">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Role</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ws.role === 'owner' ? 'bg-blue-500/10 text-blue-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-600">Role</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${ws.role === 'owner' ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-800 text-zinc-500'}`}>
                           {ws.role}
                         </span>
                       </div>
