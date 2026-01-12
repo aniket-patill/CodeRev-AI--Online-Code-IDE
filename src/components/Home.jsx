@@ -347,10 +347,11 @@ const LanguageSupport = () => {
   ];
 
   return (
-    <section className="relative py-24 px-6 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col justify-center py-24 px-6 overflow-hidden bg-[#aa58f7]">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:40px_40px]" />
 
 
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto w-full">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -358,29 +359,29 @@ const LanguageSupport = () => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-300 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white mb-6 backdrop-blur-sm">
               <Code2 className="w-3.5 h-3.5" />
               Language Support
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-5 tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-5 tracking-tight">
               Code in Any Language
             </h2>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed mb-8">
+            <p className="text-lg text-purple-100 leading-relaxed mb-8">
               CodeRev supports almost every major programming language. Several ship in the box, like JavaScript, TypeScript, CSS, and HTML.
             </p>
 
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {["JS", "TS", "🐍"].map((icon, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-white dark:border-black flex items-center justify-center text-xs font-bold text-zinc-900 dark:text-white shadow-lg">
+                  <div key={i} className="w-10 h-10 rounded-full bg-white text-purple-600 border-2 border-[#aa58f7] flex items-center justify-center text-xs font-bold shadow-lg">
                     {icon}
                   </div>
                 ))}
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-semibold text-zinc-900 dark:text-white">10+ Languages</span>
-                <span className="text-xs text-zinc-500 dark:text-zinc-500">Supported out of the box</span>
+                <span className="text-base font-semibold text-white">10+ Languages</span>
+                <span className="text-xs text-purple-200">Supported out of the box</span>
               </div>
             </div>
           </motion.div>
@@ -400,13 +401,13 @@ const LanguageSupport = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.1 + (i * 0.05) }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="group relative p-4 rounded-xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/30 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-300 cursor-default"
+                className="group relative p-4 rounded-xl border border-white/10 bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 cursor-default"
               >
                 <div className="relative text-center">
-                  <div className={`text-xl font-bold mb-2 ${lang.color} drop-shadow-sm`}>
+                  <div className={`text-xl font-bold mb-2 text-white drop-shadow-sm`}>
                     {lang.icon}
                   </div>
-                  <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                  <div className="text-[10px] text-purple-200 font-medium group-hover:text-white transition-colors">
                     {lang.name}
                   </div>
                 </div>
