@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, FileText, Lock, Loader2, X, Plus, Trash2 } from "lucide-react";
+import { Clock, FileText, Lock, Loader2, X, Plus, Trash2, Upload } from "lucide-react";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/config/firebase";
 import { toast } from "sonner";
@@ -110,6 +110,77 @@ const TestCreationModal = ({ isOpen, onClose }) => {
             ...prev,
             questions: prev.questions.filter(question => question.id !== id)
         }));
+    };
+
+    // Function to handle JSON file import
+    const handleJsonImport = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'application/json') {
+            toast.error('Please select a valid JSON file');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                
+                // Validate the JSON structure
+                if (!Array.isArray(jsonData)) {
+                    toast.error('JSON file must contain an array of questions');
+                    return;
+                }
+
+                // Validate each question object
+                const validQuestions = [];
+                for (let i = 0; i < jsonData.length; i++) {
+                    const question = jsonData[i];
+                    
+                    // Check required fields
+                    if (typeof question.title !== 'string') {
+                        toast.error(`Question ${i + 1} is missing a title`);
+                        return;
+                    }
+                    
+                    // Create a valid question object with defaults
+                    const validQuestion = {
+                        id: Date.now() + i, // Ensure unique IDs
+                        title: question.title,
+                        description: question.description || '',
+                        points: typeof question.points === 'number' ? question.points : 10,
+                    };
+                    
+                    validQuestions.push(validQuestion);
+                }
+
+                // Add imported questions to existing questions
+                setFormData(prev => ({
+                    ...prev,
+                    questions: [...prev.questions, ...validQuestions]
+                }));
+                
+                toast.success(`${validQuestions.length} questions imported successfully!`);
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                toast.error('Invalid JSON format');
+            }
+        };
+        
+        reader.onerror = () => {
+            toast.error('Error reading file');
+        };
+        
+        reader.readAsText(file);
+        
+        // Reset the file input
+        event.target.value = '';
+    };
+
+    // Trigger file input click
+    const triggerFileInput = () => {
+        document.getElementById('json-file-input').click();
     };
 
     const handleCreate = async () => {
@@ -306,15 +377,32 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 </label>
                                 <p className="text-xs text-zinc-500 mt-1">Define the questions for this test</p>
                             </div>
-                            <Button
-                                onClick={addQuestion}
-                                variant="ghost"
-                                size="sm"
-                                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
-                            >
-                                <Plus size={14} className="mr-1" /> Add Question
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={triggerFileInput}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 px-3"
+                                >
+                                    <Upload size={14} className="mr-1" /> Import JSON
+                                </Button>
+                                <Button
+                                    onClick={addQuestion}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
+                                >
+                                    <Plus size={14} className="mr-1" /> Add Question
+                                </Button>
+                            </div>
                         </div>
+                        <input
+                            id="json-file-input"
+                            type="file"
+                            accept=".json,application/json"
+                            onChange={handleJsonImport}
+                            className="hidden"
+                        />
 
                         <div className="space-y-3">
                             {formData.questions.map((question, index) => (

@@ -24,6 +24,7 @@ const TestWorkspaceContent = ({ test }) => {
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
     const [hasStarted, setHasStarted] = useState(false);
+    const [questionProgress, setQuestionProgress] = useState({}); // Track progress for each question
 
     const files = getCurrentParticipantFiles();
     const questions = getCurrentParticipantQuestions();
@@ -58,6 +59,21 @@ const TestWorkspaceContent = ({ test }) => {
 
     const handleCodeChange = (code) => {
         setCurrentCode(code);
+        
+        // Update question progress when code changes
+        if (activeFile) {
+            const currentQuestion = questions[activeFileIndex];
+            if (currentQuestion) {
+                setQuestionProgress(prev => ({
+                    ...prev,
+                    [currentQuestion.id || activeFileIndex]: {
+                        completed: code.trim() !== '',
+                        lastEdited: new Date().toISOString(),
+                        codeLength: code.length
+                    }
+                }));
+            }
+        }
     };
 
     const handleAutoSubmit = async (reason) => {
@@ -107,20 +123,41 @@ const TestWorkspaceContent = ({ test }) => {
                             <h3 className="font-semibold text-white">Assigned Questions</h3>
                             <p className="text-xs text-zinc-400 mt-1">{questions.length} question{questions.length !== 1 ? 's' : ''} assigned</p>
                         </div>
-                        <div className="p-4 space-y-4">
-                            {questions.map((question, index) => (
-                                <div 
-                                    key={question.id || index} 
-                                    className="p-3 bg-zinc-800/50 rounded-lg border border-white/5"
-                                >
-                                    <h4 className="font-medium text-white mb-1">{question.title || `Question ${index + 1}`}</h4>
-                                    <p className="text-xs text-zinc-300 mb-2">{question.description || 'No description provided.'}</p>
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-zinc-400">Points: {question.points || 0}</span>
-                                        <span className="text-blue-400">#{index + 1}</span>
+                        <div className="p-4 space-y-2">
+                            {questions.map((question, index) => {
+                                // Calculate status based on code submission for this question
+                                const hasCode = Object.keys(currentParticipant?.files || {}).some(
+                                    fileName => currentParticipant.files[fileName]?.trim() !== ''
+                                );
+                                
+                                // Get progress status for this question
+                                const questionId = question.id || index;
+                                const progress = questionProgress[questionId];
+                                
+                                let statusClass = "bg-gray-500"; // Default (not started)
+                                if (progress?.completed) {
+                                    statusClass = "bg-green-500"; // Completed
+                                } else if (activeFileIndex === index) {
+                                    statusClass = "bg-yellow-500"; // In progress
+                                }
+                                
+                                return (
+                                    <div 
+                                        key={question.id || index} 
+                                        className={`p-3 rounded-lg border cursor-pointer transition-all ${activeFileIndex === index ? 'border-blue-500 bg-zinc-800/70' : 'border-white/10 hover:border-white/30'} flex items-start`}
+                                        onClick={() => setActiveFileIndex(index)}
+                                    >
+                                        <div className={`w-3 h-3 rounded-full mr-3 mt-1 ${statusClass}`}></div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-medium text-white truncate">{question.title || `Question ${index + 1}`}</h4>
+                                            <div className="flex justify-between text-xs mt-1">
+                                                <span className="text-zinc-400">{question.points || 0} pts</span>
+                                                <span className="text-zinc-500">#{index + 1}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 

@@ -115,8 +115,12 @@ export const TestProvider = ({ children, testId, participantId }) => {
             const totalQuestions = testData.questions;
             const questionsCount = Math.min(testData.questionsCount, totalQuestions.length);
             
-            // Shuffle the questions and pick the required number
-            const shuffledQuestions = [...totalQuestions].sort(() => Math.random() - 0.5);
+            // Fisher-Yates shuffle algorithm for better randomization
+            const shuffledQuestions = [...totalQuestions];
+            for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
+            }
             const assignedQuestions = shuffledQuestions.slice(0, questionsCount);
             
             participantData.assignedQuestions = assignedQuestions;
@@ -130,8 +134,12 @@ export const TestProvider = ({ children, testId, participantId }) => {
             const totalFiles = testData.files;
             const questionsCount = Math.min(testData.questionsCount, totalFiles.length);
             
-            // Shuffle the files and pick the required number
-            const shuffledFiles = [...totalFiles].sort(() => Math.random() - 0.5);
+            // Fisher-Yates shuffle algorithm for better randomization
+            const shuffledFiles = [...totalFiles];
+            for (let i = shuffledFiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledFiles[i], shuffledFiles[j]] = [shuffledFiles[j], shuffledFiles[i]];
+            }
             const assignedFiles = shuffledFiles.slice(0, questionsCount);
             
             participantData.assignedFiles = assignedFiles;
@@ -139,6 +147,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
             // If no randomization, assign all files from the test
             participantData.assignedFiles = testData.files || [];
         }
+
 
         await setDoc(participantRef, participantData);
         return participantRef.id;
