@@ -101,10 +101,10 @@ export const TestProvider = ({ children, testId, participantId }) => {
         if (!testId || !participantId) return;
 
         const participantRef = doc(db, `tests/${testId}/participants`, participantId);
-        await updateDoc(participantRef, {
-            [new FieldPath("files", fileName)]: code,
-            lastActive: Timestamp.now(),
-        });
+        await updateDoc(participantRef,
+            new FieldPath("files", fileName), code,
+            "lastActive", Timestamp.now()
+        );
     };
 
     // Submit test
