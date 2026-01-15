@@ -1,6 +1,6 @@
 
 "use client";
-import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings, Code2, Check, X } from "lucide-react";
+import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings, Code2, Check, X, Lightbulb } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Editor, { useMonaco, DiffEditor } from "@monaco-editor/react";
 import axios from "axios";
@@ -28,6 +28,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   const [isDiffView, setIsDiffView] = useState(false);
   const [originalCode, setOriginalCode] = useState("");
   const [fixedCode, setFixedCode] = useState("");
+  const [hintData, setHintData] = useState(null);
 
   useEffect(() => {
     if (file) {
@@ -118,7 +119,6 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
 
       if (res.data.fixedCode) {
         if (!res.data.aiFixed) {
-
           // Optionally show a toast here
         } else {
           setOriginalCode(updatedCode);
@@ -148,6 +148,46 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
     setIsDiffView(false);
     setOriginalCode("");
     setFixedCode("");
+  };
+  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [hintCooldown, setHintCooldown] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (hintCooldown > 0) {
+      interval = setInterval(() => {
+        setHintCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [hintCooldown]);
+
+  const getHint = async () => {
+    if (hintCooldown > 0) return;
+
+    setIsHintLoading(true);
+    setHintData(null);
+    try {
+      const res = await axios.post("/api/getChatResponse", {
+        message: "Analyze the code and provide a single, short, helpful hint or context about what this code is doing or what might be missing. Keep it under 2 sentences. Focus on the very last part of the code.",
+        codeContext: updatedCode,
+      });
+      if (res.data?.aiResponse) {
+        setHintData(res.data.aiResponse);
+        setHintCooldown(10); // 10s cooldown after success
+      }
+    } catch (error) {
+      console.error("Failed to get hint:", error);
+      if (error.response?.status === 429) {
+        setHintData("Too many requests. Please wait a moment.");
+        setHintCooldown(30); // 30s cooldown on rate limit
+      } else {
+        setHintData("Failed to get hint. Try again later.");
+        setHintCooldown(5);
+      }
+    } finally {
+      setIsHintLoading(false);
+    }
   };
 
   const toggleExpand = () => {
@@ -317,6 +357,41 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                     <Wrench size={12} />
                     {isFixing ? "Fixing..." : "Fix"}
                   </button>
+
+                  {isFocusMode && (
+                    <div className="relative">
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg text-xs font-medium text-amber-500 hover:text-amber-400 transition-all disabled:opacity-50"
+                        onClick={getHint}
+                        disabled={isHintLoading}
+                        title="Get a hint about your code"
+                      >
+                        <Lightbulb size={12} className={isHintLoading ? "animate-pulse" : ""} />
+                        {isHintLoading ? "Thinking..." : "Hint"}
+                      </button>
+
+                      {hintData && (
+                        <div className="absolute top-full right-0 mt-3 w-72 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+                          <div className="flex justify-between items-start gap-4 mb-2">
+                            <div className="flex items-center gap-2 text-amber-500">
+                              <Lightbulb size={14} />
+                              <span className="text-xs font-bold uppercase tracking-wider">Code Context</span>
+                            </div>
+                            <button
+                              onClick={() => setHintData(null)}
+                              className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                          <p className="text-zinc-300 text-xs leading-relaxed">
+                            {hintData}
+                          </p>
+                          <div className="absolute -top-1 right-8 w-2 h-2 bg-zinc-900 border-t border-l border-white/10 transform rotate-45" />
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="h-4 w-[1px] bg-white/10 mx-1" />
 
