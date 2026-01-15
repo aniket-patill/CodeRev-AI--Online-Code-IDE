@@ -110,7 +110,22 @@ export const TestProvider = ({ children, testId, participantId }) => {
             files: {},
         };
         
-        // If randomization is enabled, assign random files to this participant
+        // If randomization is enabled, assign random questions to this participant
+        if (testData.randomizeQuestions && testData.questions && testData.questionsCount) {
+            const totalQuestions = testData.questions;
+            const questionsCount = Math.min(testData.questionsCount, totalQuestions.length);
+            
+            // Shuffle the questions and pick the required number
+            const shuffledQuestions = [...totalQuestions].sort(() => Math.random() - 0.5);
+            const assignedQuestions = shuffledQuestions.slice(0, questionsCount);
+            
+            participantData.assignedQuestions = assignedQuestions;
+        } else {
+            // If no randomization, assign all questions from the test
+            participantData.assignedQuestions = testData.questions || [];
+        }
+        
+        // Also assign the corresponding files
         if (testData.randomizeQuestions && testData.files && testData.questionsCount) {
             const totalFiles = testData.files;
             const questionsCount = Math.min(testData.questionsCount, totalFiles.length);
@@ -215,6 +230,14 @@ export const TestProvider = ({ children, testId, participantId }) => {
         // Return assigned files if they exist, otherwise return test files
         return currentParticipant.assignedFiles || test?.files || [];
     };
+    
+    // Get questions for current participant (either assigned or from test)
+    const getCurrentParticipantQuestions = () => {
+        if (!currentParticipant) return [];
+        
+        // Return assigned questions if they exist, otherwise return test questions
+        return currentParticipant.assignedQuestions || test?.questions || [];
+    };
 
     return (
         <TestContext.Provider
@@ -234,6 +257,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
                 changeParticipantStatus,
                 deleteTest,
                 getCurrentParticipantFiles,
+                getCurrentParticipantQuestions,
             }}
         >
             {children}
@@ -259,6 +283,7 @@ export const useTest = () => {
             leaveTest: () => Promise.resolve(),
             changeParticipantStatus: () => Promise.reject("Provider missing"),
             getCurrentParticipantFiles: () => [],
+            getCurrentParticipantQuestions: () => [],
         };
     }
     return context;

@@ -18,7 +18,7 @@ import ProctorStartScreen from "@/components/test/ProctorStartScreen";
 const TestWorkspaceContent = ({ test }) => {
     const router = useRouter();
     const { testId } = useParams();
-    const { submitTest, leaveTest, currentParticipant, getCurrentParticipantFiles } = useTest();
+    const { submitTest, leaveTest, currentParticipant, getCurrentParticipantFiles, getCurrentParticipantQuestions } = useTest();
     const { isProctorActive } = useProctor();
 
     const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -26,6 +26,7 @@ const TestWorkspaceContent = ({ test }) => {
     const [hasStarted, setHasStarted] = useState(false);
 
     const files = getCurrentParticipantFiles();
+    const questions = getCurrentParticipantQuestions();
     const activeFile = files[activeFileIndex];
 
     // Track current code for running
@@ -99,56 +100,83 @@ const TestWorkspaceContent = ({ test }) => {
                     onLeave={handleLeave}
                 />
 
-                {/* File Tabs */}
-                <div className="flex items-center gap-1 px-4 py-2 bg-zinc-900/50 border-b border-white/5 shrink-0">
-                    {files.map((file, index) => (
-                        <button
-                            key={file.name}
-                            onClick={() => setActiveFileIndex(index)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${index === activeFileIndex
-                                ? "bg-zinc-800 text-white"
-                                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                                }`}
-                        >
-                            {file.name}
-                            {file.readOnly && (
-                                <span className="ml-2 text-[10px] text-yellow-400 uppercase">
-                                    (read-only)
-                                </span>
-                            )}
-                        </button>
-                    ))}
-                </div>
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Questions Sidebar */}
+                    <div className="w-80 bg-zinc-900/30 border-r border-white/5 overflow-y-auto shrink-0 hidden md:block">
+                        <div className="p-4 border-b border-white/5">
+                            <h3 className="font-semibold text-white">Assigned Questions</h3>
+                            <p className="text-xs text-zinc-400 mt-1">{questions.length} question{questions.length !== 1 ? 's' : ''} assigned</p>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            {questions.map((question, index) => (
+                                <div 
+                                    key={question.id || index} 
+                                    className="p-3 bg-zinc-800/50 rounded-lg border border-white/5"
+                                >
+                                    <h4 className="font-medium text-white mb-1">{question.title || `Question ${index + 1}`}</h4>
+                                    <p className="text-xs text-zinc-300 mb-2">{question.description || 'No description provided.'}</p>
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-zinc-400">Points: {question.points || 0}</span>
+                                        <span className="text-blue-400">#{index + 1}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                {/* Main Content */}
-                <div className="flex-1 overflow-hidden">
-                    <PanelGroup direction="vertical">
-                        {/* Editor Panel */}
-                        <Panel defaultSize={70} minSize={30}>
-                            <div className="h-full">
-                                {activeFile && (
-                                    <TestEditor
-                                        file={activeFile}
-                                        language={activeFile.language || "javascript"}
-                                        readOnly={activeFile.readOnly}
-                                        onChange={handleCodeChange}
+                    <div className="flex-1 flex flex-col">
+                        {/* File Tabs */}
+                        <div className="flex items-center gap-1 px-4 py-2 bg-zinc-900/50 border-b border-white/5 shrink-0">
+                            {files.map((file, index) => (
+                                <button
+                                    key={file.name}
+                                    onClick={() => setActiveFileIndex(index)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${index === activeFileIndex
+                                        ? "bg-zinc-800 text-white"
+                                        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                                        }`}
+                                >
+                                    {file.name}
+                                    {file.readOnly && (
+                                        <span className="ml-2 text-[10px] text-yellow-400 uppercase">
+                                            (read-only)
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="flex-1 overflow-hidden">
+                            <PanelGroup direction="vertical">
+                                {/* Editor Panel */}
+                                <Panel defaultSize={70} minSize={30}>
+                                    <div className="h-full">
+                                        {activeFile && (
+                                            <TestEditor
+                                                file={activeFile}
+                                                language={activeFile.language || "javascript"}
+                                                readOnly={activeFile.readOnly}
+                                                onChange={handleCodeChange}
+                                            />
+                                        )}
+                                    </div>
+                                </Panel>
+
+                                <PanelResizeHandle className="h-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-row-resize flex justify-center items-center group">
+                                    <div className="w-8 h-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
+                                </PanelResizeHandle>
+
+                                {/* Output Panel */}
+                                <Panel defaultSize={30} minSize={15}>
+                                    <TestOutput
+                                        code={currentCode}
+                                        language={activeFile?.language || "javascript"}
                                     />
-                                )}
-                            </div>
-                        </Panel>
-
-                        <PanelResizeHandle className="h-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-row-resize flex justify-center items-center group">
-                            <div className="w-8 h-1 bg-zinc-600 rounded-full group-hover:bg-blue-400 transition-colors" />
-                        </PanelResizeHandle>
-
-                        {/* Output Panel */}
-                        <Panel defaultSize={30} minSize={15}>
-                            <TestOutput
-                                code={currentCode}
-                                language={activeFile?.language || "javascript"}
-                            />
-                        </Panel>
-                    </PanelGroup>
+                                </Panel>
+                            </PanelGroup>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
