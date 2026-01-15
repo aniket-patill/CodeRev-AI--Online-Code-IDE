@@ -20,6 +20,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown, ArrowUp, Sparkles, Loader2, CornerDownRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from "framer-motion";
 
 function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, onMessageConsumed }) {
   const [messages, setMessages] = useState([]);
@@ -233,18 +234,25 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
     let aiPrompt = null;
     let userMessage = newMessage;
 
+    // Capture the selection context before clearing
+    const capturedSelectionContext = selectionContext;
+
     if (aiMatch) {
       // If there's selection context, prepend it to the prompt
       const userQuery = aiMatch[1].trim();
-      if (selectionContext) {
+      if (capturedSelectionContext) {
         aiPrompt = userQuery
-          ? `${selectionContext}\n\nUser question: ${userQuery}`
-          : selectionContext;
+          ? `${capturedSelectionContext}\n\nUser question: ${userQuery}`
+          : capturedSelectionContext;
         userMessage = userQuery ? `@ ${userQuery}` : `@ Explain this`;
       } else {
         aiPrompt = userQuery;
       }
     }
+
+    // Clear input and selection IMMEDIATELY (before async operations)
+    setNewMessage("");
+    setSelectionContext(null);
 
     try {
       if (userMessage && userMessage.trim() !== "@") {
@@ -272,9 +280,6 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
           workspaceId,
         });
       }
-
-      setNewMessage("");
-      setSelectionContext(null); // Clear selection context after sending
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -600,25 +605,49 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
           </div>
         )}
 
-        {isAIProcessing && (
-          <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex gap-3 max-w-[90%] items-center">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+        <AnimatePresence mode="wait">
+          {isAIProcessing && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="flex justify-start w-full"
+            >
+              <div className="flex gap-3 max-w-[90%] items-center">
+                <motion.div
+                  className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                </motion.div>
+                <motion.div
+                  className="bg-zinc-800 border border-white/5 px-4 py-2.5 rounded-xl flex items-center gap-3"
+                  initial={{ width: "auto" }}
+                  animate={{ width: "auto" }}
+                  layout
+                >
+                  <motion.span
+                    key={aiProcessingPhase}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-[13px] text-zinc-300 font-medium"
+                  >
+                    {aiProcessingPhase}
+                  </motion.span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+                  </div>
+                </motion.div>
               </div>
-              <div className="bg-zinc-800 border border-white/5 px-4 py-2.5 rounded-xl flex items-center gap-3">
-                <span className="text-[13px] text-zinc-300 font-medium animate-pulse">
-                  {aiProcessingPhase}
-                </span>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
@@ -632,24 +661,45 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
           className="relative max-w-3xl mx-auto"
         >
           {/* Selection Context Preview */}
-          {selectionContext && (
-            <div className="mb-2 flex items-center gap-2.5 bg-zinc-800/70 border border-white/5 rounded-lg px-3 py-2.5 animate-in fade-in duration-200">
-              <CornerDownRight size={14} className="text-zinc-500 flex-shrink-0" />
-              <p className="flex-1 text-[13px] text-zinc-300 truncate">
-                "{selectionContext}"
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectionContext(null);
-                  setNewMessage("");
+          <AnimatePresence mode="wait">
+            {selectionContext && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30,
+                  mass: 0.8
                 }}
-                className="text-zinc-500 hover:text-white transition-colors flex-shrink-0"
+                className="mb-2 flex items-center gap-2.5 bg-zinc-800/70 border border-white/5 rounded-lg px-3 py-2.5"
               >
-                <X size={14} />
-              </button>
-            </div>
-          )}
+                <motion.div
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                >
+                  <CornerDownRight size={14} className="text-zinc-500 flex-shrink-0" />
+                </motion.div>
+                <p className="flex-1 text-[13px] text-zinc-300 truncate">
+                  "{selectionContext}"
+                </p>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    setSelectionContext(null);
+                    setNewMessage("");
+                  }}
+                  className="text-zinc-500 hover:text-white transition-colors flex-shrink-0"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X size={14} />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Unified Capsule Container */}
           <div className={`
              relative flex items-center p-1.5 
