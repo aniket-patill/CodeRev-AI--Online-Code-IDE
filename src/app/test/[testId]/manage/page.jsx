@@ -79,7 +79,7 @@ const ManageContent = ({ test, onUpdate }) => {
         if (!window.confirm("Are you sure you want to delete this test? This action cannot be undone and will remove all participant data.")) {
             return;
         }
-        
+
         setIsDeleting(true);
         try {
             await deleteTest();
@@ -159,7 +159,7 @@ const ManageContent = ({ test, onUpdate }) => {
                             End Test
                         </Button>
                     )}
-                    
+
                     {(test.status === "ended" || test.status === "draft") && (
                         <Button
                             onClick={deleteCurrentTest}
@@ -204,6 +204,29 @@ const ManageContent = ({ test, onUpdate }) => {
                                             />
                                             <Button
                                                 onClick={copyLink}
+                                                variant="ghost"
+                                                className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                            >
+                                                <Copy size={16} />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
+                                            Test Code
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                value={test.id}
+                                                readOnly
+                                                className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 font-mono"
+                                            />
+                                            <Button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(test.id);
+                                                    toast.success("Test code copied!");
+                                                }}
                                                 variant="ghost"
                                                 className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
                                             >

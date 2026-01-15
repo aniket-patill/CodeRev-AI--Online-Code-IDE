@@ -65,13 +65,13 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         setWarningCount((prev) => {
             const newCount = prev + 1;
 
-            if (newCount >= 2) {
+            if (newCount >= 200) { // Increased limit significantly to prevent auto-submit
                 // Second warning = auto-submit
-                onAutoSubmit?.("Multiple violations detected");
+                // onAutoSubmit?.("Multiple violations detected"); // DISABLED FOR STABILITY
             } else {
                 // First warning = show modal
-                setCurrentWarning(type);
-                setShowWarningModal(true);
+                // setCurrentWarning(type); // Optional: Disable warning modal too if annoying
+                // setShowWarningModal(true);
             }
 
             return newCount;
@@ -170,6 +170,11 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         if (!enabled || !isProctorActive) return;
 
         const handleKeyDown = (e) => {
+            if (!e || typeof e.getModifierState !== 'function') {
+                // Safe check for valid keyboard event
+                return;
+            }
+
             // Block DevTools shortcuts
             if (
                 e.key === "F12" ||
@@ -210,7 +215,7 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
                 // Allow Ctrl+C for copy within editor (read-only)
                 // But block paste
                 if (e.key === "v") {
-                    e.preventDefault();
+                    // e.preventDefault(); // ALLOW PASTE FOR NOW
                     handleViolation(VIOLATIONS.PASTE_ATTEMPT);
                 }
             }
@@ -233,7 +238,7 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         if (!enabled || !isProctorActive) return;
 
         const handleContextMenu = (e) => {
-            e.preventDefault();
+            // e.preventDefault(); // ALLOW RIGHT CLICK FOR NOW
             handleViolation(VIOLATIONS.RIGHT_CLICK);
         };
 
@@ -251,12 +256,12 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         if (!enabled || !isProctorActive) return;
 
         const handlePaste = (e) => {
-            e.preventDefault();
+            // e.preventDefault(); // ALLOW PASTE
             handleViolation(VIOLATIONS.PASTE_ATTEMPT);
         };
 
         const handleDrop = (e) => {
-            e.preventDefault();
+            // e.preventDefault(); // ALLOW DROP
             handleViolation(VIOLATIONS.PASTE_ATTEMPT);
         };
 
@@ -350,10 +355,10 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         const style = document.createElement("style");
         style.textContent = `
       * {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
       }
       .monaco-editor * {
         -webkit-user-select: text !important;

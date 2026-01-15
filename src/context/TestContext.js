@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { doc, getDoc, collection, onSnapshot, setDoc, updateDoc, Timestamp, deleteDoc, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, onSnapshot, setDoc, updateDoc, Timestamp, deleteDoc, getDocs, FieldPath } from "firebase/firestore";
 import { db } from "@/config/firebase";
 
 const TestContext = createContext();
@@ -123,7 +123,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
 
         const participantRef = doc(db, `tests/${testId}/participants`, participantId);
         await updateDoc(participantRef, {
-            [`files.${fileName}`]: code,
+            [new FieldPath("files", fileName)]: code,
             lastActive: Timestamp.now(),
         });
     };
