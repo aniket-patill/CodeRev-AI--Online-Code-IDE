@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { TestProvider, useTest } from "@/context/TestContext";
 import { Button } from "@/components/ui/button";
 import ParticipantsList from "@/components/test/ParticipantsList";
+import StudentCodeViewer from "@/components/test/StudentCodeViewer";
 
 const ManageContent = ({ test, onUpdate }) => {
     const router = useRouter();
@@ -18,6 +19,7 @@ const ManageContent = ({ test, onUpdate }) => {
     const [isStarting, setIsStarting] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedParticipant, setSelectedParticipant] = useState(null);
 
     const testUrl = typeof window !== "undefined"
         ? `${window.location.origin}/test/${test.id}`
@@ -181,134 +183,145 @@ const ManageContent = ({ test, onUpdate }) => {
             {/* Main Content */}
             <div className="flex-1 overflow-hidden">
                 <PanelGroup direction="horizontal">
-                    {/* Left - Test Info */}
-                    <Panel defaultSize={35} minSize={25}>
-                        <div className="h-full overflow-y-auto p-6 space-y-6">
-                            {/* Share Section */}
-                            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-5">
-                                <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                    <Link2 size={16} className="text-blue-400" />
-                                    Share Test
-                                </h2>
+                    {/* Left - Content (Test Info or Student Code) */}
+                    <Panel defaultSize={75} minSize={40}>
+                        {selectedParticipant ? (
+                            <StudentCodeViewer
+                                participant={selectedParticipant}
+                                test={test}
+                                onClose={() => setSelectedParticipant(null)}
+                            />
+                        ) : (
+                            <div className="h-full overflow-y-auto p-6 space-y-6">
+                                {/* Share Section */}
+                                <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-5">
+                                    <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                        <Link2 size={16} className="text-blue-400" />
+                                        Share Test
+                                    </h2>
 
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
-                                            Test Link
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                value={testUrl}
-                                                readOnly
-                                                className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 truncate"
-                                            />
-                                            <Button
-                                                onClick={copyLink}
-                                                variant="ghost"
-                                                className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                                            >
-                                                <Copy size={16} />
-                                            </Button>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
+                                                Test Link
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={testUrl}
+                                                    readOnly
+                                                    className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 truncate"
+                                                />
+                                                <Button
+                                                    onClick={copyLink}
+                                                    variant="ghost"
+                                                    className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                                >
+                                                    <Copy size={16} />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
+                                                Test Code
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={test.id}
+                                                    readOnly
+                                                    className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 font-mono"
+                                                />
+                                                <Button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(test.id);
+                                                        toast.success("Test code copied!");
+                                                    }}
+                                                    variant="ghost"
+                                                    className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                                >
+                                                    <Copy size={16} />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
+                                                Password
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={test.password}
+                                                    readOnly
+                                                    type="password"
+                                                    className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300"
+                                                />
+                                                <Button
+                                                    onClick={copyPassword}
+                                                    variant="ghost"
+                                                    className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                                >
+                                                    <Copy size={16} />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div>
-                                        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
-                                            Test Code
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                value={test.id}
-                                                readOnly
-                                                className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 font-mono"
-                                            />
-                                            <Button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(test.id);
-                                                    toast.success("Test code copied!");
-                                                }}
-                                                variant="ghost"
-                                                className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                                            >
-                                                <Copy size={16} />
-                                            </Button>
+                                {/* Stats */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4">
+                                        <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                                            <Users size={14} />
+                                            <span className="text-xs uppercase tracking-wider">Active</span>
                                         </div>
+                                        <p className="text-2xl font-bold text-white">{activeCount}</p>
                                     </div>
 
-                                    <div>
-                                        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">
-                                            Password
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                value={test.password}
-                                                readOnly
-                                                type="password"
-                                                className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300"
-                                            />
-                                            <Button
-                                                onClick={copyPassword}
-                                                variant="ghost"
-                                                className="px-3 hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                                            >
-                                                <Copy size={16} />
-                                            </Button>
+                                    <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4">
+                                        <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                                            <Clock size={14} />
+                                            <span className="text-xs uppercase tracking-wider">Submitted</span>
                                         </div>
+                                        <p className="text-2xl font-bold text-green-400">{submittedCount}</p>
+                                    </div>
+                                </div>
+
+                                {/* Test Details */}
+                                <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-5">
+                                    <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                        <Settings size={16} className="text-zinc-400" />
+                                        Test Details
+                                    </h2>
+
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-400">Duration</span>
+                                            <span className="text-white">{test.duration ? `${test.duration} minutes` : "No limit"}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-400">Files</span>
+                                            <span className="text-white">{test.files?.length || 0} files</span>
+                                        </div>
+                                        {test.description && (
+                                            <div className="pt-3 border-t border-white/5">
+                                                <span className="text-zinc-400 block mb-1">Description</span>
+                                                <p className="text-zinc-300 text-xs">{test.description}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Stats */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 text-zinc-400 mb-1">
-                                        <Users size={14} />
-                                        <span className="text-xs uppercase tracking-wider">Active</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-white">{activeCount}</p>
-                                </div>
-
-                                <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 text-zinc-400 mb-1">
-                                        <Clock size={14} />
-                                        <span className="text-xs uppercase tracking-wider">Submitted</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-green-400">{submittedCount}</p>
-                                </div>
-                            </div>
-
-                            {/* Test Details */}
-                            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-5">
-                                <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                    <Settings size={16} className="text-zinc-400" />
-                                    Test Details
-                                </h2>
-
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Duration</span>
-                                        <span className="text-white">{test.duration ? `${test.duration} minutes` : "No limit"}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Files</span>
-                                        <span className="text-white">{test.files?.length || 0} files</span>
-                                    </div>
-                                    {test.description && (
-                                        <div className="pt-3 border-t border-white/5">
-                                            <span className="text-zinc-400 block mb-1">Description</span>
-                                            <p className="text-zinc-300 text-xs">{test.description}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </Panel>
 
                     <PanelResizeHandle className="w-1 bg-white/5 hover:bg-blue-500/50 transition-colors cursor-col-resize" />
 
-                    {/* Right - Participants */}
-                    <Panel defaultSize={65} minSize={40}>
-                        <ParticipantsList />
+                    {/* Right - Participants List */}
+                    <Panel defaultSize={25} minSize={20} maxSize={40}>
+                        <ParticipantsList
+                            onSelect={setSelectedParticipant}
+                            selectedId={selectedParticipant?.id}
+                        />
                     </Panel>
                 </PanelGroup>
             </div>
