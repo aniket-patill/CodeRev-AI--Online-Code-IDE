@@ -6,54 +6,12 @@ import { Button } from "@/components/ui/button";
 
 const getViolationMessage = (type) => {
     switch (type) {
-        case VIOLATIONS.FULLSCREEN_EXIT:
-            return {
-                title: "Fullscreen Required",
-                message: "You must remain in fullscreen mode during the test. Exiting fullscreen again will automatically submit your test.",
-                icon: "🖥️",
-            };
-        case VIOLATIONS.TAB_SWITCH:
-            return {
-                title: "Tab Switch Detected",
-                message: "Switching tabs or windows is not allowed. Another attempt will automatically submit your test.",
-                icon: "🔀",
-            };
-        case VIOLATIONS.WINDOW_BLUR:
-            return {
-                title: "Window Focus Lost",
-                message: "You clicked outside the test window. This is not allowed. Another attempt will automatically submit your test.",
-                icon: "👁️",
-            };
-        case VIOLATIONS.DEVTOOLS_OPEN:
-            return {
-                title: "Developer Tools Detected",
-                message: "Opening developer tools is prohibited during the test. This action has been logged.",
-                icon: "🔧",
-            };
-        case VIOLATIONS.PASTE_ATTEMPT:
-            return {
-                title: "Paste Blocked",
-                message: "Pasting content is not allowed during the test. You must type all answers manually.",
-                icon: "📋",
-            };
-        case VIOLATIONS.RIGHT_CLICK:
-            return {
-                title: "Right-Click Disabled",
-                message: "Right-clicking is disabled during the test.",
-                icon: "🖱️",
-            };
-        case VIOLATIONS.KEYBOARD_SHORTCUT:
-            return {
-                title: "Keyboard Shortcut Blocked",
-                message: "Certain keyboard shortcuts are disabled during the test to maintain integrity.",
-                icon: "⌨️",
-            };
-        default:
-            return {
-                title: "Warning",
-                message: "A suspicious activity was detected. Please focus on your test.",
-                icon: "⚠️",
-            };
+        case VIOLATIONS.FULLSCREEN_EXIT: return { title: "Fullscreen Required", message: "Please stay in fullscreen to continue." };
+        case VIOLATIONS.TAB_SWITCH: return { title: "Focus Lost", message: "Switching tabs is not allowed." };
+        case VIOLATIONS.WINDOW_BLUR: return { title: "Window Blurred", message: "Please keep the test window in focus." };
+        case VIOLATIONS.DEVTOOLS_OPEN: return { title: "System Alert", message: "Developer tools are not permitted." };
+        case VIOLATIONS.PASTE_ATTEMPT: return { title: "Action Blocked", message: "Copy/Paste is disabled." };
+        default: return { title: "Security Alert", message: "Suspicious activity detected." };
     }
 };
 
@@ -62,71 +20,39 @@ const ProctorWarningModal = () => {
 
     if (!showWarningModal || !currentWarning) return null;
 
-    const { title, message, icon } = getViolationMessage(currentWarning);
+    const { title, message } = getViolationMessage(currentWarning);
+    const remaining = 2 - warningCount;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
-            <div className="bg-zinc-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl shadow-red-500/20 animate-in zoom-in-95 duration-300">
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="p-4 bg-red-500/20 rounded-2xl text-4xl">
-                        {icon}
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <ShieldAlert className="w-5 h-5 text-red-400" />
-                            <span className="text-red-400 text-xs font-bold uppercase tracking-wider">
-                                Warning {warningCount}/2
-                            </span>
-                        </div>
-                        <h2 className="text-xl font-bold text-white">{title}</h2>
-                    </div>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xl animate-in fade-in duration-200">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full mx-6 shadow-2xl animate-in zoom-in-95 duration-200">
+
+                {/* Minimal Icon */}
+                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
                 </div>
 
-                {/* Message */}
-                <p className="text-zinc-300 mb-6 leading-relaxed">
-                    {message}
-                </p>
-
-                {/* Warning indicator */}
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
-                    <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                        <div className="text-sm">
-                            <p className="text-red-400 font-semibold mb-1">
-                                {warningCount === 1 ? "First Warning" : "Final Warning"}
-                            </p>
-                            <p className="text-red-300/70">
-                                {warningCount === 1
-                                    ? "This is your first warning. One more violation will automatically submit your test."
-                                    : "This is your final warning. Any further violations will result in automatic submission."}
-                            </p>
-                        </div>
-                    </div>
+                {/* Text */}
+                <div className="text-center mb-8">
+                    <h2 className="text-xl font-bold text-white mb-2 tracking-tight">{title}</h2>
+                    <p className="text-zinc-400 text-sm">{message}</p>
                 </div>
 
-                {/* Progress bar showing warnings */}
-                <div className="mb-6">
-                    <div className="flex gap-2">
-                        {[1, 2].map((num) => (
-                            <div
-                                key={num}
-                                className={`flex-1 h-2 rounded-full transition-colors ${num <= warningCount ? "bg-red-500" : "bg-zinc-700"
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                    <p className="text-center text-xs text-zinc-500 mt-2">
-                        {2 - warningCount} warning{2 - warningCount !== 1 ? "s" : ""} remaining
-                    </p>
+                {/* Status */}
+                <div className="flex items-center justify-center gap-2 mb-8">
+                    <div className={`h-1.5 w-8 rounded-full ${warningCount >= 1 ? 'bg-red-500' : 'bg-zinc-800'}`} />
+                    <div className={`h-1.5 w-8 rounded-full ${warningCount >= 2 ? 'bg-red-500' : 'bg-zinc-800'}`} />
+                    <span className="text-[10px] text-zinc-500 font-medium ml-2 uppercase tracking-wider">
+                        {remaining} {remaining === 1 ? 'Attempt' : 'Attempts'} Left
+                    </span>
                 </div>
 
                 {/* Action */}
                 <Button
                     onClick={dismissWarning}
-                    className="w-full bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-bold text-base"
+                    className="w-full bg-white text-black hover:bg-zinc-200 h-11 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]"
                 >
-                    I Understand - Return to Fullscreen
+                    Return to Test
                 </Button>
             </div>
         </div>

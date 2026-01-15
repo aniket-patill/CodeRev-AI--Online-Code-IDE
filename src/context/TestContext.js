@@ -14,38 +14,36 @@ export const TestProvider = ({ children, testId, participantId }) => {
     const [error, setError] = useState(null);
     const [timeRemaining, setTimeRemaining] = useState(null);
 
-    // Fetch test data
+    // Listen to test data in real-time
     useEffect(() => {
         if (!testId) return;
 
-        const fetchTest = async () => {
-            try {
-                const testRef = doc(db, "tests", testId);
-                const testSnap = await getDoc(testRef);
+        const testRef = doc(db, "tests", testId);
+        const unsubscribe = onSnapshot(testRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const testData = { id: docSnap.id, ...docSnap.data() };
+                setTest(testData);
 
-                if (testSnap.exists()) {
-                    const testData = { id: testSnap.id, ...testSnap.data() };
-                    setTest(testData);
-
-                    // Calculate time remaining if duration is set
-                    if (testData.duration && testData.status === "active") {
-                        const startTime = testData.startTime?.toDate() || new Date();
-                        const endTime = new Date(startTime.getTime() + testData.duration * 60 * 1000);
-                        const remaining = Math.max(0, endTime.getTime() - Date.now());
-                        setTimeRemaining(Math.floor(remaining / 1000));
-                    }
-                } else {
-                    setError("Test not found");
+                // Calculate time remaining if duration is set and test is active
+                if (testData.duration && testData.status === "active") {
+                    const startTime = testData.startTime?.toDate() || new Date();
+                    const endTime = new Date(startTime.getTime() + testData.duration * 60 * 1000);
+                    const remaining = Math.max(0, endTime.getTime() - Date.now());
+                    setTimeRemaining(Math.floor(remaining / 1000));
+                } else if (testData.status === "ended") {
+                    setTimeRemaining(0);
                 }
-            } catch (err) {
-                console.error("Error fetching test:", err);
-                setError("Failed to load test");
-            } finally {
-                setIsLoading(false);
+            } else {
+                setError("Test not found");
             }
-        };
+            setIsLoading(false);
+        }, (err) => {
+            console.error("Error fetching test:", err);
+            setError("Failed to load test");
+            setIsLoading(false);
+        });
 
-        fetchTest();
+        return () => unsubscribe();
     }, [testId]);
 
     // Listen to participants in real-time

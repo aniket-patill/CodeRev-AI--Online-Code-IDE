@@ -5,7 +5,7 @@ import { useProctor } from "@/context/ProctorContext";
 import { Shield, Maximize, Lock, Eye, Keyboard, Clipboard, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ProctorStartScreen = ({ testTitle, onStart }) => {
+const ProctorStartScreen = ({ testTitle, testStatus, onStart }) => {
     const { startProctoring } = useProctor();
     const [isStarting, setIsStarting] = useState(false);
     const [error, setError] = useState(null);
@@ -61,6 +61,37 @@ const ProctorStartScreen = ({ testTitle, onStart }) => {
         },
     ];
 
+    if (testStatus === "draft") {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+                <div className="relative z-10 text-center space-y-6 max-w-md w-full p-8 bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl">
+                    <div className="relative w-20 h-20 mx-auto">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" />
+                        <div className="relative w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center border border-white/10">
+                            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">Waiting for Host</h1>
+                        <p className="text-zinc-400">
+                            Please wait while the organizer starts the test session.
+                            <br />
+                            Do not refresh the page.
+                        </p>
+                    </div>
+
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-800/50 rounded-full border border-white/5 text-xs text-zinc-500">
+                        <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                        Status: waiting for start
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
             {/* Background */}
@@ -71,20 +102,12 @@ const ProctorStartScreen = ({ testTitle, onStart }) => {
             <div className="relative z-10 max-w-2xl w-full">
                 <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                     {/* Header */}
-                    <div className="p-8 border-b border-white/5 bg-gradient-to-b from-blue-500/10 to-transparent">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-4 bg-blue-500/20 rounded-2xl">
-                                <Shield className="w-8 h-8 text-blue-400" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-white mb-1">
-                                    Proctored Test
-                                </h1>
-                                <p className="text-zinc-400">
-                                    {testTitle || "Please read the rules before starting"}
-                                </p>
-                            </div>
+                    <div className="p-10 pb-0 text-center">
+                        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Shield className="w-8 h-8 text-blue-500" />
                         </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">{testTitle || "Proctored Test"}</h1>
+                        <p className="text-zinc-400 text-sm max-w-sm mx-auto">This exam is monitored. Please review the rules below before starting.</p>
                     </div>
 
                     {/* Rules */}
@@ -93,22 +116,13 @@ const ProctorStartScreen = ({ testTitle, onStart }) => {
                             Test Rules & Monitoring
                         </h2>
 
-                        <div className="grid gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {rules.map((rule, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-start gap-4 p-4 bg-zinc-800/50 border border-white/5 rounded-xl"
-                                >
-                                    <div className="p-2 bg-zinc-700/50 rounded-lg shrink-0">
-                                        <rule.icon size={18} className="text-zinc-300" />
-                                    </div>
+                                <div key={index} className="flex items-start gap-3">
+                                    <rule.icon className="w-5 h-5 text-zinc-500 mt-0.5" />
                                     <div>
-                                        <h3 className="text-sm font-semibold text-white mb-0.5">
-                                            {rule.title}
-                                        </h3>
-                                        <p className="text-xs text-zinc-400">
-                                            {rule.description}
-                                        </p>
+                                        <h3 className="text-sm font-medium text-white">{rule.title}</h3>
+                                        <p className="text-xs text-zinc-500 mt-0.5">{rule.description}</p>
                                     </div>
                                 </div>
                             ))}

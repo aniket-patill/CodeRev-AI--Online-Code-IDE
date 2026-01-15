@@ -68,11 +68,19 @@ const TestWorkspaceContent = ({ test }) => {
         router.push(`/test/${testId}/submitted?auto=true`);
     };
 
+    // Watch for test ending or status changes
+    useEffect(() => {
+        if (test?.status === "ended") {
+            handleAutoSubmit("Test ended by organizer");
+        }
+    }, [test?.status]);
+
     // Show proctor start screen if not started
     if (!hasStarted) {
         return (
             <ProctorStartScreen
                 testTitle={test?.title}
+                testStatus={test?.status}
                 onStart={() => setHasStarted(true)}
             />
         );
@@ -98,8 +106,8 @@ const TestWorkspaceContent = ({ test }) => {
                             key={file.name}
                             onClick={() => setActiveFileIndex(index)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${index === activeFileIndex
-                                    ? "bg-zinc-800 text-white"
-                                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                                ? "bg-zinc-800 text-white"
+                                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
                                 }`}
                         >
                             {file.name}
@@ -169,46 +177,19 @@ const ProctorWrapper = ({ test, participantId, testId }) => {
     );
 };
 
-export default function TestWorkspacePage() {
+const TestWrapper = () => {
     const { testId } = useParams();
     const router = useRouter();
-    const [test, setTest] = useState(null);
+    const { test, isLoading, error } = useTest();
     const [participantId, setParticipantId] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Check if participant has access
         const storedParticipantId = sessionStorage.getItem(`test_participant_${testId}`);
-
         if (!storedParticipantId) {
-            // No access, redirect to test access page
             router.push(`/test/${testId}`);
             return;
         }
-
         setParticipantId(storedParticipantId);
-
-        // Fetch test data
-        const fetchTest = async () => {
-            try {
-                const testRef = doc(db, "tests", testId);
-                const testSnap = await getDoc(testRef);
-
-                if (testSnap.exists()) {
-                    setTest({ id: testSnap.id, ...testSnap.data() });
-                } else {
-                    setError("Test not found");
-                }
-            } catch (err) {
-                console.error("Error fetching test:", err);
-                setError("Failed to load test");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchTest();
     }, [testId, router]);
 
     if (isLoading) {
@@ -222,11 +203,11 @@ export default function TestWorkspacePage() {
         );
     }
 
-    if (error) {
+    if (error || !test) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-red-400 mb-4">{error}</p>
+                    <p className="text-red-400 mb-4">{error || "Test not found"}</p>
                     <button
                         onClick={() => router.push("/")}
                         className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700"
@@ -238,9 +219,32 @@ export default function TestWorkspacePage() {
         );
     }
 
+    return <ProctorWrapper test={test} participantId={participantId} testId={testId} />;
+};
+
+export default function TestWorkspacePage() {
+    const { testId } = useParams();
+    // We get participantId inside the wrapper now via sessionStorage check
+    // but the provider needs it. We actally neeed to get it first.
+    // However, TestContext handles fetching the test.
+    // The previous logic had duplicated fetching. 
+    // We should use TestProvider to fetch, but TestProvider needs props.
+    // Let's keep it simple: Use TestProvider to fetch, and a child component to check loading/error.
+
+    const [participantId, setParticipantId] = useState(null);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const id = sessionStorage.getItem(`test_participant_${testId}`);
+            if (id) setParticipantId(id);
+        }
+    }, [testId]);
+
+    if (!participantId) return null; // Will redirect in inner component if missing
+
     return (
         <TestProvider testId={testId} participantId={participantId}>
-            <ProctorWrapper test={test} participantId={participantId} testId={testId} />
+            <TestWrapper />
         </TestProvider>
     );
 }

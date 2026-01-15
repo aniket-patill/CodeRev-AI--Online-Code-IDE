@@ -1,12 +1,14 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { CheckCircle, Home } from "lucide-react";
+import { CheckCircle, Home, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TestSubmittedPage() {
     const { testId } = useParams();
     const router = useRouter();
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isAutoSubmit = searchParams?.get('auto') === 'true';
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
@@ -16,17 +18,19 @@ export default function TestSubmittedPage() {
 
             {/* Content */}
             <div className="relative z-10 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-10 text-center max-w-md shadow-2xl">
-                {/* Success Icon */}
-                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-500">
-                    <CheckCircle className="w-10 h-10 text-green-400" />
+                {/* Status Icon */}
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-500 ${isAutoSubmit ? 'bg-yellow-500/10' : 'bg-green-500/10'}`}>
+                    {isAutoSubmit ? <AlertTriangle className="w-8 h-8 text-yellow-500" /> : <CheckCircle className="w-8 h-8 text-green-500" />}
                 </div>
 
-                <h1 className="text-2xl font-bold text-white mb-3 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-                    Test Submitted!
+                <h1 className="text-2xl font-bold text-white mb-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+                    {isAutoSubmit ? "Test Ended" : "Test Submitted"}
                 </h1>
 
-                <p className="text-zinc-400 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
-                    Your answers have been submitted successfully. Your instructor will review your submission.
+                <p className="text-zinc-400 mb-8 max-w-[280px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
+                    {isAutoSubmit
+                        ? "Your test was automatically submitted due to a violation or time limit."
+                        : "Your answers have been submitted successfully."}
                 </p>
 
                 <Button
