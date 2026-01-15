@@ -19,7 +19,11 @@ const ManageContent = ({ test, onUpdate }) => {
     const [isStarting, setIsStarting] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [selectedParticipant, setSelectedParticipant] = useState(null);
+    // Use ID for state so we can derive the fresh object from context
+    const [selectedParticipantId, setSelectedParticipantId] = useState(null);
+
+    // Derived state - ensures deep updates (like code changes) are reflected immediately
+    const selectedParticipant = participants.find(p => p.id === selectedParticipantId) || null;
 
     const testUrl = typeof window !== "undefined"
         ? `${window.location.origin}/test/${test.id}`
@@ -110,6 +114,7 @@ const ManageContent = ({ test, onUpdate }) => {
         <div className="h-screen flex flex-col bg-black text-white overflow-hidden">
             {/* Header */}
             <header className="h-16 px-6 flex items-center justify-between bg-zinc-900/80 backdrop-blur-xl border-b border-white/5 shrink-0">
+                {/* ... header content ... */}
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => router.push("/dashboard")}
@@ -132,6 +137,7 @@ const ManageContent = ({ test, onUpdate }) => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* ... header buttons ... */}
                     {test.status === "draft" && (
                         <Button
                             onClick={startTest}
@@ -189,7 +195,7 @@ const ManageContent = ({ test, onUpdate }) => {
                             <StudentCodeViewer
                                 participant={selectedParticipant}
                                 test={test}
-                                onClose={() => setSelectedParticipant(null)}
+                                onClose={() => setSelectedParticipantId(null)}
                             />
                         ) : (
                             <div className="h-full overflow-y-auto p-6 space-y-6">
@@ -319,8 +325,8 @@ const ManageContent = ({ test, onUpdate }) => {
                     {/* Right - Participants List */}
                     <Panel defaultSize={25} minSize={20} maxSize={40}>
                         <ParticipantsList
-                            onSelect={setSelectedParticipant}
-                            selectedId={selectedParticipant?.id}
+                            onSelect={(p) => setSelectedParticipantId(p.id)}
+                            selectedId={selectedParticipantId}
                         />
                     </Panel>
                 </PanelGroup>

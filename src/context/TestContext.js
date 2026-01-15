@@ -93,27 +93,6 @@ export const TestProvider = ({ children, testId, participantId }) => {
         const { joinTestSession } = await import("@/utils/testUtils");
 
         const participantId = await joinTestSession(db, testId, name, "dummy_password_bypass", email);
-        // Note: joinTest in Context seems to assume we are ALREADY validated or it's a different flow?
-        // Wait, the original joinTest in Context fetched the test and didn't check password?
-        // Let's check the original code again.
-        // Original code: fetched test, ignored password check.
-        // If I use the utility, it REQUIRES password.
-        // This suggests TestContext.joinTest might be used in a different context (e.g. from a lobby where password was already checked?)
-        // OR it's just incomplete/dummy code.
-        // The only place using joinTest logic (manually) was TestAccessForm which DID check password.
-        // If I change this to use utility, I need to pass the password. But joinTest signature doesn't have password.
-        // I should probably UPDATE the signature of joinTest in Context to accept password if it's ever used.
-        // But since TestAccessForm doesn't use it, who uses it?
-        // Maybe nobody uses it?
-        // I'll skip updating TestContext joinTest for now to avoid breaking unknown consumers, 
-        // BUT I will add a comment or just leave it since the critical path (TestAccessForm) is fixed.
-        // Actually, better to just leave it be or update it to be correct (require password).
-        // Let's NOT touch TestContext.joinTest if it's not used, to avoid regression.
-        // The user complained about randomization "once teacher adds question students need to be assigned their question only".
-        // This is solved by the TestAccessForm fix.
-
-        // However, I SHOULD implement the "what more can be done" part.
-        // Enhanced Anti-Cheat: Tab switching detection.
         return participantId;
     };
 
@@ -158,6 +137,18 @@ export const TestProvider = ({ children, testId, participantId }) => {
         await updateDoc(participantRef, {
             status: newStatus,
             lastActive: Timestamp.now(),
+        });
+    };
+
+    // Grade participant
+    const gradeParticipant = async (participantId, grade, feedback = "") => {
+        if (!testId) return;
+
+        const participantRef = doc(db, `tests/${testId}/participants`, participantId);
+        await updateDoc(participantRef, {
+            grade: grade, // 'passed' or 'failed'
+            gradingFeedback: feedback,
+            gradedAt: Timestamp.now(),
         });
     };
 
@@ -228,6 +219,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
                 submitTest,
                 leaveTest,
                 changeParticipantStatus,
+                gradeParticipant,
                 deleteTest,
                 getCurrentParticipantFiles,
                 getCurrentParticipantQuestions,
@@ -255,6 +247,7 @@ export const useTest = () => {
             submitTest: () => Promise.resolve(),
             leaveTest: () => Promise.resolve(),
             changeParticipantStatus: () => Promise.reject("Provider missing"),
+            gradeParticipant: () => Promise.resolve(),
             getCurrentParticipantFiles: () => [],
             getCurrentParticipantQuestions: () => [],
         };

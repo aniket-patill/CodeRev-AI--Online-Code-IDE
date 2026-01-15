@@ -1,15 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileCode, Play, X, Save } from "lucide-react";
+import { FileCode, Play, X, Save, CheckCircle, XCircle } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import TestEditor from "./TestEditor";
 import TestOutput from "./TestOutput";
 import { Button } from "@/components/ui/button";
+import { useTest } from "@/context/TestContext";
+import { toast } from "sonner";
 
 const StudentCodeViewer = ({ participant, test, onClose }) => {
+    const { gradeParticipant } = useTest();
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
+    const [gradingLoading, setGradingLoading] = useState(false);
 
     // Determine which files to show (assigned or test default)
     const files = participant?.assignedFiles || test?.files || [];
@@ -32,8 +36,19 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
 
     const handleCodeChange = (newCode) => {
         // Teacher might want to edit to fix/test, so we allow local state update
-        // But we don't save back to student's database unless we add a "Grader correction" feature
         setCurrentCode(newCode);
+    };
+
+    const handleGrade = async (grade) => {
+        setGradingLoading(true);
+        try {
+            await gradeParticipant(participant.id, grade);
+            toast.success(`Student marked as ${grade}`);
+        } catch (error) {
+            toast.error("Failed to grade");
+        } finally {
+            setGradingLoading(false);
+        }
     };
 
     if (!participant) return null;
@@ -41,25 +56,50 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
     return (
         <div className="h-full flex flex-col bg-[#1e1e1e] text-white">
             {/* Header */}
-            <div className="h-14 px-4 bg-zinc-900 border-b border-white/5 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+            <div className="h-16 px-4 bg-zinc-900 border-b border-white/5 flex items-center justify-between shrink-0 gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
                         {participant.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm text-white">{participant.name}</h3>
-                        <p className="text-xs text-zinc-500">{participant.email || "No email"}</p>
+                        <h3 className="font-bold text-sm text-white truncate">{participant.name}</h3>
+                        <p className="text-xs text-zinc-500 truncate">{participant.email || "No email"}</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded-full 
-                        ${participant.status === 'submitted' ? 'bg-green-500/10 text-green-400' :
-                            participant.status === 'cheated' ? 'bg-red-500/10 text-red-500' :
-                                'bg-blue-500/10 text-blue-400'}`}>
-                        {participant.status}
-                    </span>
-                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-zinc-400 hover:text-white">
+                <div className="flex items-center gap-3">
+                    {/* Grading Controls */}
+                    <div className="flex bg-zinc-800 rounded-lg p-1 border border-white/5">
+                        <Button
+                            onClick={() => handleGrade("passed")}
+                            size="sm"
+                            variant="ghost"
+                            disabled={gradingLoading}
+                            className={`h-7 px-3 text-xs font-medium gap-1.5 ${participant.grade === "passed"
+                                    ? "bg-green-500/20 text-green-400 hover:bg-green-500/30 hover:text-green-300"
+                                    : "text-zinc-400 hover:text-green-400 hover:bg-green-500/10"
+                                }`}
+                        >
+                            <CheckCircle size={14} />
+                            Pass
+                        </Button>
+                        <div className="w-px bg-white/5 mx-1" />
+                        <Button
+                            onClick={() => handleGrade("failed")}
+                            size="sm"
+                            variant="ghost"
+                            disabled={gradingLoading}
+                            className={`h-7 px-3 text-xs font-medium gap-1.5 ${participant.grade === "failed"
+                                    ? "bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300"
+                                    : "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                                }`}
+                        >
+                            <XCircle size={14} />
+                            Fail
+                        </Button>
+                    </div>
+
+                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-zinc-400 hover:text-white shrink-0">
                         <X size={18} />
                     </Button>
                 </div>
@@ -91,14 +131,6 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
                                 file={{ ...activeFile, content: currentCode }} // Pass currentCode as content
                                 language={activeFile.language || "javascript"}
                                 readOnly={true} // Read only for teacher initially? Or allow edit? 
-                                // Let's allow edit but visual indication it's temporary?
-                                // Actually, TestEditor uses internal state initialized from file.content.
-                                // We are passing `currentCode` as `content`. 
-                                // To make it update when we switch files, TestEditor needs to reset key or listen to file change.
-                                // TestEditor implementation listens to [file, currentParticipant].
-                                // Since we aren't "currentParticipant" in context, we rely on file prop change.
-                                // We might need to key the editor to force re-mount if state issues occur, 
-                                // but TestEditor has useEffect on [file].
                                 onChange={handleCodeChange}
                             />
                         )}
