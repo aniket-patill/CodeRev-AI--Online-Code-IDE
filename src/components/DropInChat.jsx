@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
-export default function DropInChat({ isOpen, onClose, codeContext, language }) {
+export default function DropInChat({ isOpen, onClose, codeContext, language, initialInput }) {
     const [messages, setMessages] = useState([
         {
             id: "welcome",
@@ -19,6 +19,12 @@ export default function DropInChat({ isOpen, onClose, codeContext, language }) {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        if (initialInput) {
+            setInput(initialInput);
+        }
+    }, [initialInput, isOpen]); // Reset input when opened with new initialInput
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -130,8 +136,8 @@ export default function DropInChat({ isOpen, onClose, codeContext, language }) {
                                     </div>
 
                                     <div className={`flex-1 max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${msg.role === "user"
-                                            ? "bg-blue-600 text-white"
-                                            : "bg-zinc-800/50 border border-white/5 text-zinc-200"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-zinc-800/50 border border-white/5 text-zinc-200"
                                         }`}>
                                         {msg.role === "ai" ? (
                                             <ReactMarkdown

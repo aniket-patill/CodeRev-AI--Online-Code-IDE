@@ -60,11 +60,13 @@ const TextSelectionMenu = ({ onAskAI, externalSelection }) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={isSubmitted
                         ? {
-                            x: window.innerWidth - (position?.left || 0) - 400, // Fly towards right panel roughly
-                            y: -200,
+                            left: "50%",
+                            top: "20%",
+                            x: "-50%",
+                            y: 0,
                             opacity: 0,
                             scale: 0.5,
-                            transition: { duration: 0.5, ease: "anticipate" }
+                            transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
                         }
                         : { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
                     }
