@@ -2,8 +2,7 @@
 "use client";
 import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings, Code2, Check, X, Lightbulb, Bot } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import DropInChat from "./DropInChat";
-import TextSelectionMenu from "./TextSelectionMenu";
+
 import Editor, { useMonaco, DiffEditor } from "@monaco-editor/react";
 import axios from "axios";
 import LanguageSelector from "./LanguageSelector";
@@ -21,7 +20,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   );
   const [isFixing, setIsFixing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isAiOpen, setIsAiOpen] = useState(false);
+
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
   const editorRef = useRef(null); // Internal Ref
@@ -32,8 +31,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   const [originalCode, setOriginalCode] = useState("");
   const [fixedCode, setFixedCode] = useState("");
   const [hintData, setHintData] = useState(null);
-  const [externalSelection, setExternalSelection] = useState(null);
-  const [chatInput, setChatInput] = useState("");
+
 
   useEffect(() => {
     if (file) {
@@ -102,47 +100,10 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
     if (onEditorMounted) {
       onEditorMounted(editor);
     }
-
-    editor.onDidChangeCursorSelection((e) => {
-      const selection = editor.getSelection();
-      const model = editor.getModel();
-
-      if (!selection || selection.isEmpty()) {
-        setExternalSelection(null);
-        return;
-      }
-
-      const text = model.getValueInRange(selection);
-      if (!text.trim()) {
-        setExternalSelection(null);
-        return;
-      }
-
-      // Calculate position
-      const position = selection.getEndPosition();
-      const scrolledVisiblePosition = editor.getScrolledVisiblePosition(position);
-      const domNode = editor.getDomNode();
-
-      if (domNode && scrolledVisiblePosition) {
-        const rect = domNode.getBoundingClientRect();
-        // Adjust for editor padding/layout if needed, but rect + visiblePos usually works well
-        // We add some vertical offset to show below the cursor
-        setExternalSelection({
-          text: text,
-          top: rect.top + scrolledVisiblePosition.top + 20, // 20px offset
-          left: rect.left + scrolledVisiblePosition.left
-        });
-      }
-    });
-
     editor.focus();
   };
 
-  const handleAskAI = (text) => {
-    setChatInput(text);
-    setIsAiOpen(true);
-    setExternalSelection(null);
-  };
+
 
   const handleGenerateDocs = async () => {
     setIsLoading(true);
@@ -505,14 +466,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
           </div>
         </div>
       </div>
-      <DropInChat
-        isOpen={isAiOpen}
-        onClose={() => setIsAiOpen(false)}
-        codeContext={updatedCode}
-        language={language}
-        initialInput={chatInput}
-      />
-      <TextSelectionMenu onAskAI={handleAskAI} externalSelection={externalSelection} />
+
     </div>
   );
 }

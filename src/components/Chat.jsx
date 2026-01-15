@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown, ArrowUp, Sparkles, Loader2 } from "lucide-react";
+import { MessageSquarePlus, Trash, X, Copy, Check, Send, User, ArrowDown, ArrowUp, Sparkles, Loader2, CornerDownRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
 function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, onMessageConsumed }) {
@@ -73,20 +73,20 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
   }, [messages, newMessage, isAIProcessing]);
 
   const [isReceivingContext, setIsReceivingContext] = useState(false);
+  const [selectionContext, setSelectionContext] = useState(null);
 
   // Handle pending messages from parent (e.g., from TextSelectionMenu)
   useEffect(() => {
     if (pendingMessage) {
-      // Format as an AI query
-      const formattedMessage = `@ ${pendingMessage}`;
-      setNewMessage(formattedMessage);
+      // Store the selection for the context preview bubble
+      setSelectionContext(pendingMessage);
+      // Set AI mode prefix, user can type their question
+      setNewMessage("@ ");
 
       // Trigger "Catch" animation
       setIsReceivingContext(true);
       setTimeout(() => setIsReceivingContext(false), 1500);
 
-      // Optionally auto-focus the input if we had a ref to it, 
-      // but identifying the @ prefix is enough for the user to just hit enter or edit.
       if (onMessageConsumed) {
         onMessageConsumed();
       }
@@ -593,6 +593,22 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
           }}
           className="relative max-w-3xl mx-auto"
         >
+          {/* Selection Context Preview */}
+          {selectionContext && (
+            <div className="mb-2 flex items-center gap-2.5 bg-zinc-800/70 border border-white/5 rounded-lg px-3 py-2.5 animate-in fade-in duration-200">
+              <CornerDownRight size={14} className="text-zinc-500 flex-shrink-0" />
+              <p className="flex-1 text-[13px] text-zinc-300 truncate">
+                "{selectionContext}"
+              </p>
+              <button
+                type="button"
+                onClick={() => setSelectionContext(null)}
+                className="text-zinc-500 hover:text-white transition-colors flex-shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
           {/* Unified Capsule Container */}
           <div className={`
              relative flex items-center p-1.5 
