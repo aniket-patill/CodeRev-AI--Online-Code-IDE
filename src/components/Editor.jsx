@@ -151,6 +151,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   };
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [hintCooldown, setHintCooldown] = useState(0);
+  const [hintsRemaining, setHintsRemaining] = useState(5);
 
   useEffect(() => {
     let interval;
@@ -163,18 +164,19 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   }, [hintCooldown]);
 
   const getHint = async () => {
-    if (hintCooldown > 0) return;
+    if (hintCooldown > 0 || hintsRemaining <= 0) return;
 
     setIsHintLoading(true);
     setHintData(null);
     try {
       const res = await axios.post("/api/getChatResponse", {
-        message: "Analyze the code and provide a single, short, helpful hint or context about what this code is doing or what might be missing. Keep it under 2 sentences. Focus on the very last part of the code.",
+        message: "Analyze the current code context and provide a brief, actionable hint about what logically comes next. Do not provide the full code, just a nudge on the next step or logic to implement. Keep it under 2 sentences.",
         codeContext: updatedCode,
       });
       if (res.data?.aiResponse) {
         setHintData(res.data.aiResponse);
         setHintCooldown(10); // 10s cooldown after success
+        setHintsRemaining((prev) => prev - 1);
       }
     } catch (error) {
       console.error("Failed to get hint:", error);
@@ -361,13 +363,13 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                   {isFocusMode && (
                     <div className="relative">
                       <button
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg text-xs font-medium text-amber-500 hover:text-amber-400 transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg text-xs font-medium text-amber-500 hover:text-amber-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={getHint}
-                        disabled={isHintLoading}
-                        title="Get a hint about your code"
+                        disabled={isHintLoading || (hintsRemaining <= 0 && !hintData) || hintCooldown > 0}
+                        title={hintsRemaining <= 0 ? "No hints remaining for this session" : "Get a hint about what to write next"}
                       >
                         <Lightbulb size={12} className={isHintLoading ? "animate-pulse" : ""} />
-                        {isHintLoading ? "Thinking..." : "Hint"}
+                        {isHintLoading ? "Thinking..." : `Hint (${hintsRemaining})`}
                       </button>
 
                       {hintData && (
@@ -375,7 +377,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                           <div className="flex justify-between items-start gap-4 mb-2">
                             <div className="flex items-center gap-2 text-amber-500">
                               <Lightbulb size={14} />
-                              <span className="text-xs font-bold uppercase tracking-wider">Code Context</span>
+                              <span className="text-xs font-bold uppercase tracking-wider">Hint</span>
                             </div>
                             <button
                               onClick={() => setHintData(null)}
