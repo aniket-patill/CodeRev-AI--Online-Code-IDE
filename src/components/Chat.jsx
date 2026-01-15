@@ -30,6 +30,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const lastRequestTimeRef = useRef(0);
   const cooldownIntervalRef = useRef(null);
+  const [aiProcessingPhase, setAiProcessingPhase] = useState("Thinking");
 
   // Null-safe auth access (prevents crash during hydration)
   const userId = auth.currentUser?.uid;
@@ -43,7 +44,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
   // Guard: If user is not authenticated, show message
   if (!userId) {
     return (
-      <div className="flex flex-col h-full bg-zinc-900/95 backdrop-blur-xl border-l border-white/10 items-center justify-center p-6">
+      <div className="flex flex-col h-full bg-zinc-900 border-l border-white/10 items-center justify-center p-6">
         <p className="text-zinc-400 text-sm">Please log in to access chat.</p>
       </div>
     );
@@ -120,6 +121,24 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       }
     };
   }, []);
+
+  // Cycle through AI processing phases
+  useEffect(() => {
+    if (!isAIProcessing) {
+      setAiProcessingPhase("Thinking");
+      return;
+    }
+
+    const phases = ["Thinking", "Analyzing", "Composing"];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % phases.length;
+      setAiProcessingPhase(phases[index]);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [isAIProcessing]);
 
   const generateAIResponse = async (prompt, codeContext, retryCount = 0) => {
     // Debounce: prevent rapid requests (min 2 seconds between requests)
@@ -203,19 +222,32 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
   };
 
   const sendMessage = async () => {
-    if (newMessage.trim() === "") return;
+    // Allow sending if there's a message OR if there's selection context with AI mode
+    const hasContent = newMessage.trim() !== "" && newMessage.trim() !== "@";
+    const hasSelectionWithAI = selectionContext && newMessage.trim().startsWith("@");
+
+    if (!hasContent && !hasSelectionWithAI) return;
 
     const imageUrl = auth.currentUser.photoURL;
-    const aiMatch = newMessage.match(/@(.+)/);
+    const aiMatch = newMessage.match(/@(.*)$/);
     let aiPrompt = null;
     let userMessage = newMessage;
 
     if (aiMatch) {
-      aiPrompt = aiMatch[1].trim();
+      // If there's selection context, prepend it to the prompt
+      const userQuery = aiMatch[1].trim();
+      if (selectionContext) {
+        aiPrompt = userQuery
+          ? `${selectionContext}\n\nUser question: ${userQuery}`
+          : selectionContext;
+        userMessage = userQuery ? `@ ${userQuery}` : `@ Explain this`;
+      } else {
+        aiPrompt = userQuery;
+      }
     }
 
     try {
-      if (userMessage) {
+      if (userMessage && userMessage.trim() !== "@") {
         await addDoc(messagesRef, {
           text: userMessage,
           createdAt: serverTimestamp(),
@@ -242,6 +274,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       }
 
       setNewMessage("");
+      setSelectionContext(null); // Clear selection context after sending
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -504,7 +537,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/95 backdrop-blur-xl border-l border-white/10">
+    <div className="flex flex-col h-full bg-zinc-900 border-l border-white/10">
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -569,14 +602,19 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
 
         {isAIProcessing && (
           <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex gap-3 max-w-[90%] items-start">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 ring-2 ring-blue-500/20">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <div className="flex gap-3 max-w-[90%] items-center">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
               </div>
-              <div className="bg-zinc-900/60 border border-white/5 px-4 py-3 rounded-2xl flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
+              <div className="bg-zinc-800 border border-white/5 px-4 py-2.5 rounded-xl flex items-center gap-3">
+                <span className="text-[13px] text-zinc-300 font-medium animate-pulse">
+                  {aiProcessingPhase}
+                </span>
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+                </div>
               </div>
             </div>
           </div>
@@ -585,7 +623,7 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
       </div>
 
       {/* Input Section */}
-      <div className="p-4 bg-zinc-900/50 backdrop-blur-lg">
+      <div className="p-4 bg-zinc-950 border-t border-white/5">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -602,7 +640,10 @@ function Chatroom({ workspaceId, setIsChatOpen, editorInstance, pendingMessage, 
               </p>
               <button
                 type="button"
-                onClick={() => setSelectionContext(null)}
+                onClick={() => {
+                  setSelectionContext(null);
+                  setNewMessage("");
+                }}
                 className="text-zinc-500 hover:text-white transition-colors flex-shrink-0"
               >
                 <X size={14} />
