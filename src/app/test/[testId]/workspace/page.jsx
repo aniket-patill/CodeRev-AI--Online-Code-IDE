@@ -59,7 +59,7 @@ const TestWorkspaceContent = ({ test }) => {
 
     const handleCodeChange = (code) => {
         setCurrentCode(code);
-        
+
         // Update question progress when code changes
         if (activeFile) {
             const currentQuestion = questions[activeFileIndex];
@@ -67,9 +67,9 @@ const TestWorkspaceContent = ({ test }) => {
                 setQuestionProgress(prev => ({
                     ...prev,
                     [currentQuestion.id || activeFileIndex]: {
-                        completed: code.trim() !== '',
+                        completed: (typeof code === 'string' ? code.trim() : "") !== '',
                         lastEdited: new Date().toISOString(),
-                        codeLength: code.length
+                        codeLength: code ? code.length : 0
                     }
                 }));
             }
@@ -127,23 +127,26 @@ const TestWorkspaceContent = ({ test }) => {
                             {questions.map((question, index) => {
                                 // Calculate status based on code submission for this question
                                 const hasCode = Object.keys(currentParticipant?.files || {}).some(
-                                    fileName => currentParticipant.files[fileName]?.trim() !== ''
+                                    fileName => {
+                                        const fileContent = currentParticipant.files[fileName];
+                                        return typeof fileContent === 'string' && fileContent.trim() !== '';
+                                    }
                                 );
-                                
+
                                 // Get progress status for this question
                                 const questionId = question.id || index;
                                 const progress = questionProgress[questionId];
-                                
+
                                 let statusClass = "bg-gray-500"; // Default (not started)
                                 if (progress?.completed) {
                                     statusClass = "bg-green-500"; // Completed
                                 } else if (activeFileIndex === index) {
                                     statusClass = "bg-yellow-500"; // In progress
                                 }
-                                
+
                                 return (
-                                    <div 
-                                        key={question.id || index} 
+                                    <div
+                                        key={question.id || index}
                                         className={`p-3 rounded-lg border cursor-pointer transition-all ${activeFileIndex === index ? 'border-blue-500 bg-zinc-800/70' : 'border-white/10 hover:border-white/30'} flex items-start`}
                                         onClick={() => setActiveFileIndex(index)}
                                     >

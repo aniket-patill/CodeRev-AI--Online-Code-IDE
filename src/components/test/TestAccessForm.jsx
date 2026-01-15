@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, Loader2, AlertCircle } from "lucide-react";
-import { collection, getDocs, query, where, doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -27,52 +26,27 @@ const TestAccessForm = ({ testId, testTitle, testDescription, onSuccess }) => {
         setError("");
 
         try {
-            // Verify password by fetching test document
-            const testRef = doc(db, "tests", testId);
-            const { getDoc } = await import("firebase/firestore");
-            const testSnap = await getDoc(testRef);
+            // Import the utility dynamically or assumption it's top-level
+            // But since we are replacing the block, let's assume we add the import at the top too.
+            // Wait, I cannot add imports with replace_file_content easily if I only target this block.
+            // I should use multi_replace or ensure I update imports too.
+            // Let's use multi_replace to handle both imports and the function body.
 
-            if (!testSnap.exists()) {
-                setError("Test not found");
-                return;
-            }
-
-            const testData = testSnap.data();
-
-            // Verify password (in production, compare hashed values)
-            if (testData.password !== password) {
-                setError("Incorrect password");
-                return;
-            }
-
-            // Check if test is active
-            if (testData.status === "ended") {
-                setError("This test has ended");
-                return;
-            }
-
-            // Create participant entry
-            const participantRef = doc(collection(db, `tests/${testId}/participants`));
-            await setDoc(participantRef, {
-                name: name.trim(),
-                joinedAt: Timestamp.now(),
-                lastActive: Timestamp.now(),
-                status: "active",
-                submittedAt: null,
-                files: {},
-            });
+            // This logic is just for the function body:
+            const { joinTestSession } = await import("@/utils/testUtils");
+            const participantId = await joinTestSession(db, testId, name, password);
 
             // Store participant ID in session storage for this test
-            sessionStorage.setItem(`test_participant_${testId}`, participantRef.id);
+            sessionStorage.setItem(`test_participant_${testId}`, participantId);
 
             if (onSuccess) {
-                onSuccess(participantRef.id);
+                onSuccess(participantId);
             } else {
                 router.push(`/test/${testId}/workspace`);
             }
         } catch (err) {
             console.error("Error joining test:", err);
-            setError("Failed to join test. Please try again.");
+            setError(err.message || "Failed to join test. Please try again.");
         } finally {
             setIsLoading(false);
         }
