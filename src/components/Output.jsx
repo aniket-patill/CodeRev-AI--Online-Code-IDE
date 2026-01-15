@@ -148,18 +148,19 @@ const Output = ({ editorRef, language }) => {
     setIsLoading(true);
     try {
       const { run: result } = await executeCode(language, sourceCode, userInput);
-      setOutput(result.output.split("\n"));
-      if (result.stderr) {
+
+      // Piston returns 'output' which combines stdout and stderr
+      // But sometimes we want to check them explicitly
+      const outputText = result.output || result.stdout || result.stderr || "";
+      setOutput(outputText.split("\n"));
+
+      // Check for errors (stderr or non-zero exit code)
+      if (result.stderr || (result.code !== 0 && result.code !== null)) {
         setIsError(true);
-        // Show compilation errors for C/C++
-        if (language === 'c' || language === 'cpp') {
-          setOutput(result.stderr.split("\n"));
-        }
       } else {
         setIsError(false);
       }
     } catch (error) {
-
       setIsError(true);
       setOutput([`Error while running the code: ${error.message || 'Unknown error'}`]);
     } finally {
@@ -181,8 +182,8 @@ const Output = ({ editorRef, language }) => {
             <button
               onClick={() => setShowInput(!showInput)}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${needsInput
-                  ? 'bg-zinc-800 text-amber-400 border-amber-500/30 hover:bg-zinc-700'
-                  : 'bg-zinc-800 text-zinc-300 border-white/10 hover:bg-zinc-700 hover:text-white'
+                ? 'bg-zinc-800 text-amber-400 border-amber-500/30 hover:bg-zinc-700'
+                : 'bg-zinc-800 text-zinc-300 border-white/10 hover:bg-zinc-700 hover:text-white'
                 }`}
             >
               {showInput ? 'Hide Input' : 'Add Input ⚠️'}
@@ -219,8 +220,8 @@ const Output = ({ editorRef, language }) => {
             onChange={(e) => setUserInput(e.target.value)}
             placeholder={needsInput ? "Enter input for your program..." : "Enter input here..."}
             className={`w-full h-24 px-3 py-2 bg-zinc-900 text-zinc-200 border rounded-lg resize-none focus:outline-none focus:ring-1 text-xs font-mono ${needsInput && !userInput.trim()
-                ? 'border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20'
-                : 'border-white/10 focus:border-white/20 focus:ring-white/10'
+              ? 'border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20'
+              : 'border-white/10 focus:border-white/20 focus:ring-white/10'
               }`}
           />
 
