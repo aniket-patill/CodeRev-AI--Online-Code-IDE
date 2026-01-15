@@ -3,13 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Users, Clock, Copy, ExternalLink, Loader2, Globe, Lock } from "lucide-react";
+import { doc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "@/config/firebase";
+import { FileText, Users, Clock, Copy, ExternalLink, Loader2, Globe, Lock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const TestCard = ({ test, onDelete }) => {
     const router = useRouter();
     const [isCopying, setIsCopying] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const copyTestLink = async () => {
         setIsCopying(true);
@@ -42,6 +45,41 @@ const TestCard = ({ test, onDelete }) => {
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         return mins ? `${hours}h ${mins}m` : `${hours}h`;
+    };
+
+    const deleteCurrentTest = async () => {
+        if (!window.confirm(`Are you sure you want to delete the test "${test.title}"? This action cannot be undone and will remove all participant data.`)) {
+            return;
+        }
+        
+        setIsDeleting(true);
+        try {
+            // Delete all participant documents
+            const participantsRef = collection(db, `tests/${test.id}/participants`);
+            const participantsSnapshot = await getDocs(participantsRef);
+            
+            const deleteParticipantPromises = participantsSnapshot.docs.map(docSnap => 
+                deleteDoc(docSnap.ref)
+            );
+            
+            await Promise.all(deleteParticipantPromises);
+            
+            // Finally delete the test document itself
+            const testRef = doc(db, "tests", test.id);
+            await deleteDoc(testRef);
+            
+            toast.success("Test deleted successfully!");
+            
+            // Call the onDelete callback if provided
+            if (onDelete) {
+                onDelete(test.id);
+            }
+        } catch (error) {
+            console.error("Error deleting test:", error);
+            toast.error("Failed to delete test");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -106,6 +144,19 @@ const TestCard = ({ test, onDelete }) => {
                             Manage
                         </Button>
                     </Link>
+                    
+                    <Button
+                        onClick={deleteCurrentTest}
+                        disabled={isDeleting}
+                        variant="destructive"
+                        className="h-9 text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/20"
+                    >
+                        {isDeleting ? (
+                            <Loader2 size={14} className="mr-2 animate-spin" />
+                        ) : (
+                            <Trash2 size={14} className="mr-2" />
+                        )}
+                    </Button>
                 </div>
             </div>
         </div>

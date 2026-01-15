@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/config/firebase";
 import { Loader2, ArrowLeft, Copy, Play, Square, Link2, Users, Clock, Settings, Trash2 } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -14,9 +14,10 @@ import ParticipantsList from "@/components/test/ParticipantsList";
 
 const ManageContent = ({ test, onUpdate }) => {
     const router = useRouter();
-    const { participants } = useTest();
+    const { participants, deleteTest } = useTest();
     const [isStarting, setIsStarting] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const testUrl = typeof window !== "undefined"
         ? `${window.location.origin}/test/${test.id}`
@@ -71,6 +72,24 @@ const ManageContent = ({ test, onUpdate }) => {
             toast.error("Failed to end test");
         } finally {
             setIsEnding(false);
+        }
+    };
+
+    const deleteCurrentTest = async () => {
+        if (!window.confirm("Are you sure you want to delete this test? This action cannot be undone and will remove all participant data.")) {
+            return;
+        }
+        
+        setIsDeleting(true);
+        try {
+            await deleteTest();
+            toast.success("Test deleted successfully!");
+            router.push("/dashboard");
+        } catch (error) {
+            console.error("Error deleting test:", error);
+            toast.error("Failed to delete test");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -138,6 +157,22 @@ const ManageContent = ({ test, onUpdate }) => {
                                 <Square size={16} className="mr-2" />
                             )}
                             End Test
+                        </Button>
+                    )}
+                    
+                    {(test.status === "ended" || test.status === "draft") && (
+                        <Button
+                            onClick={deleteCurrentTest}
+                            disabled={isDeleting}
+                            variant="destructive"
+                            className="bg-red-600/20 hover:bg-red-600/30 text-red-400 h-9 px-4 border border-red-600/30"
+                        >
+                            {isDeleting ? (
+                                <Loader2 size={16} className="mr-2 animate-spin" />
+                            ) : (
+                                <Trash2 size={16} className="mr-2" />
+                            )}
+                            Delete Test
                         </Button>
                     )}
                 </div>

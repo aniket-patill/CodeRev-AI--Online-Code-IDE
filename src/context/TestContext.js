@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { doc, getDoc, collection, onSnapshot, setDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, collection, onSnapshot, setDoc, updateDoc, Timestamp, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
 
 const TestContext = createContext();
@@ -136,6 +136,17 @@ export const TestProvider = ({ children, testId, participantId }) => {
             lastActive: Timestamp.now(),
         });
     };
+    
+    // Change participant status (used for marking cheaters)
+    const changeParticipantStatus = async (participantId, newStatus) => {
+        if (!testId || !participantId) return;
+        
+        const participantRef = doc(db, `tests/${testId}/participants`, participantId);
+        await updateDoc(participantRef, {
+            status: newStatus,
+            lastActive: Timestamp.now(),
+        });
+    };
 
     // Format time remaining
     const formatTime = (seconds) => {
@@ -143,6 +154,33 @@ export const TestProvider = ({ children, testId, participantId }) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    // Delete test and all participants
+    const deleteTest = async () => {
+        if (!testId) return;
+        
+        try {
+            // First get all participants to delete them
+            const participantsRef = collection(db, `tests/${testId}/participants`);
+            const participantsSnapshot = await getDocs(participantsRef);
+            
+            // Delete all participant documents
+            const deleteParticipantPromises = participantsSnapshot.docs.map(doc => 
+                deleteDoc(doc.ref)
+            );
+            
+            await Promise.all(deleteParticipantPromises);
+            
+            // Finally delete the test document itself
+            const testRef = doc(db, "tests", testId);
+            await deleteDoc(testRef);
+            
+            return true;
+        } catch (error) {
+            console.error("Error deleting test:", error);
+            throw error;
+        }
     };
 
     return (
@@ -160,6 +198,8 @@ export const TestProvider = ({ children, testId, participantId }) => {
                 updateCode,
                 submitTest,
                 leaveTest,
+                changeParticipantStatus,
+                deleteTest,
             }}
         >
             {children}
@@ -183,6 +223,7 @@ export const useTest = () => {
             updateCode: () => Promise.resolve(),
             submitTest: () => Promise.resolve(),
             leaveTest: () => Promise.resolve(),
+            changeParticipantStatus: () => Promise.reject("Provider missing"),
         };
     }
     return context;

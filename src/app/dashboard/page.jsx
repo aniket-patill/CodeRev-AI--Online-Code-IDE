@@ -374,7 +374,14 @@ const Dashboard = () => {
               </div>
             ) : (
               tests.map((test) => (
-                <TestCard key={test.id} test={test} />
+                <TestCard 
+                  key={test.id} 
+                  test={test} 
+                  onDelete={(deletedTestId) => {
+                    setTests(prevTests => prevTests.filter(t => t.id !== deletedTestId));
+                    toast.success("Test deleted successfully!");
+                  }} 
+                />
               ))
             )}
           </div>

@@ -1,33 +1,46 @@
 "use client";
 
 import { useTest } from "@/context/TestContext";
-import { Users, Clock, CheckCircle, XCircle, Circle, RefreshCw } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, Circle, RefreshCw, MoreVertical, ShieldAlert, ShieldCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const ParticipantsList = () => {
-    const { participants, isLoading } = useTest();
+    const { participants, isLoading, changeParticipantStatus } = useTest();
+    
+    const handleStatusChange = async (participantId, newStatus) => {
+        try {
+            await changeParticipantStatus(participantId, newStatus);
+            toast.success(`Participant marked as ${newStatus}`);
+        } catch (error) {
+            toast.error("Failed to update status");
+        }
+    };
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case "submitted":
-                return <CheckCircle size={14} className="text-green-400" />;
-            case "left":
-                return <XCircle size={14} className="text-red-400" />;
+            case "submitted": return <CheckCircle size={14} className="text-green-400" />;
+            case "cheated": return <ShieldAlert size={14} className="text-red-500" />;
+            case "left": return <XCircle size={14} className="text-red-400" />;
             case "active":
-            default:
-                return <Circle size={14} className="text-blue-400 animate-pulse" />;
+            default: return <Circle size={14} className="text-blue-400 animate-pulse" />;
         }
     };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "submitted":
-                return "bg-green-500/20 text-green-400";
-            case "left":
-                return "bg-red-500/20 text-red-400";
+            case "submitted": return "bg-green-500/10 text-green-400 border border-green-500/20";
+            case "cheated": return "bg-red-500/10 text-red-500 border border-red-500/20";
+            case "left": return "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20";
             case "active":
-            default:
-                return "bg-blue-500/20 text-blue-400";
+            default: return "bg-blue-500/10 text-blue-400 border border-blue-500/20";
         }
     };
 
@@ -117,6 +130,27 @@ const ParticipantsList = () => {
                                 <span className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-full ${getStatusColor(participant.status)}`}>
                                     {participant.status}
                                 </span>
+
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 hover:text-white hover:bg-white/10 ml-1">
+                                            <MoreVertical size={16} />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-white">
+                                        {participant.status !== "cheated" ? (
+                                            <DropdownMenuItem onClick={() => handleStatusChange(participant.id, "cheated")} className="text-red-400 focus:text-red-400 focus:bg-red-500/10 cursor-pointer">
+                                                <ShieldAlert className="mr-2 h-4 w-4" />
+                                                Mark as Cheated
+                                            </DropdownMenuItem>
+                                        ) : (
+                                            <DropdownMenuItem onClick={() => handleStatusChange(participant.id, "active")} className="text-zinc-400 focus:text-white focus:bg-zinc-800 cursor-pointer">
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                                Mark as Safe
+                                            </DropdownMenuItem>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         ))}
                     </div>
