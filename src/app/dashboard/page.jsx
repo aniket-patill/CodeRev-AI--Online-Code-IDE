@@ -11,7 +11,7 @@ import {
   setDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { Globe, Lock, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { Globe, Lock, Loader2, PlusCircle, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import ShowMembers from "@/components/Members";
 import InviteNotification from "@/components/InviteNotification";
+import TestCreationModal from "@/components/test/TestCreationModal";
+import TestCard from "@/components/test/TestCard";
 
 
 
@@ -39,12 +41,15 @@ const Dashboard = () => {
 
   // State management
   const [workspaces, setWorkspaces] = useState([]);
+  const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [deletingWorkspaceId, setDeletingWorkspaceId] = useState(null);
+  const [activeTab, setActiveTab] = useState("spaces"); // "spaces" or "tests"
 
   // Fetch workspaces on mount
   useEffect(() => {
@@ -80,14 +85,26 @@ const Dashboard = () => {
         );
 
         setWorkspaces(workspaceData.filter(Boolean));
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching spaces:", error);
-        setLoading(false);
       }
     };
 
-    fetchWorkspaces();
+    const fetchTests = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "tests"));
+        const testData = querySnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((test) => test.createdBy === user.uid);
+        setTests(testData);
+      } catch (error) {
+        console.error("Error fetching tests:", error);
+      }
+    };
+
+    Promise.all([fetchWorkspaces(), fetchTests()]).finally(() => {
+      setLoading(false);
+    });
   }, [user, router]);
 
   // Create workspace handler
@@ -204,34 +221,68 @@ const Dashboard = () => {
       {/* Page Header */}
       <div className="relative z-10 flex justify-between items-center px-8 py-8 container mx-auto max-w-7xl">
         <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Your Spaces</h1>
-          <p className="text-zinc-400">Manage and create your development environments</p>
+          <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-zinc-400">Manage your spaces and tests</p>
         </div>
 
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="inline-flex items-center gap-2 px-6 py-6 bg-white text-black font-semibold rounded-xl col-span-1 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 border-0 text-base"
-          disabled={isCreating}
-        >
-          {isCreating ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <>
-              <PlusCircle size={22} className="text-black" />
-              <span>Create Space</span>
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setIsTestModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all hover:scale-105 active:scale-95 border-0"
+          >
+            <FileText size={20} />
+            <span>Create Test</span>
+          </Button>
+          <Button
+            onClick={() => setIsOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-5 bg-white text-black font-semibold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 border-0"
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                <PlusCircle size={20} />
+                <span>Create Space</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Workspaces Grid */}
+      {/* Tabs */}
+      <div className="relative z-10 px-8 container mx-auto max-w-7xl mb-6">
+        <div className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-fit border border-white/5">
+          <button
+            onClick={() => setActiveTab("spaces")}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "spaces"
+              ? "bg-white text-black"
+              : "text-zinc-400 hover:text-white"
+              }`}
+          >
+            Spaces ({workspaces.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("tests")}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "tests"
+              ? "bg-white text-black"
+              : "text-zinc-400 hover:text-white"
+              }`}
+          >
+            Tests ({tests.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Content Grid */}
       <div className="relative z-10 flex-1 overflow-y-auto px-8 pb-8 container mx-auto max-w-7xl">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-            <span className="ml-3 text-zinc-500">Loading spaces...</span>
+            <span className="ml-3 text-zinc-500">Loading...</span>
           </div>
-        ) : (
+        ) : activeTab === "spaces" ? (
+          /* Spaces Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {workspaces.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center h-[400px] text-center border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
@@ -254,12 +305,12 @@ const Dashboard = () => {
                   className="relative group border border-white/10 bg-zinc-900 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:border-white/20 hover:shadow-2xl overflow-hidden flex flex-col"
                 >
                   <CardContent className="p-6 flex flex-col h-full gap-6">
-                    {/* Header with Icons - Restored */}
+                    {/* Header with Icons */}
                     <div className="flex justify-between items-start">
                       <div className="p-3 bg-zinc-950 border border-white/5 rounded-xl text-zinc-400 transition-colors">
                         {ws.isPublic ? <Globe size={20} /> : <Lock size={20} />}
                       </div>
-                      {/* Delete Button (Outside Link) */}
+                      {/* Delete Button */}
                       {ws.role === "owner" && (
                         <button
                           className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-20"
@@ -301,6 +352,29 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
+              ))
+            )}
+          </div>
+        ) : (
+          /* Tests Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tests.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center h-[400px] text-center border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
+                <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                  <FileText className="w-8 h-8 text-zinc-500 opacity-50" />
+                </div>
+                <p className="text-zinc-300 text-xl font-medium mb-2">No tests found</p>
+                <p className="text-zinc-500 mb-6 max-w-sm">Create a test to assess your students or run a coding assessment.</p>
+                <Button
+                  onClick={() => setIsTestModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium"
+                >
+                  Create Your First Test
+                </Button>
+              </div>
+            ) : (
+              tests.map((test) => (
+                <TestCard key={test.id} test={test} />
               ))
             )}
           </div>
@@ -386,6 +460,12 @@ const Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Test Creation Modal */}
+      <TestCreationModal
+        isOpen={isTestModalOpen}
+        onClose={() => setIsTestModalOpen(false)}
+      />
 
       {/* Invite Notifications - Bottom Right */}
       <InviteNotification />
