@@ -85,12 +85,22 @@ export const TestProvider = ({ children, testId, participantId }) => {
         return () => clearInterval(interval);
     }, [timeRemaining]);
 
-    // Join test as participant
+   
     const joinTest = async (name, email = "") => {
         if (!testId) throw new Error("No test ID");
 
+      
+        const testRef = doc(db, "tests", testId);
+        const testSnap = await getDoc(testRef);
+        
+        if (!testSnap.exists()) {
+            throw new Error("Test not found");
+        }
+        
+        const testData = testSnap.data();
         const participantRef = doc(collection(db, `tests/${testId}/participants`));
-        const participantData = {
+        
+        let participantData = {
             name,
             email,
             joinedAt: Timestamp.now(),
@@ -99,6 +109,21 @@ export const TestProvider = ({ children, testId, participantId }) => {
             submittedAt: null,
             files: {},
         };
+        
+        // If randomization is enabled, assign random files to this participant
+        if (testData.randomizeQuestions && testData.files && testData.questionsCount) {
+            const totalFiles = testData.files;
+            const questionsCount = Math.min(testData.questionsCount, totalFiles.length);
+            
+            // Shuffle the files and pick the required number
+            const shuffledFiles = [...totalFiles].sort(() => Math.random() - 0.5);
+            const assignedFiles = shuffledFiles.slice(0, questionsCount);
+            
+            participantData.assignedFiles = assignedFiles;
+        } else {
+            // If no randomization, assign all files from the test
+            participantData.assignedFiles = testData.files || [];
+        }
 
         await setDoc(participantRef, participantData);
         return participantRef.id;
@@ -182,6 +207,14 @@ export const TestProvider = ({ children, testId, participantId }) => {
             throw error;
         }
     };
+    
+    // Get files for current participant (either assigned or from test)
+    const getCurrentParticipantFiles = () => {
+        if (!currentParticipant) return [];
+        
+        // Return assigned files if they exist, otherwise return test files
+        return currentParticipant.assignedFiles || test?.files || [];
+    };
 
     return (
         <TestContext.Provider
@@ -200,6 +233,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
                 leaveTest,
                 changeParticipantStatus,
                 deleteTest,
+                getCurrentParticipantFiles,
             }}
         >
             {children}
@@ -224,6 +258,7 @@ export const useTest = () => {
             submitTest: () => Promise.resolve(),
             leaveTest: () => Promise.resolve(),
             changeParticipantStatus: () => Promise.reject("Provider missing"),
+            getCurrentParticipantFiles: () => [],
         };
     }
     return context;

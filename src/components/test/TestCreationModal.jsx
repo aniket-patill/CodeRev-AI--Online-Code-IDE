@@ -26,6 +26,8 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         description: "",
         password: "",
         duration: "",
+        randomizeQuestions: false,
+        questionsCount: "",
         files: [{ name: "main.js", language: "javascript", content: "// Write your solution here\n", readOnly: false }],
     });
 
@@ -44,20 +46,67 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         setFormData((prev) => {
             const newFiles = [...prev.files];
             newFiles[index] = { ...newFiles[index], [field]: value };
-            return { ...prev, files: newFiles };
+            
+            let updatedFormData = { ...prev, files: newFiles };
+            
+            // If changing the name field and randomization is enabled, adjust questionsCount if needed
+            if (field === 'name' && prev.randomizeQuestions) {
+                const namedFilesAfterUpdate = newFiles.filter(f => f.name.trim()).length;
+                if (parseInt(prev.questionsCount) > namedFilesAfterUpdate) {
+                    updatedFormData.questionsCount = namedFilesAfterUpdate.toString();
+                }
+            }
+            
+            return updatedFormData;
         });
     };
 
     const removeFile = (index) => {
         if (formData.files.length <= 1) return;
-        setFormData((prev) => ({
-            ...prev,
-            files: prev.files.filter((_, i) => i !== index),
-        }));
+        setFormData((prev) => {
+            const newFiles = prev.files.filter((_, i) => i !== index);
+            
+            let updatedFormData = {
+                ...prev,
+                files: newFiles
+            };
+            
+            // If randomization is enabled, adjust questionsCount if needed
+            if (prev.randomizeQuestions) {
+                const namedFilesAfterRemoval = newFiles.filter(f => f.name.trim()).length;
+                if (parseInt(prev.questionsCount) > namedFilesAfterRemoval) {
+                    updatedFormData.questionsCount = namedFilesAfterRemoval.toString();
+                }
+            }
+            
+            return updatedFormData;
+        });
     };
 
     const handleCreate = async () => {
+        const namedFiles = formData.files.filter((f) => f.name.trim());
+        
+        // Validate required fields
         if (!formData.title || !formData.password || isCreating) return;
+        
+        // Validate randomization settings if enabled
+        if (formData.randomizeQuestions) {
+            if (!formData.questionsCount) {
+                toast.error("Please specify number of questions per student");
+                return;
+            }
+            
+            const questionsCount = parseInt(formData.questionsCount);
+            if (isNaN(questionsCount) || questionsCount <= 0) {
+                toast.error("Questions per student must be a positive number");
+                return;
+            }
+            
+            if (questionsCount > namedFiles.length) {
+                toast.error(`Cannot assign ${questionsCount} questions per student when only ${namedFiles.length} named files exist`);
+                return;
+            }
+        }
 
         try {
             setIsCreating(true);
@@ -67,6 +116,8 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                 description: formData.description,
                 password: formData.password, // In production, hash this
                 duration: formData.duration ? parseInt(formData.duration) : null,
+                randomizeQuestions: formData.randomizeQuestions,
+                questionsCount: formData.randomizeQuestions ? parseInt(formData.questionsCount) : null,
                 createdBy: user?.uid || "anonymous",
                 createdAt: Timestamp.now(),
                 status: "draft",
@@ -167,6 +218,52 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-12 rounded-xl"
                             />
                         </div>
+                    </div>
+
+                    {/* Randomization Options */}
+                    <div className="space-y-4 p-4 bg-zinc-900/30 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="randomizeQuestions"
+                                checked={formData.randomizeQuestions}
+                                onChange={(e) => updateField("randomizeQuestions", e.target.checked)}
+                                className="w-4 h-4 rounded bg-zinc-800 border-white/10 text-blue-500 focus:ring-blue-500"
+                            />
+                            <label htmlFor="randomizeQuestions" className="text-sm font-medium text-white">
+                                Randomize Questions
+                            </label>
+                        </div>
+                        
+                        {formData.randomizeQuestions && (
+                            <div className="space-y-3 pl-7">
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
+                                        Questions per Student *
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        max={formData.files.filter(f => f.name.trim()).length}
+                                        placeholder="Number of questions each student gets"
+                                        value={formData.questionsCount}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            const numValue = parseInt(value) || 0;
+                                            // Validate that questionsCount is not greater than total named files
+                                            const namedFilesCount = formData.files.filter(f => f.name.trim()).length;
+                                            if (numValue <= namedFilesCount) {
+                                                updateField("questionsCount", e.target.value);
+                                            }
+                                        }}
+                                        className="bg-zinc-800 text-white border-white/10 focus:border-blue-500/50 h-10 rounded-lg"
+                                    />
+                                    <p className="text-xs text-zinc-500">
+                                        Maximum {formData.files.filter(f => f.name.trim()).length} based on named files
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Starter Files */}

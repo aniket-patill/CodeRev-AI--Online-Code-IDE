@@ -18,14 +18,14 @@ import ProctorStartScreen from "@/components/test/ProctorStartScreen";
 const TestWorkspaceContent = ({ test }) => {
     const router = useRouter();
     const { testId } = useParams();
-    const { submitTest, leaveTest, currentParticipant } = useTest();
+    const { submitTest, leaveTest, currentParticipant, getCurrentParticipantFiles } = useTest();
     const { isProctorActive } = useProctor();
 
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
     const [hasStarted, setHasStarted] = useState(false);
 
-    const files = test?.files || [];
+    const files = getCurrentParticipantFiles();
     const activeFile = files[activeFileIndex];
 
     // Track current code for running

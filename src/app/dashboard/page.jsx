@@ -31,6 +31,7 @@ import ShowMembers from "@/components/Members";
 import InviteNotification from "@/components/InviteNotification";
 import TestCreationModal from "@/components/test/TestCreationModal";
 import TestCard from "@/components/test/TestCard";
+import TestJoinModal from "@/components/test/TestJoinModal";
 
 
 
@@ -45,6 +46,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -232,6 +234,13 @@ const Dashboard = () => {
           >
             <FileText size={20} />
             <span>Create Test</span>
+          </Button>
+          <Button
+            onClick={() => setIsJoinModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-5 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-all hover:scale-105 active:scale-95 border border-white/10"
+          >
+           
+            <span>Join Test</span>
           </Button>
           <Button
             onClick={() => setIsOpen(true)}
@@ -472,6 +481,12 @@ const Dashboard = () => {
       <TestCreationModal
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
+      />
+
+      {/* Test Join Modal */}
+      <TestJoinModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
       />
 
       {/* Invite Notifications - Bottom Right */}
