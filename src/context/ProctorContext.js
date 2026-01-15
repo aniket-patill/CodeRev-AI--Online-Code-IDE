@@ -65,13 +65,13 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         setWarningCount((prev) => {
             const newCount = prev + 1;
 
-            if (newCount >= 200) { // Increased limit significantly to prevent auto-submit
-                // Second warning = auto-submit
-                // onAutoSubmit?.("Multiple violations detected"); // DISABLED FOR STABILITY
+            if (newCount >= 3) {
+                // Third warning = auto-submit
+                onAutoSubmit?.("Multiple violations detected (Limit exceeded)");
             } else {
-                // First warning = show modal
-                // setCurrentWarning(type); // Optional: Disable warning modal too if annoying
-                // setShowWarningModal(true);
+                // Warning = show modal
+                setCurrentWarning(type);
+                setShowWarningModal(true);
             }
 
             return newCount;
@@ -215,7 +215,7 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
                 // Allow Ctrl+C for copy within editor (read-only)
                 // But block paste
                 if (e.key === "v") {
-                    // e.preventDefault(); // ALLOW PASTE FOR NOW
+                    e.preventDefault(); // Block Paste
                     handleViolation(VIOLATIONS.PASTE_ATTEMPT);
                 }
             }
@@ -238,7 +238,7 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         if (!enabled || !isProctorActive) return;
 
         const handleContextMenu = (e) => {
-            // e.preventDefault(); // ALLOW RIGHT CLICK FOR NOW
+            e.preventDefault(); // Block Right Click
             handleViolation(VIOLATIONS.RIGHT_CLICK);
         };
 
@@ -256,12 +256,12 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         if (!enabled || !isProctorActive) return;
 
         const handlePaste = (e) => {
-            // e.preventDefault(); // ALLOW PASTE
+            e.preventDefault(); // Block Paste
             handleViolation(VIOLATIONS.PASTE_ATTEMPT);
         };
 
         const handleDrop = (e) => {
-            // e.preventDefault(); // ALLOW DROP
+            e.preventDefault(); // Block Drop
             handleViolation(VIOLATIONS.PASTE_ATTEMPT);
         };
 
