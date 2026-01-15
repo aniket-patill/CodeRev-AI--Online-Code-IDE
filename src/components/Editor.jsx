@@ -39,6 +39,12 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   }, [file]);
 
   useEffect(() => {
+    if (isFocusMode) {
+      setIsAiOpen(false);
+    }
+  }, [isFocusMode]);
+
+  useEffect(() => {
     if (!file?.id || !file?.workspaceId) return;
 
     const filePath = `workspaces/${file.workspaceId}/files`;
@@ -361,13 +367,15 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                     <Wrench size={12} />
                     {isFixing ? "Fixing..." : "Fix"}
                   </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 rounded-lg text-xs font-medium text-blue-400 hover:text-blue-300 transition-all"
-                    onClick={() => setIsAiOpen(!isAiOpen)}
-                  >
-                    <Bot size={14} />
-                    Ask AI
-                  </button>
+                  {!isFocusMode && (
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 rounded-lg text-xs font-medium text-blue-400 hover:text-blue-300 transition-all"
+                      onClick={() => setIsAiOpen(!isAiOpen)}
+                    >
+                      <Bot size={14} />
+                      Ask AI
+                    </button>
+                  )}
 
                   {isFocusMode && (
                     <div className="relative">
