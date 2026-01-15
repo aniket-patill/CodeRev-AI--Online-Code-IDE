@@ -19,7 +19,7 @@ const TestWorkspaceContent = ({ test }) => {
     const router = useRouter();
     const { testId } = useParams();
     const { submitTest, leaveTest, updateCode, currentParticipant, getCurrentParticipantFiles, getCurrentParticipantQuestions } = useTest();
-    const { isProctorActive } = useProctor();
+    const { isProctorActive, stopProctoring } = useProctor();
 
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
@@ -79,6 +79,9 @@ const TestWorkspaceContent = ({ test }) => {
     };
 
     const handleSubmit = async () => {
+        // Stop proctoring first to avoid "fullscreen exit" violation
+        stopProctoring();
+
         // Save final changes
         if (activeFile && currentCode && isDirty) {
             await saveCurrentCode(activeFile, currentCode);
@@ -92,6 +95,8 @@ const TestWorkspaceContent = ({ test }) => {
     };
 
     const handleLeave = async () => {
+        stopProctoring();
+
         // Save current changes
         if (activeFile && currentCode && isDirty) {
             await saveCurrentCode(activeFile, currentCode);

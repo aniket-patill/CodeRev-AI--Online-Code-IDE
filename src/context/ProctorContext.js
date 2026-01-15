@@ -106,6 +106,11 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
         return success;
     }, [enterFullscreen]);
 
+    // Stop proctoring (used when submitting)
+    const stopProctoring = useCallback(() => {
+        setIsProctorActive(false);
+    }, []);
+
     // Dismiss warning modal
     const dismissWarning = useCallback(() => {
         setShowWarningModal(false);
@@ -384,6 +389,7 @@ export const ProctorProvider = ({ children, onAutoSubmit, enabled = true }) => {
                 showWarningModal,
                 currentWarning,
                 startProctoring,
+                stopProctoring,
                 enterFullscreen,
                 dismissWarning,
                 logViolation,
@@ -406,6 +412,7 @@ export const useProctor = () => {
             showWarningModal: false,
             currentWarning: null,
             startProctoring: () => Promise.resolve(false),
+            stopProctoring: () => { },
             enterFullscreen: () => Promise.resolve(false),
             dismissWarning: () => { },
             logViolation: () => { },
