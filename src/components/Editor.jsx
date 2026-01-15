@@ -1,7 +1,8 @@
 
 "use client";
-import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings, Code2, Check, X, Lightbulb } from "lucide-react";
+import { Moon, Sun, Sparkles, Wrench, File, Expand, Shrink, Settings, Code2, Check, X, Lightbulb, Bot } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import DropInChat from "./DropInChat";
 import Editor, { useMonaco, DiffEditor } from "@monaco-editor/react";
 import axios from "axios";
 import LanguageSelector from "./LanguageSelector";
@@ -19,6 +20,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   );
   const [isFixing, setIsFixing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
   const monaco = useMonaco();
   const timeoutRef = useRef(null);
   const editorRef = useRef(null); // Internal Ref
@@ -359,6 +361,13 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
                     <Wrench size={12} />
                     {isFixing ? "Fixing..." : "Fix"}
                   </button>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 rounded-lg text-xs font-medium text-blue-400 hover:text-blue-300 transition-all"
+                    onClick={() => setIsAiOpen(!isAiOpen)}
+                  >
+                    <Bot size={14} />
+                    Ask AI
+                  </button>
 
                   {isFocusMode && (
                     <div className="relative">
@@ -458,6 +467,12 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
           </div>
         </div>
       </div>
+      <DropInChat
+        isOpen={isAiOpen}
+        onClose={() => setIsAiOpen(false)}
+        codeContext={updatedCode}
+        language={language}
+      />
     </div>
   );
 }
