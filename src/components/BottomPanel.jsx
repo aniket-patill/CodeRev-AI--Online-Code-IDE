@@ -5,7 +5,7 @@ import DocsPanel from "./DocsPanel";
 import GitControl from "./GitControl";
 import { Github } from "lucide-react";
 
-const BottomPanel = ({ editorRef, language, documentation, workspaceId }) => {
+const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearningMode = false }) => {
   const [activeTab, setActiveTab] = useState("output"); // 'output' | 'docs'
   const [isGitOpen, setIsGitOpen] = useState(false);
 
@@ -56,7 +56,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId }) => {
         {activeTab === "output" ? (
           <Output editorRef={editorRef} language={language} />
         ) : (
-          <DocsPanel documentation={documentation} />
+          <DocsPanel documentation={documentation} isLearningMode={isLearningMode} />
         )}
       </div>
 

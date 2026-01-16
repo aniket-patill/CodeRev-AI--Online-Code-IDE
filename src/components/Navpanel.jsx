@@ -23,8 +23,28 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceState } from "@/context/WorkspaceStateContext";
+import { MODES } from "@/context/WorkspaceSettingsContext";
 
-const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
+/**
+ * Get collection names based on mode.
+ * Focus mode uses existing collections, Learning mode uses separate collections.
+ */
+const getCollectionNames = (workspaceId, mode) => {
+  if (mode === MODES.LEARNING) {
+    return {
+      files: `workspaces/${workspaceId}/learningFiles`,
+      folders: `workspaces/${workspaceId}/learningFolders`,
+    };
+  }
+  // Default to Focus mode collections (existing data)
+  return {
+    files: `workspaces/${workspaceId}/files`,
+    folders: `workspaces/${workspaceId}/folders`,
+  };
+};
+
+const NavPanel = ({ workspaceId, mode, openFile, onFileCreated, hasFiles }) => {
+  const collectionPaths = getCollectionNames(workspaceId, mode);
   const router = useRouter();
   const { canUndo, canRedo, undo, redo } = useWorkspaceState();
 
@@ -44,50 +64,50 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
   const enterPressedRef = useRef(false);
 
   const ALLOWED_EXTENSIONS = [
-    ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp", 
+    ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp",
     ".html", ".css", ".json", ".md", ".txt", ".xml", ".yml", ".yaml"
   ];
 
   const handleFileUpload = async (e) => {
     const uploadedFiles = Array.from(e.target.files);
-    
-    for (const file of uploadedFiles) {
-        const extension = "." + file.name.split(".").pop().toLowerCase();
-        
-        if (!ALLOWED_EXTENSIONS.includes(extension)) {
-            alert(`File type ${extension} not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`);
-            continue;
-        }
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const content = event.target.result;
-            try {
-                const fileRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
-                    name: file.name,
-                    content: content,
-                    workspaceId: workspaceId,
-                    folderId: null, // Uploads to root for now
-                });
-                
-                // If this is the first file and onFileCreated callback exists, notify parent
-                if (!hasFiles && onFileCreated) {
-                    const newFile = {
-                        id: fileRef.id,
-                        name: file.name,
-                        content: content,
-                        workspaceId: workspaceId,
-                        folderId: null,
-                    };
-                    // Auto-open the first file
-                    openFile(newFile);
-                    onFileCreated(newFile);
-                }
-            } catch (error) {
-                console.error("Error uploading file:", error);
-            }
-        };
-        reader.readAsText(file);
+    for (const file of uploadedFiles) {
+      const extension = "." + file.name.split(".").pop().toLowerCase();
+
+      if (!ALLOWED_EXTENSIONS.includes(extension)) {
+        alert(`File type ${extension} not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`);
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const content = event.target.result;
+        try {
+          const fileRef = await addDoc(collection(db, collectionPaths.files), {
+            name: file.name,
+            content: content,
+            workspaceId: workspaceId,
+            folderId: null, // Uploads to root for now
+          });
+
+          // If this is the first file and onFileCreated callback exists, notify parent
+          if (!hasFiles && onFileCreated) {
+            const newFile = {
+              id: fileRef.id,
+              name: file.name,
+              content: content,
+              workspaceId: workspaceId,
+              folderId: null,
+            };
+            // Auto-open the first file
+            openFile(newFile);
+            onFileCreated(newFile);
+          }
+        } catch (error) {
+          console.error("Error uploading file:", error);
+        }
+      };
+      reader.readAsText(file);
     }
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -113,7 +133,7 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
       if (member) setUserRole(member.role);
     });
 
-    const foldersRef = collection(db, `workspaces/${workspaceId}/folders`);
+    const foldersRef = collection(db, collectionPaths.folders);
     const unsubscribeFolders = onSnapshot(foldersRef, (snapshot) => {
       const foldersData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -128,7 +148,7 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
       setFolderStates(initialFolderStates);
     });
 
-    const filesRef = collection(db, `workspaces/${workspaceId}/files`);
+    const filesRef = collection(db, collectionPaths.files);
     const unsubscribeFiles = onSnapshot(filesRef, (snapshot) => {
       setFiles(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
@@ -186,18 +206,18 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
 
     try {
       if (creatingType === "folder") {
-        await addDoc(collection(db, `workspaces/${workspaceId}/folders`), {
+        await addDoc(collection(db, collectionPaths.folders), {
           name: newItemName,
           parentFolderId: creatingParentFolderId,
         });
       } else {
-        const fileRef = await addDoc(collection(db, `workspaces/${workspaceId}/files`), {
+        const fileRef = await addDoc(collection(db, collectionPaths.files), {
           name: newItemName,
           folderId: creatingParentFolderId,
           workspaceId,
           content: "", // Initialize with empty content
         });
-        
+
         // If this is the first file and onFileCreated callback exists, notify parent
         if (!hasFiles && onFileCreated) {
           const newFile = {
@@ -231,10 +251,10 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
     if (!renamingItem?.name) return;
 
     try {
-      const collectionName =
-        renamingItem.type === "folder" ? "folders" : "files";
+      const collectionPath =
+        renamingItem.type === "folder" ? collectionPaths.folders : collectionPaths.files;
       await updateDoc(
-        doc(db, `workspaces/${workspaceId}/${collectionName}/${renamingItem.id}`),
+        doc(db, `${collectionPath}/${renamingItem.id}`),
         { name: renamingItem.name }
       );
       setRenamingItem(null);
@@ -245,7 +265,7 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
 
   const deleteItem = async (type, id) => {
     if (type === "folders") {
-      await deleteDoc(doc(db, `workspaces/${workspaceId}/folders/${id}`));
+      await deleteDoc(doc(db, `${collectionPaths.folders}/${id}`));
 
       const nestedFolders = folders.filter(
         (folder) => folder.parentFolderId === id
@@ -256,10 +276,10 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
 
       const folderFiles = files.filter((file) => file.folderId === id);
       for (const file of folderFiles) {
-        await deleteDoc(doc(db, `workspaces/${workspaceId}/files/${file.id}`));
+        await deleteDoc(doc(db, `${collectionPaths.files}/${file.id}`));
       }
     } else {
-      await deleteDoc(doc(db, `workspaces/${workspaceId}/files/${id}`));
+      await deleteDoc(doc(db, `${collectionPaths.files}/${id}`));
     }
   };
 
@@ -477,12 +497,12 @@ const NavPanel = ({ workspaceId, openFile, onFileCreated, hasFiles }) => {
             >
               <Upload size={14} className="text-zinc-400" />
             </button>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                className="hidden" 
-                multiple 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              multiple
             />
           </div>
         </div>
