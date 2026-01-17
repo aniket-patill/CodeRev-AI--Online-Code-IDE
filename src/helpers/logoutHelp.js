@@ -7,7 +7,7 @@ const logout = async () => {
     await signOut(auth);
 
     // Redirect to login page after logout
-    window.location.href = "/login";
+    window.location.href = "/";
   } catch (error) {
     console.error("Error logging out:", error.message);
   }
