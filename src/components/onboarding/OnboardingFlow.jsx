@@ -33,19 +33,6 @@ const DASHBOARD_TOUR_STEPS = [
         position: "bottom",
         advanceOnTargetClick: true,
     },
-    {
-        targetId: "create-workspace-modal-name",
-        title: "Name Your Space",
-        description: "Enter a unique name for your new project.",
-        position: "bottom",
-    },
-    {
-        targetId: "create-workspace-confirm",
-        title: "Launch!",
-        description: "Click Create Space to build your environment. We'll verify your setup and continue the tour inside!",
-        position: "top",
-        advanceOnTargetClick: true,
-    },
 ];
 
 const WORKSPACE_TOUR_STEPS = [

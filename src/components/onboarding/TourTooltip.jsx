@@ -233,19 +233,35 @@ const TourTooltip = ({
                         >
                             <div className="bg-[#1C1C1E] border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
                                 <div className="p-5">
-                                    {/* Header */}
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">
-                                                Step {step} of {totalSteps}
-                                            </span>
-                                            <h3 className="text-base font-semibold text-white">{title}</h3>
+                                    {/* Header with Progress Dots */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex-1">
+                                            {/* Step Counter with Dots */}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">
+                                                    Step {step} of {totalSteps}
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: totalSteps }).map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className={`h-1.5 rounded-full transition-all duration-300 ${i < step
+                                                                    ? 'w-4 bg-blue-500'
+                                                                    : i === step - 1
+                                                                        ? 'w-6 bg-white'
+                                                                        : 'w-1.5 bg-zinc-700'
+                                                                }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <h3 className="text-lg font-bold text-white">{title}</h3>
                                         </div>
                                         <button
                                             onClick={onSkip}
-                                            className="text-zinc-500 hover:text-white transition-colors p-1"
+                                            className="text-zinc-500 hover:text-white transition-colors p-1 ml-2"
                                         >
-                                            <X size={14} />
+                                            <X size={16} />
                                         </button>
                                     </div>
 
