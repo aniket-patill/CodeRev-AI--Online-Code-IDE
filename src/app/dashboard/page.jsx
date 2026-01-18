@@ -53,6 +53,8 @@ const Dashboard = () => {
   const [workspaceName, setWorkspaceName] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState(null);
   const [deletingWorkspaceId, setDeletingWorkspaceId] = useState(null);
   const [activeTab, setActiveTab] = useState("spaces"); // "spaces" or "tests"
 
@@ -150,61 +152,26 @@ const Dashboard = () => {
   };
 
   // Delete workspace handler
-  const deleteWorkspace = async (workspaceId) => {
-    const confirmationToast = toast(
-      <div className="flex flex-col gap-4 w-full">
-        {/* Backdrop Blur Overlay - Hacky but effective for "blur background while popup" */}
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] rounded-xl" style={{ margin: '-20px', pointerEvents: 'none' }} />
+  const handleDeleteButtonClick = (workspaceId) => {
+    setWorkspaceToDelete(workspaceId);
+    setIsDeleteOpen(true);
+  };
 
-        <div className="flex justify-between items-center gap-4 relative z-10">
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-white text-sm">Delete Space?</span>
-            <span className="text-xs text-zinc-400">This action cannot be undone.</span>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => toast.dismiss(confirmationToast)}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white h-7 px-3 text-xs rounded-lg border border-white/5"
-              disabled={deletingWorkspaceId === workspaceId}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                try {
-                  setDeletingWorkspaceId(workspaceId);
-                  await deleteDoc(doc(db, `workspaces/${workspaceId}`));
-                  setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceId));
-                  toast.success("Space deleted");
-                } catch (error) {
-                  toast.error("Failed to delete");
-                } finally {
-                  setDeletingWorkspaceId(null);
-                  toast.dismiss(confirmationToast);
-                }
-              }}
-              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 h-7 px-3 text-xs rounded-lg"
-              disabled={deletingWorkspaceId === workspaceId}
-            >
-              {deletingWorkspaceId === workspaceId ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>,
-      {
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-        duration: Infinity,
-        position: "bottom-right",
-        className: "bg-zinc-950 border border-white/10 p-4 rounded-xl shadow-2xl min-w-[340px]",
-        unstyled: true,
-      }
-    );
+  const confirmDeleteWorkspace = async () => {
+    if (!workspaceToDelete) return;
+
+    try {
+      setDeletingWorkspaceId(workspaceToDelete);
+      await deleteDoc(doc(db, `workspaces/${workspaceToDelete}`));
+      setWorkspaces(workspaces.filter((ws) => ws.id !== workspaceToDelete));
+      toast.success("Space deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete space");
+    } finally {
+      setDeletingWorkspaceId(null);
+      setIsDeleteOpen(false);
+      setWorkspaceToDelete(null);
+    }
   };
 
   return (
@@ -337,7 +304,7 @@ const Dashboard = () => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            deleteWorkspace(ws.id);
+                            handleDeleteButtonClick(ws.id);
                           }}
                           disabled={deletingWorkspaceId === ws.id}
                         >
@@ -483,6 +450,51 @@ const Dashboard = () => {
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   "Create Space"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Workspace Confirmation Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-md shadow-2xl">
+          <div className="p-6 border-b border-white/5 bg-red-500/5">
+            <DialogTitle className="text-2xl font-bold text-white mb-1">
+              Delete Space
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              This action <span className="text-red-400 font-semibold">cannot be undone</span>. All files and data in this space will be permanently removed.
+            </DialogDescription>
+          </div>
+
+          <div className="p-6 space-y-6">
+            <div className="flex flex-col items-center justify-center py-4 bg-zinc-900/50 rounded-xl border border-white/5 border-dashed">
+              <Trash2 className="w-12 h-12 text-red-500/50 mb-3" />
+              <p className="text-sm text-zinc-500">Are you absolutely sure?</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setIsDeleteOpen(false)}
+                className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-12 rounded-xl font-medium"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteWorkspace}
+                className="flex-1 items-center gap-2 bg-red-600 hover:bg-red-500 text-white h-12 rounded-xl font-semibold hover:shadow-lg hover:shadow-red-500/10 transition-all disabled:opacity-50"
+                disabled={deletingWorkspaceId !== null}
+              >
+                {deletingWorkspaceId !== null ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 size={18} />
+                    <span>Delete Space</span>
+                  </>
                 )}
               </Button>
             </div>
