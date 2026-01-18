@@ -29,8 +29,22 @@ const DASHBOARD_TOUR_STEPS = [
     {
         targetId: "create-space-btn",
         title: "Start Building",
-        description: "Ready to launch? Click here to create your first workspace. This is the first step to building your project!",
+        description: "Click to create your first workspace. This will open the setup form.",
         position: "bottom",
+        advanceOnTargetClick: true,
+    },
+    {
+        targetId: "create-workspace-modal-name",
+        title: "Name Your Space",
+        description: "Enter a unique name for your new project.",
+        position: "bottom",
+    },
+    {
+        targetId: "create-workspace-confirm",
+        title: "Launch!",
+        description: "Click Create Space to build your environment. We'll verify your setup and continue the tour inside!",
+        position: "top",
+        advanceOnTargetClick: true,
     },
 ];
 
@@ -44,7 +58,7 @@ const WORKSPACE_TOUR_STEPS = [
     {
         targetId: "create-file-btn",
         title: "Create a File",
-        description: "Start by creating a new file. Click this button to add your first code file to the project.",
+        description: "Let's write some code! Click this button to create your first file (e.g., index.js) and see the editor in action.",
         position: "bottom",
     },
     {
@@ -178,15 +192,22 @@ const OnboardingFlow = () => {
 
         if (type) {
             setTourType(type);
-            // Filter steps that have valid targets in the DOM
-            const validSteps = rawSteps.filter(step => !!document.getElementById(step.targetId));
-
-            if (validSteps.length > 0) {
-                setActiveTourSteps(validSteps);
+            // For Dashboard, we do NOT filter steps because some targets (modal) appear dynamically
+            if (type === "dashboard") {
+                setActiveTourSteps(rawSteps);
                 setCurrentStep(0);
                 setShowTour(true);
             } else {
-                console.warn("No valid tour steps found for this page.");
+                // For Workspace, we filter as before
+                const validSteps = rawSteps.filter(step => !!document.getElementById(step.targetId));
+
+                if (validSteps.length > 0) {
+                    setActiveTourSteps(validSteps);
+                    setCurrentStep(0);
+                    setShowTour(true);
+                } else {
+                    console.warn("No valid tour steps found for this page.");
+                }
             }
         }
 
@@ -270,6 +291,7 @@ const OnboardingFlow = () => {
                     onNext={handleNext}
                     onBack={handleBack}
                     onSkip={handleSkip}
+                    advanceOnTargetClick={currentStepData.advanceOnTargetClick}
                 />
             )}
         </>

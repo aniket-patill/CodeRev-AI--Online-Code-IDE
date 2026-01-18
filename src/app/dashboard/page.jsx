@@ -426,6 +426,7 @@ const Dashboard = () => {
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">Space Name</label>
               <Input
+                id="create-workspace-modal-name"
                 placeholder="e.g., My Awesome Project"
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
@@ -473,6 +474,7 @@ const Dashboard = () => {
                 Cancel
               </Button>
               <Button
+                id="create-workspace-confirm"
                 onClick={handleCreateWorkspace}
                 className="flex-1 items-center gap-2 bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                 disabled={isCreating || !workspaceName}

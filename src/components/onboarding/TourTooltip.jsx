@@ -16,6 +16,7 @@ const TourTooltip = ({
     onNext,
     onBack,
     onSkip,
+    advanceOnTargetClick = false, // Auto-advance when target is clicked
     position = "bottom", // top, bottom, left, right
 }) => {
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
@@ -27,8 +28,9 @@ const TourTooltip = ({
             return;
         }
 
+        const targetElement = document.getElementById(targetId);
+
         const calculatePosition = () => {
-            const targetElement = document.getElementById(targetId);
             if (!targetElement) {
                 console.warn(`Target element with id "${targetId}" not found`);
                 setIsReady(false);
@@ -88,15 +90,32 @@ const TourTooltip = ({
             setIsReady(true);
         };
 
+        // Handle target click
+        const handleTargetClick = () => {
+            if (advanceOnTargetClick) {
+                // Small delay to allow UI to update (e.g. modal open)
+                setTimeout(() => {
+                    onNext();
+                }, 200);
+            }
+        };
+
+        if (targetElement) {
+            targetElement.addEventListener("click", handleTargetClick);
+        }
+
         calculatePosition();
         window.addEventListener("resize", calculatePosition);
         window.addEventListener("scroll", calculatePosition);
 
         return () => {
+            if (targetElement) {
+                targetElement.removeEventListener("click", handleTargetClick);
+            }
             window.removeEventListener("resize", calculatePosition);
             window.removeEventListener("scroll", calculatePosition);
         };
-    }, [isVisible, targetId, position]);
+    }, [isVisible, targetId, position, advanceOnTargetClick, onNext]);
 
     // Calculate path for the SVG mask (cutout effect)
     const getMaskPath = () => {
