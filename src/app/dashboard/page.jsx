@@ -14,6 +14,7 @@ import {
 import { Globe, Lock, Loader2, PlusCircle, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -457,50 +458,57 @@ const Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Workspace Confirmation Dialog */}
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-md shadow-2xl">
-          <div className="p-6 border-b border-white/5 bg-red-500/5">
-            <DialogTitle className="text-2xl font-bold text-white mb-1">
-              Delete Space
-            </DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              This action <span className="text-red-400 font-semibold">cannot be undone</span>. All files and data in this space will be permanently removed.
-            </DialogDescription>
-          </div>
+      {/* Minimal Delete Confirmation - Bottom Right */}
+      <AnimatePresence>
+        {isDeleteOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
+            className="fixed bottom-8 right-8 z-[100] w-full max-w-[320px]"
+          >
+            <div className="bg-zinc-950/90 backdrop-blur-xl border border-red-500/20 rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 bg-red-500/5 blur-2xl rounded-full" />
 
-          <div className="p-6 space-y-6">
-            <div className="flex flex-col items-center justify-center py-4 bg-zinc-900/50 rounded-xl border border-white/5 border-dashed">
-              <Trash2 className="w-12 h-12 text-red-500/50 mb-3" />
-              <p className="text-sm text-zinc-500">Are you absolutely sure?</p>
-            </div>
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-red-500/10 rounded-lg">
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                  </div>
+                  <h3 className="font-bold text-white text-sm">Delete Space?</h3>
+                </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setIsDeleteOpen(false)}
-                className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-12 rounded-xl font-medium"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDeleteWorkspace}
-                className="flex-1 items-center gap-2 bg-red-600 hover:bg-red-500 text-white h-12 rounded-xl font-semibold hover:shadow-lg hover:shadow-red-500/10 transition-all disabled:opacity-50"
-                disabled={deletingWorkspaceId !== null}
-              >
-                {deletingWorkspaceId !== null ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <Trash2 size={18} />
-                    <span>Delete Space</span>
-                  </>
-                )}
-              </Button>
+                <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+                  This action is permanent and <span className="text-red-400 font-medium">cannot be undone</span>.
+                </p>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setIsDeleteOpen(false);
+                      setWorkspaceToDelete(null);
+                    }}
+                    className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/5 text-zinc-400 h-9 rounded-xl text-xs font-medium"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={confirmDeleteWorkspace}
+                    className="flex-1 bg-red-600 hover:bg-red-500 text-white h-9 rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-lg shadow-red-900/20"
+                    disabled={deletingWorkspaceId !== null}
+                  >
+                    {deletingWorkspaceId !== null ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "Delete"
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Test Creation Modal */}
       <TestCreationModal

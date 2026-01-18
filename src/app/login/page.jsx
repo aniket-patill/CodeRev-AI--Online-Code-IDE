@@ -17,6 +17,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2, User, Loader2 } from "lucide-react";
 
 
 
@@ -26,6 +28,8 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginSuccess, setShowLoginSuccess] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const router = useRouter();
 
   const handleLogin = async (e) => {
@@ -35,8 +39,11 @@ const Login = () => {
 
 
       if (user) {
-        toast.success("Login successful!");
-        router.push("/dashboard");
+        setLoggedInUser(user);
+        setShowLoginSuccess(true);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
       }
     } catch (error) {
       setError(error.message);
@@ -50,8 +57,11 @@ const Login = () => {
 
 
       if (user) {
-        toast.success("Logged in with Google!");
-        router.push("/dashboard");
+        setLoggedInUser(user);
+        setShowLoginSuccess(true);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
       }
     } catch (error) {
       setError(error.message);
@@ -220,6 +230,64 @@ const Login = () => {
           </Dialog>
         </CardContent>
       </Card>
+
+      {/* Premium Minimal Login Success Notification */}
+      <AnimatePresence>
+        {showLoginSuccess && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
+            className="fixed bottom-8 right-8 z-[100] w-full max-w-[320px]"
+          >
+            <div className="bg-white/80 dark:bg-zinc-950/90 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 bg-zinc-500/5 blur-2xl rounded-full" />
+
+              <div className="relative flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-200 dark:border-white/10 overflow-hidden">
+                    {loggedInUser?.photoURL ? (
+                      <Image
+                        src={loggedInUser.photoURL}
+                        alt="Profile"
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-zinc-400" />
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-950 rounded-full p-0.5 border border-zinc-200 dark:border-white/10">
+                    <div className="bg-green-500 rounded-full p-0.5">
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="font-bold text-zinc-900 dark:text-white text-sm">
+                    Welcome Back!
+                  </h3>
+                  <p className="text-xs text-zinc-500 truncate max-w-[180px]">
+                    {loggedInUser?.displayName || loggedInUser?.email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Minimal Progress Bar */}
+              <div className="mt-4 w-full h-1 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 2, ease: "linear" }}
+                  className="h-full bg-zinc-900 dark:bg-white"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
