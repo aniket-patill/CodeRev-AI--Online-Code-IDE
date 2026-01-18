@@ -25,6 +25,11 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   const timeoutRef = useRef(null);
   const editorRef = useRef(null); // Internal Ref
   const settingsRef = useRef(null);
+  const codeRef = useRef(updatedCode); // Ref to track latest code for snapshot listener
+
+  // Determine collection path based on mode
+  const collectionName = isFocusMode ? "files" : "learningFiles";
+
 
   // Diff View State
   const [isDiffView, setIsDiffView] = useState(false);
@@ -34,6 +39,10 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
 
 
   useEffect(() => {
+    codeRef.current = updatedCode;
+  }, [updatedCode]);
+
+  useEffect(() => {
     if (file) {
       fetchFileContent();
     }
@@ -41,28 +50,32 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
 
 
 
+
   useEffect(() => {
     if (!file?.id || !file?.workspaceId) return;
 
-    const filePath = `workspaces/${file.workspaceId}/files`;
+    const filePath = `workspaces/${file.workspaceId}/${collectionName}`;
     const fileRef = doc(db, filePath, file.id);
 
     const unsubscribe = onSnapshot(fileRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
-        if (data.content !== updatedCode && !isDiffView) {
+        // Use ref to check against current state without closure staleness
+        if (data.content !== codeRef.current && !isDiffView) {
+          console.log("Syncing from remote:", data.content?.substring(0, 20) + "...");
           setUpdatedCode(data.content || "");
         }
       }
     });
 
     return () => unsubscribe();
-  }, [file, isDiffView]);
+  }, [file, isDiffView, collectionName]);
+
 
   const fetchFileContent = async () => {
     if (!file?.id || !file?.workspaceId) return;
     try {
-      const filePath = `workspaces/${file.workspaceId}/files`;
+      const filePath = `workspaces/${file.workspaceId}/${collectionName}`;
       const fileRef = doc(db, filePath, file.id);
       const fileSnap = await getDoc(fileRef);
 
@@ -83,7 +96,7 @@ export default function CodeEditor({ file, onEditorMounted, language, setLanguag
   const autoSaveFile = async (content) => {
     if (!file?.id || !file?.workspaceId) return;
     try {
-      const filePath = `workspaces/${file.workspaceId}/files`;
+      const filePath = `workspaces/${file.workspaceId}/${collectionName}`;
       const fileRef = doc(db, filePath, file.id);
       await updateDoc(fileRef, { content });
     } catch (error) {
