@@ -4,6 +4,7 @@ import { WorkspaceSettingsProvider, useWorkspaceSettings, MODES } from "@/contex
 import ModeSelectionModal from "@/components/modals/ModeSelectionModal";
 import FocusWorkspace from "@/components/workspace/FocusWorkspace";
 import LearningWorkspace from "@/components/workspace/LearningWorkspace";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
 /**
  * WorkspaceRouter - Routes to appropriate workspace based on selected mode.
@@ -27,10 +28,20 @@ const WorkspaceRouter = () => {
 
   // Route to appropriate workspace based on mode
   if (mode === MODES.FOCUS) {
-    return <FocusWorkspace />;
+    return (
+      <>
+        <FocusWorkspace />
+        <OnboardingFlow />
+      </>
+    );
   }
 
-  return <LearningWorkspace />;
+  return (
+    <>
+      <LearningWorkspace />
+      <OnboardingFlow />
+    </>
+  );
 };
 
 /**

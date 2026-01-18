@@ -17,7 +17,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearni
   }, [documentation]);
 
   return (
-    <div className="flex-1 h-full bg-black border-t border-white/10 flex flex-col min-h-0">
+    <div id="bottom-panel" className="flex-1 h-full bg-black border-t border-white/10 flex flex-col min-h-0">
       {/* Tab Switcher */}
       <div className="flex items-center justify-between border-b border-white/10 bg-zinc-900/50 pr-2">
         <div className="flex">
@@ -43,6 +43,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearni
 
         {/* Git Control Trigger */}
         <button
+          id="git-control-btn"
           onClick={() => setIsGitOpen(true)}
           className="flex items-center gap-1.5 px-2 py-1 bg-[#24292e] hover:bg-[#2f363d] text-white text-[10px] font-medium rounded-md transition-colors border border-white/10"
         >

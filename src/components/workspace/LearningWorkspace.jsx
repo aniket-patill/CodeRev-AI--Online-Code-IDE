@@ -172,7 +172,7 @@ const LearningWorkspace = () => {
                         <Panel order={2} minSize={30}>
                             <PanelGroup direction="vertical">
                                 <Panel order={1} minSize={30}>
-                                    <main className="flex flex-col h-full min-w-0 relative">
+                                    <main id="code-editor-wrapper" className="flex flex-col h-full min-w-0 relative">
                                         {/* Workspace Header */}
                                         <div className="relative z-40 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-zinc-900/30 backdrop-blur-sm shrink-0">
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -215,6 +215,7 @@ const LearningWorkspace = () => {
 
                                                 {!isChatOpen && (
                                                     <button
+                                                        id="ai-chat-trigger"
                                                         onClick={() => setIsChatOpen(true)}
                                                         className="p-1.5 bg-zinc-900/40 backdrop-blur-sm border border-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
                                                         title="Open Chat"
@@ -244,7 +245,7 @@ const LearningWorkspace = () => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col flex-1 overflow-hidden relative">
+                                            <div id="code-editor" className="flex flex-col flex-1 overflow-hidden relative">
                                                 <Editor
                                                     file={selectedFile}
                                                     onEditorMounted={setEditorInstance}
@@ -289,6 +290,7 @@ const LearningWorkspace = () => {
                                     collapsible
                                     onCollapse={() => setIsChatOpen(false)}
                                     order={3}
+                                    id="chat-panel"
                                     className="bg-zinc-900/40 backdrop-blur-md border-l border-white/5"
                                 >
                                     <Chat

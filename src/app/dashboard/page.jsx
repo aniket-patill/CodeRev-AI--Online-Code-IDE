@@ -32,6 +32,9 @@ import InviteNotification from "@/components/InviteNotification";
 import TestCreationModal from "@/components/test/TestCreationModal";
 import TestCard from "@/components/test/TestCard";
 import TestJoinModal from "@/components/test/TestJoinModal";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+
+
 
 
 
@@ -221,9 +224,11 @@ const Dashboard = () => {
       </div>
 
       {/* Page Header */}
-      <div className="relative z-10 flex justify-between items-center px-8 py-8 container mx-auto max-w-7xl">
+      <div id="dashboard-header" className="relative z-10 flex justify-between items-center px-8 py-8 container mx-auto max-w-7xl">
         <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+          </div>
           <p className="text-zinc-400">Manage your spaces and tests</p>
         </div>
 
@@ -235,14 +240,16 @@ const Dashboard = () => {
             <FileText size={20} />
             <span>Create Test</span>
           </Button>
+
           <Button
             onClick={() => setIsJoinModalOpen(true)}
             className="inline-flex items-center gap-2 px-5 py-5 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-all hover:scale-105 active:scale-95 border border-white/10"
           >
-           
             <span>Join Test</span>
           </Button>
+
           <Button
+            id="create-space-btn"
             onClick={() => setIsOpen(true)}
             className="inline-flex items-center gap-2 px-5 py-5 bg-white text-black font-semibold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 border-0"
             disabled={isCreating}
@@ -261,25 +268,29 @@ const Dashboard = () => {
 
       {/* Tabs */}
       <div className="relative z-10 px-8 container mx-auto max-w-7xl mb-6">
-        <div className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-fit border border-white/5">
-          <button
-            onClick={() => setActiveTab("spaces")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "spaces"
-              ? "bg-white text-black"
-              : "text-zinc-400 hover:text-white"
-              }`}
-          >
-            Spaces ({workspaces.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("tests")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "tests"
-              ? "bg-white text-black"
-              : "text-zinc-400 hover:text-white"
-              }`}
-          >
-            Tests ({tests.length})
-          </button>
+        <div className="flex items-center gap-3">
+          <div id="dashboard-tabs-container" className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-fit border border-white/5">
+            <button
+              id="dashboard-spaces-tab"
+              onClick={() => setActiveTab("spaces")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "spaces"
+                ? "bg-white text-black"
+                : "text-zinc-400 hover:text-white"
+                }`}
+            >
+              Spaces ({workspaces.length})
+            </button>
+            <button
+              id="dashboard-tests-tab"
+              onClick={() => setActiveTab("tests")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "tests"
+                ? "bg-white text-black"
+                : "text-zinc-400 hover:text-white"
+                }`}
+            >
+              Tests ({tests.length})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -383,13 +394,13 @@ const Dashboard = () => {
               </div>
             ) : (
               tests.map((test) => (
-                <TestCard 
-                  key={test.id} 
-                  test={test} 
+                <TestCard
+                  key={test.id}
+                  test={test}
                   onDelete={(deletedTestId) => {
                     setTests(prevTests => prevTests.filter(t => t.id !== deletedTestId));
                     toast.success("Test deleted successfully!");
-                  }} 
+                  }}
                 />
               ))
             )}
@@ -491,6 +502,11 @@ const Dashboard = () => {
 
       {/* Invite Notifications - Bottom Right */}
       <InviteNotification />
+
+      {/* Onboarding Flow */}
+      <OnboardingFlow />
+
+
     </div>
   );
 };

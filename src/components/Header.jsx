@@ -8,9 +8,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { auth, db } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { LayoutDashboard, Users, Zap, BookOpen, LayoutGrid, Share2 } from "lucide-react";
+import { LayoutDashboard, Users, Zap, BookOpen, LayoutGrid, Share2, HelpCircle } from "lucide-react";
 import { useWorkspaceSettings, MODES } from "@/context/WorkspaceSettingsContext";
 import PomodoroTimer from "./PomodoroTimer";
+import { updateOnboardingStatus } from "@/helpers/onboarding";
+import { toast } from "sonner";
 
 const ModeBadge = () => {
   const { mode, setMode } = useWorkspaceSettings();
@@ -89,6 +91,40 @@ const Header = ({ workspaceId }) => {
 
     fetchUserInfo();
   }, []);
+
+  const startTour = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("Please login first");
+      return;
+    }
+
+    try {
+      // Reset onboarding status to trigger the tour
+      await updateOnboardingStatus(user.uid, {
+        hasSeenWelcome: false,
+        dashboardTourComplete: false,
+        workspaceTourComplete: false,
+        isSkipped: false,
+      });
+
+      // Navigate to dashboard if not already there
+      if (!pathname.startsWith("/dashboard")) {
+        router.push("/dashboard");
+        toast.success("Redirecting to dashboard to start tour...");
+      } else {
+        toast.success("Refresh the page to start the tour!");
+      }
+
+      // Reload page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("Error starting tour:", error);
+      toast.error("Failed to start tour");
+    }
+  };
 
   const goToDashboard = () => {
     router.push("/dashboard");
