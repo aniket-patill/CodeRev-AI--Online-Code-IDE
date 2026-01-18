@@ -152,7 +152,7 @@ const FocusWorkspace = () => {
                                                     <SearchBar workspaceId={workspaceId} />
                                                 </div>
 
-                                                <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg">
+                                                <div id="invite-members-btn" className="bg-zinc-900/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg">
                                                     <ShowMembers workspaceId={workspaceId} />
                                                 </div>
                                             </div>

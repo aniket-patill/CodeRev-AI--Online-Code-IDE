@@ -511,6 +511,7 @@ const NavPanel = ({ workspaceId, mode, openFile, onFileCreated, hasFiles }) => {
             {(userRole === "contributor" || userRole === "owner") && (
               <>
                 <button
+                  id="create-folder-btn"
                   onClick={() => {
                     setCreatingParentFolderId(null);
                     setNewItemName("");
@@ -524,6 +525,7 @@ const NavPanel = ({ workspaceId, mode, openFile, onFileCreated, hasFiles }) => {
                   Folder
                 </button>
                 <button
+                  id="create-file-btn"
                   onClick={() => {
                     setCreatingParentFolderId(null);
                     setNewItemName("");

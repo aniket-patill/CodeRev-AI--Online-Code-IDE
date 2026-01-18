@@ -28,8 +28,8 @@ const DASHBOARD_TOUR_STEPS = [
     },
     {
         targetId: "create-space-btn",
-        title: "Create Your First Space",
-        description: "Click this button to create your first workspace. You'll be able to code, collaborate, and deploy your projects.",
+        title: "Start Building",
+        description: "Ready to launch? Click here to create your first workspace. This is the first step to building your project!",
         position: "bottom",
     },
 ];
@@ -38,8 +38,14 @@ const WORKSPACE_TOUR_STEPS = [
     {
         targetId: "left-panel",
         title: "File Explorer",
-        description: "Manage your files and folders here. Create, rename, delete, and organize your project structure with drag-and-drop support.",
+        description: "Manage your files and folders here. Create, rename, delete, and organize your project structure.",
         position: "right",
+    },
+    {
+        targetId: "create-file-btn",
+        title: "Create a File",
+        description: "Start by creating a new file. Click this button to add your first code file to the project.",
+        position: "bottom",
     },
     {
         targetId: "code-editor-wrapper",
@@ -52,6 +58,12 @@ const WORKSPACE_TOUR_STEPS = [
         title: "Output & Documentation",
         description: "View code execution results, terminal output, and AI-generated documentation. Switch between tabs to access different tools.",
         position: "top",
+    },
+    {
+        targetId: "invite-members-btn",
+        title: "Real-time Collaboration",
+        description: "Invite team members to code with you in real-time. Share your workspace and build together.",
+        position: "bottom",
     },
     {
         targetId: "git-control-btn",
@@ -118,9 +130,31 @@ const OnboardingFlow = () => {
     }, [pathname]);
 
     // Auto-start tour based on route
-    // DISABLED: We now rely solely on the WelcomeToast to ask the user first.
     useEffect(() => {
-        // No auto-start logic.
+        if (isLoading || !onboardingStatus) return;
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Auto-start Workspace tour ONLY if Dashboard tour is complete
+        // This creates the "Continue after this one" effect
+        if (pathname.startsWith("/workspace/")) {
+            // Check if we should auto-start (Dashboard done, Workspace not done)
+            // We ignore isSkipped here to ensure continuity if they click "Start Building"
+            if (onboardingStatus.dashboardTourComplete && !onboardingStatus.workspaceTourComplete) {
+                // Determine valid steps first (dynamic filtering)
+                const validSteps = WORKSPACE_TOUR_STEPS.filter(step => !!document.getElementById(step.targetId));
+
+                if (validSteps.length > 0) {
+                    setTourType("workspace");
+                    setActiveTourSteps(validSteps);
+                    setCurrentStep(0);
+                    setShowTour(true);
+                    // Hide welcome toast if auto-starting
+                    setShowWelcome(false);
+                }
+            }
+        }
     }, [pathname, onboardingStatus, isLoading]);
 
     const handleStartTour = async () => {
