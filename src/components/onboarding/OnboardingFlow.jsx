@@ -292,6 +292,7 @@ const OnboardingFlow = () => {
                     onBack={handleBack}
                     onSkip={handleSkip}
                     advanceOnTargetClick={currentStepData.advanceOnTargetClick}
+                    allowBack={tourType !== "workspace"}
                 />
             )}
         </>

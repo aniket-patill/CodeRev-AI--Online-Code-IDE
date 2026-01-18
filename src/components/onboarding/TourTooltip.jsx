@@ -16,8 +16,9 @@ const TourTooltip = ({
     onNext,
     onBack,
     onSkip,
-    advanceOnTargetClick = false, // Auto-advance when target is clicked
-    position = "bottom", // top, bottom, left, right
+    advanceOnTargetClick = false,
+    position = "bottom",
+    allowBack = true,
 }) => {
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
     const [isReady, setIsReady] = useState(false);
@@ -255,7 +256,7 @@ const TourTooltip = ({
 
                                     {/* Navigation */}
                                     <div className="flex items-center justify-between">
-                                        {step > 1 ? (
+                                        {allowBack && step > 1 ? (
                                             <button
                                                 onClick={onBack}
                                                 className="text-white/60 hover:text-white text-xs font-medium transition-colors px-2 py-1"
