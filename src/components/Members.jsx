@@ -106,7 +106,7 @@ export default function ShowMembers({ workspaceId }) {
       {isOpen && (
         <div
           ref={membersRef}
-          className="absolute top-12 right-0 bg-zinc-900/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl w-80 z-50"
+          className="absolute top-12 right-0 bg-zinc-900/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl w-72 md:w-80 z-50"
         >
           <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
             <h3 className="text-white text-sm font-semibold">Space Members</h3>

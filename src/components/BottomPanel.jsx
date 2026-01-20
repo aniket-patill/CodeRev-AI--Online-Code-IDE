@@ -22,7 +22,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearni
       <div className="flex items-center justify-between border-b border-white/10 bg-zinc-900/50 pr-2">
         <div className="flex">
           <button
-            className={`px-4 py-2 text-xs font-medium transition-colors ${activeTab === "output"
+            className={`px-3 md:px-4 py-2 text-xs font-medium transition-colors ${activeTab === "output"
               ? "text-white border-b-2 border-white bg-white/5"
               : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
@@ -31,7 +31,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearni
             Output
           </button>
           <button
-            className={`px-4 py-2 text-xs font-medium transition-colors ${activeTab === "docs"
+            className={`px-3 md:px-4 py-2 text-xs font-medium transition-colors ${activeTab === "docs"
               ? "text-white border-b-2 border-white bg-white/5"
               : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
@@ -48,7 +48,7 @@ const BottomPanel = ({ editorRef, language, documentation, workspaceId, isLearni
           className="flex items-center gap-1.5 px-2 py-1 bg-[#24292e] hover:bg-[#2f363d] text-white text-[10px] font-medium rounded-md transition-colors border border-white/10"
         >
           <Github className="w-3 h-3" />
-          Git Push
+          <span className="hidden sm:inline">Git Push</span>
         </button>
       </div>
 

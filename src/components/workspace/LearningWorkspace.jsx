@@ -191,7 +191,7 @@ const LearningWorkspace = () => {
                                     <main id="code-editor-wrapper" className="flex flex-col h-full min-w-0 relative">
                                         {/* Workspace Header */}
                                         <div className="relative z-40 flex items-center justify-between px-6 py-3 border-b border-white/5 bg-zinc-900/30 backdrop-blur-sm shrink-0">
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-1 min-w-0">
                                                 {/* Toggle Button for Left Panel */}
                                                 {!isNavOpen && (
                                                     <button
@@ -212,9 +212,9 @@ const LearningWorkspace = () => {
                                                     </button>
                                                 )}
 
-                                                <h1 className="text-sm font-medium text-zinc-400 truncate">
-                                                    <span className="text-zinc-500">Space:</span>{" "}
-                                                    <span className="text-white">
+                                                <h1 className="text-sm font-medium text-zinc-400 truncate flex items-center gap-1">
+                                                    <span className="text-zinc-500 hidden sm:inline">Space:</span>
+                                                    <span className="text-white truncate max-w-[100px] sm:max-w-none">
                                                         {error ? "Error" : isLoading ? "Loading..." : workspaceName}
                                                     </span>
                                                 </h1>

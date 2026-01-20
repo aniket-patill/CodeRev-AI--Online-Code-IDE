@@ -182,7 +182,7 @@ const Header = ({ workspaceId }) => {
               className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 border border-white/10 hover:bg-zinc-800 hover:border-white/20 text-white font-medium rounded-lg transition-all"
             >
               <LayoutDashboard className="w-4 h-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
           </div>
         )}

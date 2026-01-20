@@ -109,11 +109,11 @@ export default function SearchBar({ workspaceId }) {
         onClick={() => setIsOpen(!isOpen)}
       >
         <UserPlus className="w-4 h-4" />
-        <span>Invite</span>
+        <span className="hidden sm:inline">Invite</span>
       </button>
 
       {isOpen && (
-        <div ref={searchRef} className="absolute top-10 right-0 bg-zinc-900/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl w-80 z-50">
+        <div ref={searchRef} className="absolute top-10 right-0 bg-zinc-900/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl w-72 md:w-80 z-50">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white">Invite Members</h3>
             <button
