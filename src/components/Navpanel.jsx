@@ -463,10 +463,10 @@ const NavPanel = ({ workspaceId, mode, openFile, onFileCreated, hasFiles }) => {
     <div className="bg-transparent text-zinc-300 h-full w-full flex flex-col">
       <div className="p-4 border-b border-white/10 relative z-50">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-semibold text-zinc-400 tracking-wider">
+          <h2 className="text-xs font-semibold text-zinc-400 tracking-wider hidden sm:block">
             FILE EXPLORER
           </h2>
-          <div className="flex items-center gap-1.5 relative z-50">
+          <div className="flex items-center gap-1.5 relative z-50 ml-auto">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-1.5 hover:bg-zinc-800/50 rounded transition-colors relative z-50"

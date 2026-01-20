@@ -68,8 +68,8 @@ const TestJoinModal = ({ isOpen, onClose }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-md shadow-2xl">
-                <div className="p-6 border-b border-white/5 bg-zinc-900/30">
+            <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-md shadow-2xl">
+                <div className="p-4 md:p-6 border-b border-white/5 bg-zinc-900/30">
                     <DialogTitle className="text-2xl font-bold text-white mb-1 flex items-center gap-3">
                         <div className="p-2 bg-blue-500/20 rounded-xl">
                             <ExternalLink className="w-5 h-5 text-blue-400" />
@@ -81,7 +81,7 @@ const TestJoinModal = ({ isOpen, onClose }) => {
                     </DialogDescription>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                     <div className="space-y-2">
                         <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
                             Test ID or Link
@@ -96,12 +96,12 @@ const TestJoinModal = ({ isOpen, onClose }) => {
                                         handleJoinTest();
                                     }
                                 }}
-                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-12 rounded-xl flex-1"
+                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-10 md:h-12 rounded-xl flex-1"
                             />
                             <Button
                                 onClick={handlePaste}
                                 variant="outline"
-                                className="h-12 px-4 text-zinc-400 hover:text-white border-white/10"
+                                className="h-10 md:h-12 px-4 text-zinc-400 hover:text-white border-white/10"
                             >
                                 Paste
                             </Button>
@@ -114,14 +114,14 @@ const TestJoinModal = ({ isOpen, onClose }) => {
                     <div className="flex gap-3 pt-4 border-t border-white/5">
                         <Button
                             onClick={onClose}
-                            className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-12 rounded-xl font-medium"
+                            className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-10 md:h-12 rounded-xl font-medium"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleJoinTest}
                             disabled={isJoining || !testId.trim()}
-                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white h-12 rounded-xl font-semibold disabled:opacity-50"
+                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white h-10 md:h-12 rounded-xl font-semibold disabled:opacity-50"
                         >
                             {isJoining ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />

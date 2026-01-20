@@ -252,9 +252,9 @@ const TestCreationModal = ({ isOpen, onClose }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 bg-zinc-900/30 sticky top-0 z-10">
+                <div className="p-4 md:p-6 border-b border-white/5 bg-zinc-900/30 sticky top-0 z-10">
                     <DialogTitle className="text-2xl font-bold text-white mb-1 flex items-center gap-3">
                         <div className="p-2 bg-blue-500/20 rounded-xl">
                             <FileText className="w-5 h-5 text-blue-400" />
@@ -266,7 +266,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     </DialogDescription>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                     {/* Title */}
                     <div className="space-y-2">
                         <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
@@ -276,7 +276,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                             placeholder="e.g., JavaScript Fundamentals"
                             value={formData.title}
                             onChange={(e) => updateField("title", e.target.value)}
-                            className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-12 rounded-xl"
+                            className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-10 md:h-12 rounded-xl"
                         />
                     </div>
 
@@ -304,7 +304,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 placeholder="Access password"
                                 value={formData.password}
                                 onChange={(e) => updateField("password", e.target.value)}
-                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-12 rounded-xl"
+                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-10 md:h-12 rounded-xl"
                             />
                         </div>
 
@@ -317,7 +317,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 placeholder="e.g., 60 (optional)"
                                 value={formData.duration}
                                 onChange={(e) => updateField("duration", e.target.value)}
-                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-12 rounded-xl"
+                                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 h-10 md:h-12 rounded-xl"
                             />
                         </div>
                     </div>
@@ -516,14 +516,14 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     <div className="flex gap-3 pt-4 border-t border-white/5">
                         <Button
                             onClick={onClose}
-                            className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-12 rounded-xl font-medium"
+                            className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-10 md:h-12 rounded-xl font-medium"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating || !formData.title || !formData.password}
-                            className="flex-1 bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-semibold disabled:opacity-50"
+                            className="flex-1 bg-white text-black hover:bg-zinc-200 h-10 md:h-12 rounded-xl font-semibold disabled:opacity-50"
                         >
                             {isCreating ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />

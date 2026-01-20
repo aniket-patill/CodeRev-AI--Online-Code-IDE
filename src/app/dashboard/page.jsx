@@ -379,8 +379,8 @@ const Dashboard = () => {
       {/* Create Workspace Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild />
-        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl max-w-md shadow-2xl">
-          <div className="p-6 border-b border-white/5 bg-zinc-900/30">
+        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-md shadow-2xl">
+          <div className="p-4 md:p-6 border-b border-white/5 bg-zinc-900/30">
             <DialogTitle className="text-2xl font-bold text-white mb-1">
               Create New Space
             </DialogTitle>
@@ -389,7 +389,7 @@ const Dashboard = () => {
             </DialogDescription>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Workspace Name Input */}
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">Space Name</label>
@@ -398,7 +398,7 @@ const Dashboard = () => {
                 placeholder="e.g., My Awesome Project"
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
-                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 h-12 rounded-xl text-base"
+                className="bg-zinc-900 text-white border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 h-10 md:h-12 rounded-xl text-base"
               />
             </div>
 
@@ -437,14 +437,14 @@ const Dashboard = () => {
                   setIsOpen(false);
                   setWorkspaceName("");
                 }}
-                className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-12 rounded-xl font-medium"
+                className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-10 md:h-12 rounded-xl font-medium"
               >
                 Cancel
               </Button>
               <Button
                 id="create-workspace-confirm"
                 onClick={handleCreateWorkspace}
-                className="flex-1 items-center gap-2 bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+                className="flex-1 items-center gap-2 bg-white text-black hover:bg-zinc-200 h-10 md:h-12 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                 disabled={isCreating || !workspaceName}
               >
                 {isCreating ? (

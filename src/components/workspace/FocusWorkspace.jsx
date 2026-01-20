@@ -42,6 +42,21 @@ const FocusWorkspace = () => {
     // UI State
     const [isNavOpen, setIsNavOpen] = useState(true);
 
+    // Auto-collapse sidebar on mobile
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                setIsNavOpen(false);
+            }
+        };
+
+        // Initial check
+        handleResize();
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Lifted Editor State
     const [editorInstance, setEditorInstance] = useState(null);
 
@@ -73,7 +88,7 @@ const FocusWorkspace = () => {
 
     return (
         <WorkspaceStateProvider>
-            <div className="flex flex-col h-screen bg-black text-white min-w-[1024px] relative overflow-hidden">
+            <div className="flex flex-col h-screen bg-black text-white w-full relative overflow-hidden">
                 {/* Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
