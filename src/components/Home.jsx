@@ -177,7 +177,6 @@ const Navbar = () => {
 // ---------------- CODE EDITOR PREVIEW ----------------
 const CodeEditorPreview = () => {
   const [activeTab, setActiveTab] = useState("main.py");
-  const [typedCode, setTypedCode] = useState("");
 
   const codeSnippets = {
     "main.py": `# AI-powered code completion
@@ -208,26 +207,11 @@ server.listen(3000, () => {
 });`,
   };
 
-  useEffect(() => {
-    const code = codeSnippets[activeTab];
-    let index = 0;
-    setTypedCode("");
-
-    const interval = setInterval(() => {
-      if (index < code.length) {
-        setTypedCode(code.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 10);
-
-    return () => clearInterval(interval);
-  }, [activeTab]);
+  const code = codeSnippets[activeTab];
 
   return (
     <div className="group relative rounded-2xl border border-zinc-200 dark:border-white/10 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-black overflow-hidden shadow-2xl shadow-zinc-200/50 dark:shadow-black/80 hover:shadow-zinc-300/50 dark:hover:shadow-white/5 transition-all duration-500">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-white/10 bg-zinc-50/40 dark:bg-zinc-900/40 backdrop-blur-xl">
         <div className="flex gap-1.5">
@@ -266,15 +250,14 @@ server.listen(3000, () => {
       <div className="relative p-4 font-mono text-xs min-h-[300px]">
         <div className="flex">
           <div className="text-zinc-600 text-right pr-4 select-none leading-6 font-medium">
-            {typedCode.split("\n").map((_, i) => (
+            {code.split("\n").map((_, i) => (
               <div key={i}>{i + 1}</div>
             ))}
           </div>
 
           <pre className="text-zinc-700 dark:text-zinc-300 leading-6 overflow-hidden flex-1">
             <code>
-              {typedCode}
-              <span className="inline-block w-2 h-4 bg-zinc-900 dark:bg-white/90 animate-pulse ml-0.5" />
+              {code}
             </code>
           </pre>
         </div>
@@ -357,10 +340,10 @@ const LanguageSupport = () => {
       <div className="relative max-w-7xl mx-auto w-full">
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px", amount: 0.3 }}
-            transition={{ duration: 0.3, ease: "easeIn" }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white mb-6 backdrop-blur-sm">
               <Code2 className="w-3.5 h-3.5" />
@@ -370,21 +353,21 @@ const LanguageSupport = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-5 tracking-tight">
               Code in Any Language
             </h2>
-            <p className="text-lg text-purple-100 leading-relaxed mb-8">
+            <p className="text-lg text-blue-100 leading-relaxed mb-8">
               CodeRev supports almost every major programming language. Several ship in the box, like JavaScript, TypeScript, CSS, and HTML.
             </p>
 
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {["JS", "TS", "🐍"].map((icon, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-white text-purple-600 border-2 border-[#aa58f7] flex items-center justify-center text-xs font-bold shadow-lg">
+                  <div key={i} className="w-10 h-10 rounded-full bg-white text-blue-600 border-2 border-[#0022ff] flex items-center justify-center text-xs font-bold shadow-lg">
                     {icon}
                   </div>
                 ))}
               </div>
               <div className="flex flex-col">
                 <span className="text-base font-semibold text-white">10+ Languages</span>
-                <span className="text-xs text-purple-200">Supported out of the box</span>
+                <span className="text-xs text-blue-200">Supported out of the box</span>
               </div>
             </div>
           </motion.div>
@@ -410,7 +393,7 @@ const LanguageSupport = () => {
                   <div className={`text-xl font-bold mb-2 text-white drop-shadow-sm`}>
                     {lang.icon}
                   </div>
-                  <div className="text-[10px] text-purple-200 font-medium group-hover:text-white transition-colors">
+                  <div className="text-[10px] text-blue-200 font-medium group-hover:text-white transition-colors">
                     {lang.name}
                   </div>
                 </div>
@@ -788,27 +771,32 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white">
+      {/* Mobile Experience Warning */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-[100] bg-yellow-400 text-black text-xs font-bold text-center py-2 px-4 shadow-lg border-b border-yellow-500/20">
+        For better experience use on desktop
+      </div>
+
       <Navbar />
 
       {/* HERO */}
       <section className="sticky top-0 z-0 h-screen flex flex-col justify-center pt-28 pb-20 px-6 bg-gradient-to-b from-white via-purple-50/50 to-white dark:from-black dark:via-purple-950/30 dark:to-black">
         <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-purple-100/20 to-white/50 dark:from-black/50 dark:via-purple-900/20 dark:to-black/50" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-900/15 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-900/15 rounded-full blur-[100px]" />
 
         <div className="relative max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 backdrop-blur-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse" />
                 <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">AI-Powered Development Platform</span>
               </div>
 
               <div className="space-y-5">
                 <h1 className="text-5xl sm:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight">
                   <span className="block text-zinc-900 dark:text-white">Code Smarter,</span>
-                  <span className="block bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 dark:from-white dark:via-purple-100 dark:to-purple-300 bg-clip-text text-transparent">
+                  <span className="block bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 dark:from-white dark:via-blue-100 dark:to-blue-300 bg-clip-text text-transparent">
                     Execute Faster
                   </span>
                 </h1>
