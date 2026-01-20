@@ -67,7 +67,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+      className={`relative z-50 transition-all duration-300 ${isScrolled
         ? "bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200/50 dark:border-white/5"
         : "bg-transparent"
         }`}
@@ -255,7 +255,7 @@ server.listen(3000, () => {
             ))}
           </div>
 
-          <pre className="text-zinc-700 dark:text-zinc-300 leading-6 overflow-hidden flex-1">
+          <pre className="text-zinc-700 dark:text-zinc-300 leading-6 overflow-x-auto flex-1 w-0">
             <code>
               {code}
             </code>
@@ -900,7 +900,7 @@ export default function HomePage() {
               ].map((feature, i) => (
                 <div
                   key={i}
-                  className="min-w-[300px] md:min-w-[480px] snap-center group"
+                  className="min-w-[280px] md:min-w-[480px] snap-center group"
                 >
                   <div className="mb-4 pr-4">
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{feature.title}</h3>
