@@ -212,9 +212,9 @@ const LearningWorkspace = () => {
                                                     </button>
                                                 )}
 
-                                                <h1 className="text-sm font-medium text-zinc-400 truncate flex items-center gap-1">
-                                                    <span className="text-zinc-500 hidden sm:inline">Space:</span>
-                                                    <span className="text-white truncate max-w-[100px] sm:max-w-none">
+                                                <h1 className="text-sm font-medium text-zinc-400 flex items-center gap-1 min-w-0">
+                                                    <span className="text-zinc-500 hidden sm:inline shrink-0">Space:</span>
+                                                    <span className="text-white truncate min-w-0">
                                                         {error ? "Error" : isLoading ? "Loading..." : workspaceName}
                                                     </span>
                                                 </h1>

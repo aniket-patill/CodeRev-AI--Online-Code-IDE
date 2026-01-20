@@ -379,7 +379,7 @@ const Dashboard = () => {
       {/* Create Workspace Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild />
-        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-md shadow-2xl">
+        <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-md shadow-2xl mx-auto">
           <div className="p-4 md:p-6 border-b border-white/5 bg-zinc-900/30">
             <DialogTitle className="text-2xl font-bold text-white mb-1">
               Create New Space
