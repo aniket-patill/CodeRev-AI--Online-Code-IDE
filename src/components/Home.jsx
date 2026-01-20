@@ -349,8 +349,9 @@ const LanguageSupport = () => {
   ];
 
   return (
-    <section className="relative z-10 min-h-screen flex flex-col justify-center py-16 md:py-24 px-6 overflow-hidden bg-[#aa58f7]">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:40px_40px]" />
+    <section className="relative z-10 min-h-screen flex flex-col justify-center py-16 md:py-24 px-6 overflow-hidden bg-[#0022ff]">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-[size:14px_14px] opacity-30" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/50 via-transparent to-indigo-900/50 mix-blend-overlay" />
 
 
       <div className="relative max-w-7xl mx-auto w-full">
