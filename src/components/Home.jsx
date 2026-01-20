@@ -779,22 +779,23 @@ export default function HomePage() {
       <Navbar />
 
       {/* HERO */}
-      <section className="sticky top-0 z-0 h-screen flex flex-col justify-center pt-28 pb-20 px-6 bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-black dark:via-blue-950/30 dark:to-black">
+      {/* HERO */}
+      <section className="sticky top-0 z-0 min-h-screen flex flex-col justify-center pt-24 pb-12 md:pt-28 md:pb-20 px-6 bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-black dark:via-blue-950/30 dark:to-black">
         <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-blue-100/20 to-white/50 dark:from-black/50 dark:via-blue-900/20 dark:to-black/50" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-900/15 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-blue-600/20 rounded-full blur-[80px] md:blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-blue-900/15 rounded-full blur-[60px] md:blur-[100px]" />
 
         <div className="relative max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 text-center lg:text-left">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="space-y-6 md:space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 backdrop-blur-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse" />
                 <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">AI-Powered Development Platform</span>
               </div>
 
-              <div className="space-y-5">
-                <h1 className="text-5xl sm:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight">
+              <div className="space-y-4 md:space-y-5">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight">
                   <span className="block text-zinc-900 dark:text-white">Code Smarter,</span>
                   <span className="block bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 dark:from-white dark:via-blue-100 dark:to-blue-300 bg-clip-text text-transparent">
                     Execute Faster
