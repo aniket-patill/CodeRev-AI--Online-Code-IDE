@@ -772,15 +772,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white">
       {/* Mobile Experience Warning */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-[100] bg-yellow-400 text-black text-xs font-bold text-center py-2 px-4 shadow-lg border-b border-yellow-500/20">
+      <div className="md:hidden relative w-full bg-yellow-400 text-black text-xs font-bold text-center py-3 px-4 shadow-sm z-50">
         For better experience use on desktop
       </div>
 
       <Navbar />
 
       {/* HERO */}
-      <section className="sticky top-0 z-0 h-screen flex flex-col justify-center pt-28 pb-20 px-6 bg-gradient-to-b from-white via-purple-50/50 to-white dark:from-black dark:via-purple-950/30 dark:to-black">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-purple-100/20 to-white/50 dark:from-black/50 dark:via-purple-900/20 dark:to-black/50" />
+      <section className="sticky top-0 z-0 h-screen flex flex-col justify-center pt-28 pb-20 px-6 bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-black dark:via-blue-950/30 dark:to-black">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-blue-100/20 to-white/50 dark:from-black/50 dark:via-blue-900/20 dark:to-black/50" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-900/15 rounded-full blur-[100px]" />
