@@ -136,7 +136,7 @@ const Header = ({ workspaceId }) => {
       <Link href="/dashboard" className="flex items-center gap-3 group">
 
 
-        <h1 className="text-xl font-semibold text-white">
+        <h1 className="text-xl font-bold text-white bg-[#0022ff] px-4 py-2 rounded-lg tracking-tight">
           CodeRev
         </h1>
       </Link>

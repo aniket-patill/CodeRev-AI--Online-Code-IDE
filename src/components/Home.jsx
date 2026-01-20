@@ -74,14 +74,7 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <Image
-            src="/CodeRev_Logo.png"
-            alt="CodeRev Logo"
-            width={32}
-            height={32}
-            className="w-8 h-8 object-contain group-hover:scale-110 transition-all duration-300"
-          />
-          <span className="text-lg font-semibold text-zinc-900 dark:text-white">CodeRev</span>
+          <span className="text-xl font-bold text-white bg-[#0022ff] px-4 py-2 rounded-lg tracking-tight">CodeRev</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
@@ -772,7 +765,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white">
       {/* Mobile Experience Warning */}
-      <div className="md:hidden relative w-full bg-yellow-400 text-black text-xs font-bold text-center py-3 px-4 shadow-sm z-50">
+      <div className="fixed md:hidden relative w-full bg-yellow-400 text-black text-xs font-bold text-center py-3 px-4 shadow-sm z-50">
         For better experience use on desktop
       </div>
 
