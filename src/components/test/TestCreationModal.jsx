@@ -43,7 +43,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     ...(value && !prev.questionsCount && { questionsCount: "1" })
                 };
             }
-            
+
             // When updating questionsCount, validate against available questions
             if (field === "questionsCount" && prev.randomizeQuestions) {
                 const numValue = parseInt(value) || 0;
@@ -53,7 +53,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                 }
                 return { ...prev, [field]: value };
             }
-            
+
             return { ...prev, [field]: value };
         });
     };
@@ -69,7 +69,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         setFormData((prev) => {
             const newFiles = [...prev.files];
             newFiles[index] = { ...newFiles[index], [field]: value };
-            
+
             return { ...prev, files: newFiles };
         });
     };
@@ -126,7 +126,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         reader.onload = (e) => {
             try {
                 const jsonData = JSON.parse(e.target.result);
-                
+
                 // Validate the JSON structure
                 if (!Array.isArray(jsonData)) {
                     toast.error('JSON file must contain an array of questions');
@@ -137,13 +137,13 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                 const validQuestions = [];
                 for (let i = 0; i < jsonData.length; i++) {
                     const question = jsonData[i];
-                    
+
                     // Check required fields
                     if (typeof question.title !== 'string') {
                         toast.error(`Question ${i + 1} is missing a title`);
                         return;
                     }
-                    
+
                     // Create a valid question object with defaults
                     const validQuestion = {
                         id: Date.now() + i, // Ensure unique IDs
@@ -151,7 +151,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                         description: question.description || '',
                         points: typeof question.points === 'number' ? question.points : 10,
                     };
-                    
+
                     validQuestions.push(validQuestion);
                 }
 
@@ -160,20 +160,20 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     ...prev,
                     questions: [...prev.questions, ...validQuestions]
                 }));
-                
+
                 toast.success(`${validQuestions.length} questions imported successfully!`);
             } catch (error) {
                 console.error('Error parsing JSON:', error);
                 toast.error('Invalid JSON format');
             }
         };
-        
+
         reader.onerror = () => {
             toast.error('Error reading file');
         };
-        
+
         reader.readAsText(file);
-        
+
         // Reset the file input
         event.target.value = '';
     };
@@ -186,23 +186,23 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     const handleCreate = async () => {
         const namedFiles = formData.files.filter((f) => f.name.trim());
         const availableQuestions = formData.questions.length;
-        
+
         // Validate required fields
         if (!formData.title || !formData.password || isCreating) return;
-        
+
         // Validate randomization settings if enabled
         if (formData.randomizeQuestions) {
             if (!formData.questionsCount) {
                 toast.error("Please specify number of questions per student");
                 return;
             }
-            
+
             const questionsCount = parseInt(formData.questionsCount);
             if (isNaN(questionsCount) || questionsCount <= 0) {
                 toast.error("Questions per student must be a positive number");
                 return;
             }
-            
+
             if (questionsCount > availableQuestions) {
                 toast.error(`Cannot assign ${questionsCount} questions per student when only ${availableQuestions} questions exist`);
                 return;
@@ -294,7 +294,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Password & Duration Row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1 flex items-center gap-2">
                                 <Lock size={12} /> Password *
@@ -336,7 +336,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 Randomize Questions
                             </label>
                         </div>
-                        
+
                         {formData.randomizeQuestions && (
                             <div className="space-y-3 pl-7">
                                 <div className="space-y-2">

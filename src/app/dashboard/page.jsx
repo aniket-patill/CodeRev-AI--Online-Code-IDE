@@ -176,7 +176,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-black text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen w-full bg-black text-white flex flex-col relative overflow-x-hidden">
       {/* Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]" />
 
@@ -195,7 +195,7 @@ const Dashboard = () => {
       <div id="dashboard-header" className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center px-4 md:px-8 py-6 md:py-8 container mx-auto max-w-7xl gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Dashboard</h1>
           </div>
           <p className="text-zinc-400">Manage your spaces and tests</p>
         </div>
@@ -237,7 +237,7 @@ const Dashboard = () => {
       {/* Tabs */}
       <div className="relative z-10 px-4 md:px-8 container mx-auto max-w-7xl mb-6">
         <div className="flex items-center gap-3">
-          <div id="dashboard-tabs-container" className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-fit border border-white/5">
+          <div id="dashboard-tabs-container" className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-full sm:w-fit border border-white/5 overflow-x-auto">
             <button
               id="dashboard-spaces-tab"
               onClick={() => setActiveTab("spaces")}

@@ -25,7 +25,7 @@ const TestJoinModal = ({ isOpen, onClose }) => {
         if (!testId.trim() || isJoining) return;
 
         setIsJoining(true);
-        
+
         try {
             // Check if test exists
             const testRef = doc(db, "tests", testId.trim());
@@ -37,7 +37,7 @@ const TestJoinModal = ({ isOpen, onClose }) => {
             }
 
             const testData = testSnap.data();
-            
+
             // Redirect to the test access page
             router.push(`/test/${testId.trim()}`);
             onClose();
@@ -86,7 +86,7 @@ const TestJoinModal = ({ isOpen, onClose }) => {
                         <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
                             Test ID or Link
                         </label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <Input
                                 placeholder="Enter test ID or full link"
                                 value={testId}
