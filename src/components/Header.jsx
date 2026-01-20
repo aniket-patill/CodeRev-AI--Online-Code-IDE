@@ -131,12 +131,12 @@ const Header = ({ workspaceId }) => {
   };
 
   return (
-    <header className="flex items-center justify-between px-8 py-4 bg-zinc-900/50 backdrop-blur-xl border-b border-white/10 shadow-lg">
+    <header className="flex items-center justify-between px-4 md:px-8 py-4 bg-zinc-900/50 backdrop-blur-xl border-b border-white/10 shadow-lg">
       {/* Logo & Title */}
       <Link href="/dashboard" className="flex items-center gap-3 group">
 
 
-        <h1 className="text-xl font-bold text-white bg-[#0022ff] px-4 py-2 rounded-lg tracking-tight">
+        <h1 className="text-lg font-bold text-white bg-[#0022ff] px-3 py-1 rounded-lg tracking-tight">
           CodeRev
         </h1>
       </Link>
@@ -188,7 +188,7 @@ const Header = ({ workspaceId }) => {
         )}
 
         {/* Welcome Message */}
-        <p className="text-sm text-zinc-400">
+        <p className="hidden md:block text-sm text-zinc-400">
           Welcome, <span className="font-medium text-white">{userName}</span>
         </p>
 

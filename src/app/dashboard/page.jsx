@@ -192,7 +192,7 @@ const Dashboard = () => {
       </div>
 
       {/* Page Header */}
-      <div id="dashboard-header" className="relative z-10 flex justify-between items-center px-8 py-8 container mx-auto max-w-7xl">
+      <div id="dashboard-header" className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center px-4 md:px-8 py-6 md:py-8 container mx-auto max-w-7xl gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
@@ -200,7 +200,7 @@ const Dashboard = () => {
           <p className="text-zinc-400">Manage your spaces and tests</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <Button
             onClick={() => setIsTestModalOpen(true)}
             className="inline-flex items-center gap-2 px-5 py-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all hover:scale-105 active:scale-95 border-0"
@@ -235,7 +235,7 @@ const Dashboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="relative z-10 px-8 container mx-auto max-w-7xl mb-6">
+      <div className="relative z-10 px-4 md:px-8 container mx-auto max-w-7xl mb-6">
         <div className="flex items-center gap-3">
           <div id="dashboard-tabs-container" className="flex gap-1 p-1 bg-zinc-900/50 rounded-xl w-fit border border-white/5">
             <button
@@ -263,7 +263,7 @@ const Dashboard = () => {
       </div>
 
       {/* Content Grid */}
-      <div className="relative z-10 flex-1 overflow-y-auto px-8 pb-8 container mx-auto max-w-7xl">
+      <div className="relative z-10 flex-1 overflow-y-auto px-4 md:px-8 pb-8 container mx-auto max-w-7xl">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
