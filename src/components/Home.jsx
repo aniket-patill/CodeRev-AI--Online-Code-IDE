@@ -940,116 +940,61 @@ export default function HomePage() {
         <FAQ />
 
 
-        {/* WINTERFELL-STYLE FOOTER */}
-        <footer className="relative bg-zinc-950 py-20 px-6 border-t border-white/5">
-          <div className="max-w-7xl mx-auto">
-            {/* Top Section */}
-            <div className="grid md:grid-cols-12 gap-12 mb-16">
-              {/* Left: Tagline + User Greeting */}
-              <div className="md:col-span-4">
-                <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-8">
-                  Build Better Code,<br />
-                  Together.
-                </h2>
+        {/* NEW FOOTER */}
+        <footer className="relative bg-[#0022ff] py-24 px-6 overflow-hidden">
+          {/* Grid Background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-[size:14px_14px] opacity-30" />
 
-                {/* User Greeting Card */}
-                <div className="bg-zinc-900 border border-white/10 rounded-xl p-4 inline-block">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
-                    <span className="text-white text-sm font-medium">Hey, Developer</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-zinc-500 text-xs">Rate your experience</span>
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button key={star} className="text-zinc-600 hover:text-amber-400 transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Gradient Overlay for depth */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/50 via-transparent to-indigo-900/50 mix-blend-overlay" />
 
-              {/* Product Links */}
-              <div className="md:col-span-2">
-                <h3 className="text-white font-semibold mb-5">Product</h3>
-                <ul className="space-y-3">
-                  {[
-                    { name: "Live Collaboration", badge: null },
-                    { name: "AI Code Assistant", badge: "✨" },
-                    { name: "Code Execution", badge: null },
-                    { name: "Focus Mode", badge: "🔒" },
-                    { name: "Version Control", badge: null },
-                  ].map((item) => (
-                    <li key={item.name}>
-                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5">
-                        {item.name}
-                        {item.badge && <span className="text-xs">{item.badge}</span>}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="relative max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-start gap-16 md:gap-8">
 
-              {/* Resources Links */}
-              <div className="md:col-span-2">
-                <h3 className="text-white font-semibold mb-5">Resources</h3>
-                <ul className="space-y-3">
-                  {["Documentation", "API Reference", "Tutorials", "Best Practices", "Community Forum"].map((item) => (
-                    <li key={item}>
-                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Company Links */}
-              <div className="md:col-span-2">
-                <h3 className="text-white font-semibold mb-5">Company</h3>
-                <ul className="space-y-3">
-                  {["About Us", "Careers", "Blog", "Press Kit", "Contact"].map((item) => (
-                    <li key={item}>
-                      <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Connect */}
-              <div className="md:col-span-2">
-                <h3 className="text-white font-semibold mb-5">Connect</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
-                      <Twitter className="w-4 h-4" /> Twitter
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
-                      <Github className="w-4 h-4" /> GitHub
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
-                      <Linkedin className="w-4 h-4" /> LinkedIn
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
-                      <Youtube className="w-4 h-4" /> YouTube
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+            {/* Left: Giant Text */}
+            <div className="flex-1">
+              <h1 className="text-7xl md:text-8xl lg:text-9xl font-black text-white tracking-tighter leading-[0.9]">
+                START<br />
+                BUILDING<br />
+                NOW
+              </h1>
             </div>
 
+            {/* Right: Inspirational Text */}
+            <div className="flex-1 md:max-w-xl text-white/90 text-lg md:text-xl font-medium leading-relaxed self-center flex flex-col justify-between h-full min-h-[300px]">
+              <div>
+                <p className="mb-8">
+                  Coding is full of friction worth removing.<br />
+                  Now, everything you need is in one place.<br />
+                  CodeRev is our gift to the next gen of builders<br />
+                  to satisfy their itch and build what's next.
+                </p>
+
+                <p className="mb-8">
+                  Want to start building?<br />
+                  Start with CodeRev.
+                </p>
+              </div>
+
+              {/* Restored Context: Links */}
+              <div className="grid grid-cols-2 gap-8 text-sm md:text-base">
+                <div>
+                  <h4 className="font-bold text-white mb-4 opacity-50 uppercase tracking-widest text-xs">Product</h4>
+                  <ul className="space-y-2">
+                    <li><Link href="/login" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all">Sign In</Link></li>
+                    <li><Link href="/register" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all">Get Started</Link></li>
+                    <li><Link href="#features" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all">Features</Link></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-bold text-white mb-4 opacity-50 uppercase tracking-widest text-xs">Connect</h4>
+                  <ul className="space-y-2">
+                    <li><Link href="https://github.com/ayaanshilledar/CodeRev--AI-Powered-Online-Code-Editor.git" target="_blank" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all flex items-center gap-2"><Github className="w-4 h-4" /> GitHub</Link></li>
+                    <li><Link href="#" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all flex items-center gap-2"><Twitter className="w-4 h-4" /> Twitter</Link></li>
+                    <li><Link href="#" className="hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all flex items-center gap-2"><Linkedin className="w-4 h-4" /> LinkedIn</Link></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
 
           </div>
         </footer>
