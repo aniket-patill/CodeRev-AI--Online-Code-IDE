@@ -14,6 +14,7 @@ import TestEditor from "@/components/test/TestEditor";
 import TestOutput from "@/components/test/TestOutput";
 import ProctorWarningModal from "@/components/test/ProctorWarningModal";
 import ProctorStartScreen from "@/components/test/ProctorStartScreen";
+import { runAllTestCasesAndScore } from "@/utils/execution/submitRunner";
 
 const TestWorkspaceContent = ({ test }) => {
     const router = useRouter();
@@ -24,8 +25,10 @@ const TestWorkspaceContent = ({ test }) => {
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
     const [hasStarted, setHasStarted] = useState(false);
-    const [questionProgress, setQuestionProgress] = useState({}); // Track progress for each question
+    const [questionProgress, setQuestionProgress] = useState({});
     const [isDirty, setIsDirty] = useState(false);
+    const [submitResult, setSubmitResult] = useState(null);
+    const [isRunningSubmit, setIsRunningSubmit] = useState(false);
     const saveTimeoutRef = useRef(null);
 
     const files = getCurrentParticipantFiles();
@@ -78,20 +81,55 @@ const TestWorkspaceContent = ({ test }) => {
         setActiveFileIndex(index);
     };
 
-    const handleSubmit = async () => {
-        // Stop proctoring first to avoid "fullscreen exit" violation
+    const handleSubmitClick = async () => {
         stopProctoring();
-
-        // Save final changes
         if (activeFile && currentCode && isDirty) {
             await saveCurrentCode(activeFile, currentCode);
         }
-        await submitTest();
-        // Exit fullscreen before redirect
-        if (document.fullscreenElement) {
-            await document.exitFullscreen();
+
+        const allQuestions = getCurrentParticipantQuestions();
+        const allFiles = getCurrentParticipantFiles();
+        const filesMap = currentParticipant?.files || {};
+        const hasAnyTestCases = allQuestions.some((q) => (q.testCases || []).length > 0);
+
+        if (!hasAnyTestCases) {
+            await submitTest();
+            if (document.fullscreenElement) await document.exitFullscreen();
+            router.push(`/test/${testId}/submitted`);
+            return;
         }
+
+        setIsRunningSubmit(true);
+        setSubmitResult(null);
+        try {
+            const result = await runAllTestCasesAndScore(allQuestions, filesMap, allFiles);
+            setSubmitResult(result);
+        } catch (err) {
+            console.error("Submit run error:", err);
+            setSubmitResult({
+                totalPassed: 0,
+                totalCases: 0,
+                totalScore: 0,
+                error: err.message || "Failed to run test cases",
+            });
+        } finally {
+            setIsRunningSubmit(false);
+        }
+    };
+
+    const handleConfirmSubmit = async () => {
+        await submitTest();
+        setSubmitResult(null);
+        if (document.fullscreenElement) await document.exitFullscreen();
         router.push(`/test/${testId}/submitted`);
+    };
+
+    const handleSubmit = () => {
+        if (submitResult != null) {
+            handleConfirmSubmit();
+        } else {
+            handleSubmitClick();
+        }
     };
 
     const handleLeave = async () => {
@@ -163,11 +201,57 @@ const TestWorkspaceContent = ({ test }) => {
 
     return (
         <>
-            {/* Proctor Warning Modal */}
             <ProctorWarningModal />
 
+            {isRunningSubmit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                    <div className="flex flex-col items-center gap-3 text-zinc-300">
+                        <Loader2 className="w-8 h-8 animate-spin text-green-400" />
+                        <span className="text-sm">Running all test cases...</span>
+                    </div>
+                </div>
+            )}
+
+            {submitResult != null && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-zinc-900 border border-white/10 rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+                        <h3 className="text-lg font-bold text-white">Test results</h3>
+                        {submitResult.error ? (
+                            <p className="text-red-400 text-sm">{submitResult.error}</p>
+                        ) : (
+                            <div className="space-y-2 text-sm">
+                                <p className="text-zinc-300">
+                                    <span className="text-green-400 font-semibold">{submitResult.totalPassed}</span>
+                                    {" / "}
+                                    <span className="text-zinc-400">{submitResult.totalCases}</span>
+                                    {" test cases passed"}
+                                </p>
+                                <p className="text-zinc-400">
+                                    Score: <span className="text-white font-medium">{submitResult.totalScore.toFixed(1)}</span> pts
+                                </p>
+                            </div>
+                        )}
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setSubmitResult(null)}
+                                className="flex-1 px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-sm font-medium"
+                            >
+                                Close
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmSubmit}
+                                className="flex-1 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-500 text-sm font-semibold"
+                            >
+                                Submit test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="h-screen flex flex-col bg-black text-white overflow-hidden">
-                {/* Header */}
                 <TestHeader
                     testTitle={test?.title}
                     onSubmit={handleSubmit}
@@ -306,6 +390,7 @@ const TestWorkspaceContent = ({ test }) => {
                                         <TestOutput
                                             code={currentCode}
                                             language={activeFile?.language || "javascript"}
+                                            question={questions[activeFileIndex]}
                                         />
                                     </Panel>
                                 </PanelGroup>

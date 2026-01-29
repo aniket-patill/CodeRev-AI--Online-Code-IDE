@@ -483,6 +483,62 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                         onChange={(e) => updateQuestion(question.id, "description", e.target.value)}
                                         className="w-full bg-zinc-800 text-white border border-white/10 rounded-lg p-3 min-h-[80px] resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/20"
                                     />
+                                    {/* Test cases (LeetCode-style) */}
+                                    <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs uppercase tracking-wider text-zinc-500 font-semibold">Test cases</span>
+                                            <Button
+                                                type="button"
+                                                onClick={() => addTestCase(question.id)}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-7 px-2 text-xs"
+                                            >
+                                                <Plus size={12} className="mr-1" /> Add case
+                                            </Button>
+                                        </div>
+                                        {(question.testCases || []).map((tc, tcIndex) => (
+                                            <div key={tcIndex} className="flex flex-col gap-2 p-2 bg-zinc-800/50 rounded-lg border border-white/5">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs text-zinc-500">Case {tcIndex + 1}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="flex items-center gap-1 text-xs text-zinc-400">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={tc.hidden || false}
+                                                                onChange={(e) => updateTestCase(question.id, tcIndex, "hidden", e.target.checked)}
+                                                                className="rounded bg-zinc-800 border-white/10"
+                                                            />
+                                                            Hidden
+                                                        </label>
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() => removeTestCase(question.id, tcIndex)}
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-zinc-500 hover:text-red-400 h-7 w-7"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <textarea
+                                                    placeholder="Input (stdin)"
+                                                    value={tc.input}
+                                                    onChange={(e) => updateTestCase(question.id, tcIndex, "input", e.target.value)}
+                                                    className="w-full bg-zinc-900 text-white border border-white/10 rounded p-2 text-xs min-h-[50px] resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/20"
+                                                    rows={2}
+                                                />
+                                                <textarea
+                                                    placeholder="Expected output"
+                                                    value={tc.expectedOutput}
+                                                    onChange={(e) => updateTestCase(question.id, tcIndex, "expectedOutput", e.target.value)}
+                                                    className="w-full bg-zinc-900 text-white border border-white/10 rounded p-2 text-xs min-h-[50px] resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/20"
+                                                    rows={2}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             ))}
                         </div>
