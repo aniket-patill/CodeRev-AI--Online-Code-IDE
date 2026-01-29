@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Play, Loader2, Trash2, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CodeExecutionService } from "@/utils/execution/CodeExecutionService";
+import { runTestCase } from "@/utils/execution/runTestCase";
 
 const TestOutput = ({ code, language = "javascript" }) => {
     const [output, setOutput] = useState("");
@@ -18,8 +18,7 @@ const TestOutput = ({ code, language = "javascript" }) => {
         setError(null);
 
         try {
-            // Use Client-Side Execution Service
-            const result = await CodeExecutionService.execute(code, language);
+            const result = await runTestCase(code, language, "");
 
             if (result.error) {
                 setError(result.error);

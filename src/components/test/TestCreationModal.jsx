@@ -29,7 +29,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         randomizeQuestions: false,
         questionsCount: "",
         files: [{ name: "main.js", language: "javascript", content: "// Write your solution here\n", readOnly: false }],
-        questions: [{ id: 1, title: "Question 1", description: "", points: 10 }],
+        questions: [{ id: 1, title: "Question 1", description: "", points: 10, testCases: [] }],
     });
 
     const updateField = (field, value) => {
@@ -89,10 +89,45 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                 ...prev,
                 questions: [
                     ...prev.questions,
-                    { id: newId, title: `Question ${newId}`, description: "", points: 10 }
+                    { id: newId, title: `Question ${newId}`, description: "", points: 10, testCases: [] }
                 ]
             };
         });
+    };
+
+    const addTestCase = (questionId) => {
+        setFormData((prev) => ({
+            ...prev,
+            questions: prev.questions.map((q) =>
+                q.id === questionId
+                    ? { ...q, testCases: [...(q.testCases || []), { input: "", expectedOutput: "", hidden: false }] }
+                    : q
+            ),
+        }));
+    };
+
+    const removeTestCase = (questionId, tcIndex) => {
+        setFormData((prev) => ({
+            ...prev,
+            questions: prev.questions.map((q) =>
+                q.id === questionId
+                    ? { ...q, testCases: (q.testCases || []).filter((_, i) => i !== tcIndex) }
+                    : q
+            ),
+        }));
+    };
+
+    const updateTestCase = (questionId, tcIndex, field, value) => {
+        setFormData((prev) => ({
+            ...prev,
+            questions: prev.questions.map((q) => {
+                if (q.id !== questionId) return q;
+                const cases = [...(q.testCases || [])];
+                if (!cases[tcIndex]) return q;
+                cases[tcIndex] = { ...cases[tcIndex], [field]: value };
+                return { ...q, testCases: cases };
+            }),
+        }));
     };
 
     const updateQuestion = (id, field, value) => {
@@ -145,11 +180,18 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     }
 
                     // Create a valid question object with defaults
+                    const rawCases = Array.isArray(question.testCases) ? question.testCases : [];
+                    const testCases = rawCases.map((tc) => ({
+                        input: typeof tc.input === "string" ? tc.input : "",
+                        expectedOutput: typeof tc.expectedOutput === "string" ? tc.expectedOutput : "",
+                        hidden: Boolean(tc.hidden),
+                    }));
                     const validQuestion = {
-                        id: Date.now() + i, // Ensure unique IDs
+                        id: Date.now() + i,
                         title: question.title,
-                        description: question.description || '',
-                        points: typeof question.points === 'number' ? question.points : 10,
+                        description: question.description || "",
+                        points: typeof question.points === "number" ? question.points : 10,
+                        testCases,
                     };
 
                     validQuestions.push(validQuestion);

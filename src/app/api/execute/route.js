@@ -1,32 +1,45 @@
 import { NextResponse } from "next/server";
+import { runInSandbox } from "@/utils/execution/sandbox";
+import { ALLOWED_LANGUAGES } from "@/utils/execution/executionConfig";
 
 export async function POST(req) {
-    try {
-        const { code, language } = await req.json();
+  try {
+    const body = await req.json();
+    const { code, language, stdin = "" } = body;
 
-        // MOCK EXECUTION FOR NOW
-        // In a real app, you would send this to Piston API or similar
-
-        let output = "";
-
-        if (language === "javascript") {
-            try {
-                // Warning: This is extremely unsafe for production but fine for a demo/mock
-                // In production, use an isolated sandbox environment
-                // output = eval(code); 
-                // Since this is server-side, we can't just eval. 
-
-                output = "Code execution simulated.\n\nOutput:\nHello World!";
-            } catch (e) {
-                output = e.message;
-            }
-        } else {
-            output = `Execution for ${language} is simulating...\nNo output returned.`;
-        }
-
-        return NextResponse.json({ output });
-
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to execute code" }, { status: 500 });
+    if (!code || typeof code !== "string") {
+      return NextResponse.json(
+        { error: "Missing or invalid 'code'" },
+        { status: 400 }
+      );
     }
+
+    const lang = (language || "javascript").toLowerCase();
+    if (!ALLOWED_LANGUAGES.includes(lang)) {
+      return NextResponse.json(
+        { error: `Unsupported language: ${language}. Allowed: ${ALLOWED_LANGUAGES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    const result = await runInSandbox({
+      code,
+      language: lang,
+      stdin: typeof stdin === "string" ? stdin : "",
+    });
+
+    return NextResponse.json({
+      stdout: result.stdout,
+      stderr: result.stderr,
+      exit_code: result.exitCode,
+      timed_out: result.timedOut,
+    });
+  } catch (error) {
+    console.error("[execute]", error);
+    const message = error.message || "Failed to execute code";
+    return NextResponse.json(
+      { error: message },
+      { status: 500 }
+    );
+  }
 }
