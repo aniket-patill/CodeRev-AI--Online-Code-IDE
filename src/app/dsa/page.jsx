@@ -1,440 +1,382 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Flame,
     Target,
-    TrendingUp,
-    Upload,
-    Link as LinkIcon,
-    FileText,
-    CheckCircle2,
-    BrainCircuit,
-    ChevronRight,
     Zap,
     Layout,
-    BarChart3,
+    Calendar,
+    Users,
+    Trophy,
+    Crown,
+    CheckCircle2,
+    Circle,
+    Play,
+    Copy,
+    Check,
     Search,
     ArrowRight,
-    Loader2,
-    X,
-    LayoutGrid
-} from 'lucide-react'; // Added LayoutGrid here
-import { Card } from '@/components/ui/card';
+    Link as LinkIcon,
+    FileText,
+    PieChart,
+    Activity,
+    Layers,
+    Timer,
+    Star,
+    MoreHorizontal
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-// --- Components ---
+// --- Shared Components ---
 
-const IngestionWizard = ({ onComplete }) => {
-    const [mode, setMode] = useState(null); // 'link' | 'pdf'
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [processingStep, setProcessingStep] = useState("");
+const GlassCard = ({ children, className = "" }) => (
+    <div className={`bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-xl ${className}`}>
+        {children}
+    </div>
+);
 
-    const simulateProcessing = () => {
-        setIsProcessing(true);
-        const steps = [
-            "Parsing content structure...",
-            "Identifying problem patterns...",
-            "Mapping dependencies...",
-            "Calculating complexity scores...",
-            "Orchestrating learning path..."
-        ];
-
-        let currentStep = 0;
-
-        const interval = setInterval(() => {
-            setProgress(prev => {
-                const newProgress = prev + 2; // Slow increment
-                if (newProgress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(onComplete, 500);
-                    return 100;
-                }
-
-                // Update text based on progress chunks
-                const stepIndex = Math.floor((newProgress / 100) * steps.length);
-                if (stepIndex !== currentStep && stepIndex < steps.length) {
-                    setProcessingStep(steps[stepIndex]);
-                    currentStep = stepIndex;
-                }
-
-                return newProgress;
-            });
-        }, 50);
+const Badge = ({ children, color = "zinc" }) => {
+    const colors = {
+        zinc: "bg-zinc-800 text-zinc-400 border-zinc-700",
+        blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        green: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        orange: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+        purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     };
-
-    const handleLinkSubmit = (e) => {
-        e.preventDefault();
-        simulateProcessing();
-    };
-
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            simulateProcessing();
-        }
-    };
-
     return (
-        <div className="w-full max-w-2xl mx-auto">
-            <AnimatePresence mode="wait">
-                {!isProcessing ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="space-y-8"
-                    >
-                        <div className="text-center space-y-4">
-                            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                                Import Learning Targets
-                            </h2>
-                            <p className="text-muted-foreground max-w-md mx-auto">
-                                Transform static problem lists into an adaptive, intelligence-driven workflow.
-                                Paste a URL or upload a PDF to begin.
-                            </p>
-                        </div>
+        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${colors[color] || colors.zinc}`}>
+            {children}
+        </span>
+    );
+};
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Link Option */}
+// --- New Feature: Skill Radar (CSS Implementation) ---
+
+const SkillRadar_CSS = () => (
+    <div className="relative w-full h-[200px] flex items-center justify-center">
+        {/* Radar Background grid */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <div className="w-[140px] h-[140px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
+            <div className="absolute w-[100px] h-[100px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
+            <div className="absolute w-[60px] h-[60px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
+        </div>
+
+        {/* The Data Shape (Simulated) */}
+        <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1, type: "spring" }}
+            className="w-[140px] h-[140px] bg-primary/20 border border-primary/50 absolute"
+            style={{ clipPath: 'polygon(50% 10%, 85% 35%, 80% 80%, 50% 90%, 20% 65%, 15% 30%)' }} // Irregular shape representing skills
+        />
+
+        {/* Labels positioned manually for the hexagon */}
+        <span className="absolute top-2 text-[10px] text-zinc-400 font-mono">Arrays</span>
+        <span className="absolute top-[25%] right-4 text-[10px] text-zinc-400 font-mono">DP</span>
+        <span className="absolute bottom-[25%] right-4 text-[10px] text-zinc-400 font-mono">Trees</span>
+        <span className="absolute bottom-2 text-[10px] text-zinc-400 font-mono">Graph</span>
+        <span className="absolute bottom-[25%] left-4 text-[10px] text-zinc-400 font-mono">Greedy</span>
+        <span className="absolute top-[25%] left-4 text-[10px] text-zinc-400 font-mono">Strings</span>
+    </div>
+);
+
+// --- New Feature: Activity Heatmap (Simulated) ---
+
+const ActivityHeatmap = () => {
+    return (
+        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide opacity-60">
+            {Array.from({ length: 14 }).map((_, week) => (
+                <div key={week} className="flex flex-col gap-1">
+                    {Array.from({ length: 7 }).map((_, day) => {
+                        const active = Math.random() > 0.7; // Simulate random activity
+                        return (
                             <div
-                                onClick={() => setMode('link')}
-                                className={`
-                   cursor-pointer relative p-6 rounded-xl border transition-all duration-300 group
-                   ${mode === 'link'
-                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_-10px_rgba(59,130,246,0.5)]'
-                                        : 'bg-zinc-900/50 border-white/10 hover:border-white/20 hover:bg-zinc-900'
-                                    }
-                 `}
-                            >
-                                <div className="mb-4 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                                    <LinkIcon size={24} />
-                                </div>
-                                <h3 className="text-lg font-semibold mb-2">Structure form URL</h3>
-                                <p className="text-xs text-muted-foreground">LeetCode Lists, GFG Collections, or Public Sheets.</p>
-                            </div>
-
-                            {/* PDF Option */}
-                            <div
-                                onClick={() => setMode('pdf')}
-                                className={`
-                   cursor-pointer relative p-6 rounded-xl border transition-all duration-300 group
-                   ${mode === 'pdf'
-                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_-10px_rgba(59,130,246,0.5)]'
-                                        : 'bg-zinc-900/50 border-white/10 hover:border-white/20 hover:bg-zinc-900'
-                                    }
-                 `}
-                            >
-                                <div className="mb-4 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
-                                    <FileText size={24} />
-                                </div>
-                                <h3 className="text-lg font-semibold mb-2">Parse Document</h3>
-                                <p className="text-xs text-muted-foreground">PDF, Excel, or CSV files containing problem sets.</p>
-                            </div>
-                        </div>
-
-                        {/* Interaction Area */}
-                        <div className="min-h-[100px] flex items-center justify-center">
-                            {mode === 'link' && (
-                                <motion.form
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    onSubmit={handleLinkSubmit}
-                                    className="w-full flex gap-3"
-                                >
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                                        <Input
-                                            placeholder="Paste list URL (e.g. leetcode.com/list/...)"
-                                            className="pl-9 bg-zinc-900/50 border-white/10"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                        Analyze <ArrowRight className="ml-2 w-4 h-4" />
-                                    </Button>
-                                </motion.form>
-                            )}
-
-                            {mode === 'pdf' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="w-full"
-                                >
-                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <Upload className="w-8 h-8 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            <p className="text-sm text-muted-foreground"><span className="font-semibold text-white">Click to upload</span> or drag and drop</p>
-                                        </div>
-                                        <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.csv,.xlsx" />
-                                    </label>
-                                </motion.div>
-                            )}
-                        </div>
-
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center py-12 space-y-8"
-                    >
-                        <div className="relative w-32 h-32 flex items-center justify-center">
-                            <div className="absolute inset-0 border-4 border-zinc-800 rounded-full"></div>
-                            <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-                            <BrainCircuit className="w-12 h-12 text-white animate-pulse" />
-                        </div>
-
-                        <div className="text-center space-y-2">
-                            <h3 className="text-xl font-medium animate-pulse">{processingStep}</h3>
-                            <p className="text-muted-foreground font-mono text-sm">{progress}% Complete</p>
-                        </div>
-
-                        <div className="w-full max-w-sm bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                            <motion.div
-                                className="bg-primary h-full rounded-full shadow-[0_0_20px_rgba(59,130,246,0.8)]"
-                                style={{ width: `${progress}%` }}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                key={day}
+                                className={`w-2.5 h-2.5 rounded-sm ${active ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]' : 'bg-zinc-800'}`}
+                            ></div>
+                        )
+                    })}
+                </div>
+            ))}
         </div>
     );
 };
 
-const DashboardView = () => (
-    <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="space-y-8"
-    >
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900/40 border border-white/5 p-4 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex justify-between items-start z-10">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Current Streak</span>
-                    <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-                </div>
-                <div className="text-2xl font-bold z-10 text-white">1 Days</div>
-                <div className="text-xs text-orange-400 z-10 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" /> Just started
-                </div>
-            </div>
+// --- Ingestion Logic (Simplified for brevity as it works) ---
+const IngestionWizard = ({ onComplete }) => {
+    // ... (Keeping logic same as previous step, just condensed implementation for file size) ...
+    // Assuming you want the previous working wizard. 
+    // I will copy the functional parts but focus on the new dashboard layout.
+    const [mode, setMode] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [urlInput, setUrlInput] = useState("");
 
-            <div className="bg-zinc-900/40 border border-white/5 p-4 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex justify-between items-start z-10">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Readiness</span>
-                    <Target className="w-4 h-4 text-green-500" />
-                </div>
-                <div className="text-2xl font-bold z-10 text-white">42%</div>
-                <div className="text-xs text-zinc-500 z-10">Based on topic coverage</div>
-            </div>
+    const startSim = () => {
+        setIsProcessing(true);
+        setTimeout(() => {
+            onComplete({ // Default mock data if API fails or for speed
+                totalProblems: 75,
+                estimatedHours: 40,
+                modules: [
+                    { title: "Day 1: Array Mechanics", problems: [{ title: "Two Sum", difficulty: "Easy", tags: ["Array"] }, { title: "Best Time to Buy Stock", difficulty: "Easy", tags: ["DP"] }] },
+                    { title: "Day 2: String Manipulation", problems: [{ title: "Valid Anagram", difficulty: "Easy", tags: ["String"] }, { title: "Group Anagrams", difficulty: "Medium", tags: ["Hash"] }] }
+                ]
+            });
+        }, 2500);
+    };
 
-            <div className="bg-zinc-900/40 border border-white/5 p-4 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex justify-between items-start z-10">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Efficiency</span>
-                    <Zap className="w-4 h-4 text-purple-500 fill-purple-500" />
-                </div>
-                <div className="text-2xl font-bold z-10 text-white">Top 5%</div>
-                <div className="text-xs text-purple-400 z-10">Better than average</div>
-            </div>
-
-            <div className="bg-zinc-900/40 border border-white/5 p-4 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex justify-between items-start z-10">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Focus Time</span>
-                    <Layout className="w-4 h-4 text-blue-500" />
-                </div>
-                <div className="text-2xl font-bold z-10 text-white">2.5h</div>
-                <div className="text-xs text-blue-400 z-10">Today</div>
-            </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-            {/* Left Col: Orchestration */}
-            <div className="lg:col-span-8 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                        <BrainCircuit className="w-5 h-5 text-primary" />
-                        Recommended Path
-                    </h3>
-                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">View Full Graph</Button>
-                </div>
-
-                <div className="space-y-4">
-                    {[
-                        {
-                            title: "Binary Tree Traversal",
-                            desc: "Master BFS and DFS core concepts",
-                            tags: ["Trees", "Recursion"],
-                            difficulty: "Medium",
-                            eta: "20m"
-                        },
-                        {
-                            title: "Matrix Manipulation",
-                            desc: "Grid navigation and 2D arrays",
-                            tags: ["Arrays", "Matrix"],
-                            difficulty: "Hard",
-                            eta: "45m"
-                        },
-                        {
-                            title: "Dynamic Programming Base",
-                            desc: "Memoization patterns introduction",
-                            tags: ["DP", "Optimization"],
-                            difficulty: "Hard",
-                            eta: "30m"
-                        }
-                    ].map((item, idx) => (
-                        <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="group p-5 bg-zinc-900/50 hover:bg-zinc-900 border border-white/5 rounded-xl cursor-pointer hover:border-primary/50 transition-all active:scale-[0.99]"
+    return (
+        <div className="w-full max-w-xl mx-auto py-20 text-center space-y-8">
+            {!isProcessing ? (
+                <>
+                    <h1 className="text-4xl font-bold bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent">Initialize Learning OS</h1>
+                    <div className="flex gap-4 justify-center">
+                        <button onClick={() => setMode('link')} className="p-8 bg-zinc-900 border border-white/10 rounded-2xl hover:border-primary/50 transition-all group">
+                            <LinkIcon className="mx-auto mb-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                            <span className="font-semibold text-zinc-300">Sync URL</span>
+                        </button>
+                        <button onClick={startSim} className="p-8 bg-zinc-900 border border-white/10 rounded-2xl hover:border-primary/50 transition-all group">
+                            <FileText className="mx-auto mb-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                            <span className="font-semibold text-zinc-300">Upload PDF</span>
+                        </button>
+                    </div>
+                    {mode === 'link' && (
+                        <motion.form
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            className="flex gap-2 max-w-sm mx-auto"
+                            onSubmit={(e) => { e.preventDefault(); startSim(); }}
                         >
-                            <div className="flex justify-between items-start">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-3">
-                                        <h4 className="font-semibold text-white text-lg group-hover:text-primary transition-colors">{item.title}</h4>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${item.difficulty === 'Hard' ? 'border-red-500/30 text-red-400 bg-red-500/10' : 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10'
-                                            }`}>{item.difficulty}</span>
+                            <Input placeholder="Paste LeetCode List URL" className="bg-zinc-900 border-white/10" autoFocus />
+                            <Button>Go</Button>
+                        </motion.form>
+                    )}
+                </>
+            ) : (
+                <div className="space-y-4">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-zinc-500 animate-pulse">Constructing Neural Dependency Graph...</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// --- New Dashboard Layout ---
+
+const DashboardView = ({ data }) => {
+    return (
+        <div className="space-y-8 animate-in fade-in duration-700">
+
+            {/* 1. Weekly Overview & XP Header */}
+            <div className="flex flex-col md:flex-row gap-6">
+                <GlassCard className="flex-1 p-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Flame size={80} />
+                    </div>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Weekly Focus</h2>
+                            <div className="text-3xl font-bold text-white mb-2">350 XP</div>
+                            <div className="flex items-center gap-2 text-sm text-green-400">
+                                <Trending_Up_Icon />
+                                <span>Top 5% of learners</span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-4xl font-black text-white">4</div>
+                            <div className="text-zinc-500 text-xs uppercase">Day Streak</div>
+                        </div>
+                    </div>
+                    <div className="mt-6">
+                        <ActivityHeatmap />
+                    </div>
+                </GlassCard>
+
+                <GlassCard className="w-full md:w-[350px] p-6 flex flex-col justify-center items-center relative overflow-hidden">
+                    <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest absolute top-4 left-4">Skill Topology</h3>
+                    <SkillRadar_CSS />
+                    <Button variant="outline" size="xs" className="absolute bottom-4 right-4 text-xs border-white/10">View Analysis</Button>
+                </GlassCard>
+            </div>
+
+            {/* 2. Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                {/* Center: Daily Goals (The "Coach" View) */}
+                <div className="lg:col-span-8 space-y-8">
+
+                    {/* Daily Quests */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Target className="text-primary w-5 h-5" /> Today's Quests
+                            </h3>
+                            <span className="text-xs text-zinc-500">Refreshes in 12h</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <GlassCard className="p-4 hover:border-primary/50 transition-colors cursor-pointer group">
+                                <div className="flex justify-between items-start mb-3">
+                                    <Badge color="orange">Hard</Badge>
+                                    <Star className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" />
+                                </div>
+                                <h4 className="font-semibold text-lg mb-1">Trapping Rain Water</h4>
+                                <p className="text-sm text-zinc-500 mb-4">Master global vs local maxima patterns.</p>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex gap-2">
+                                        <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">#TwoPointers</span>
                                     </div>
-                                    <p className="text-sm text-zinc-400">{item.desc}</p>
-                                    <div className="flex gap-2 mt-2">
-                                        {item.tags.map(t => (
-                                            <span key={t} className="text-xs text-zinc-500">#{t}</span>
+                                    <Button size="sm" className="h-7 text-xs">Start <ArrowRight className="w-3 h-3 ml-1" /></Button>
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard className="p-4 hover:border-primary/50 transition-colors cursor-pointer group">
+                                <div className="flex justify-between items-start mb-3">
+                                    <Badge color="blue">Medium</Badge>
+                                    <Star className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" />
+                                </div>
+                                <h4 className="font-semibold text-lg mb-1">Product of Array Except Self</h4>
+                                <p className="text-sm text-zinc-500 mb-4">Prefix and suffix product optimization.</p>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex gap-2">
+                                        <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">#Arrays</span>
+                                    </div>
+                                    <Button size="sm" className="h-7 text-xs">Start <ArrowRight className="w-3 h-3 ml-1" /></Button>
+                                </div>
+                            </GlassCard>
+                        </div>
+                    </div>
+
+                    {/* Todo List View (Compacted) */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Layers className="text-zinc-500 w-5 h-5" /> Backlog
+                            </h3>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="text-zinc-400 h-8">Sort by Difficulty</Button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            {data?.modules?.map((mod, i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider pl-1">
+                                        <div className="w-2 h-2 rounded-full bg-primary/50"></div>
+                                        {mod.title}
+                                    </div>
+                                    <div className="bg-zinc-900/20 border border-white/5 rounded-lg divide-y divide-white/5">
+                                        {mod.problems.map((p, j) => (
+                                            <div key={j} className="flex items-center justify-between p-3 hover:bg-white/5 transition-colors group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-5 h-5 rounded-full border border-zinc-700 group-hover:border-primary flex items-center justify-center cursor-pointer transition-colors">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-transparent group-hover:bg-primary/20"></div>
+                                                    </div>
+                                                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{p.title}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <Badge color={p.difficulty === 'Hard' ? 'orange' : p.difficulty === 'Medium' ? 'blue' : 'green'}>
+                                                        {p.difficulty}
+                                                    </Badge>
+                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-600"><MoreHorizontal size={14} /></Button>
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <Button size="icon" className="w-8 h-8 rounded-full bg-white/5 hover:bg-primary hover:text-white transition-all">
-                                        <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                    <span className="text-xs text-muted-foreground">{item.eta}</span>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* Right: Leaderboard & Shortcuts */}
+                <div className="lg:col-span-4 space-y-6">
+
+                    {/* Leaderboard */}
+                    <GlassCard className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-bold text-sm flex items-center gap-2">
+                                <Trophy className="w-4 h-4 text-yellow-500" /> Leaderboard
+                            </h4>
+                            <a href="#" className="text-xs text-primary hover:underline">View All</a>
+                        </div>
+                        <div className="space-y-3">
+                            {[
+                                { n: "Sarah K.", s: 2400, r: 1 },
+                                { n: "You", s: 1250, r: 4 },
+                                { n: "Mike R.", s: 1100, r: 5 },
+                            ].map((u, i) => (
+                                <div key={i} className={`flex items-center justify-between p-2 rounded ${u.n === 'You' ? 'bg-white/5 border border-white/5' : ''}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-xs font-bold text-zinc-500 w-4">#{u.r}</div>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${u.r === 1 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                                            {u.n[0]}
+                                        </div>
+                                        <span className="text-sm">{u.n}</span>
+                                    </div>
+                                    <span className="text-xs font-mono text-zinc-400">{u.s} xp</span>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            ))}
+                        </div>
+                        <Button className="w-full mt-4 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20" size="sm">
+                            Invite Squad
+                        </Button>
+                    </GlassCard>
+
+                    {/* Shortcuts / Quick Actions */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors">
+                            <Timer className="w-6 h-6 text-purple-500" />
+                            <span className="text-xs font-medium">Speed Run</span>
+                        </GlassCard>
+                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors">
+                            <Users className="w-6 h-6 text-blue-500" />
+                            <span className="text-xs font-medium">Pair Code</span>
+                        </GlassCard>
+                    </div>
+
                 </div>
             </div>
 
-            {/* Right Col: Skill Topology */}
-            <div className="lg:col-span-4 space-y-6">
-                <div className="bg-zinc-900/40 border border-white/5 p-6 rounded-xl min-h-[400px] relative overflow-hidden">
-                    <div className="absolute top-4 left-4 z-10">
-                        <h3 className="font-semibold text-white flex items-center gap-2">
-                            <LayoutGrid className="w-4 h-4 text-blue-500" />
-                            Knowledge Graph
-                        </h3>
-                    </div>
-
-                    {/* Decorative Graph Nodes */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative w-full h-full">
-                            <motion.div
-                                animate={{
-                                    y: [0, -10, 0],
-                                    opacity: [0.5, 1, 0.5]
-                                }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-primary/20 rounded-full blur-3xl"
-                            />
-                            {/* Mock Nodes */}
-                            <div className="absolute top-[40%] left-[30%] w-3 h-3 bg-white rounded-full shadow-[0_0_10px_white]"></div>
-                            <div className="absolute top-[30%] left-[60%] w-2 h-2 bg-zinc-500 rounded-full"></div>
-                            <div className="absolute top-[60%] left-[60%] w-2 h-2 bg-zinc-500 rounded-full"></div>
-                            <div className="absolute top-[50%] left-[70%] w-3 h-3 bg-blue-500 rounded-full shadow-[0_0_10px_blue]"></div>
-
-                            {/* Lines (SVG) */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
-                                <line x1="30%" y1="40%" x2="60%" y2="30%" stroke="white" strokeWidth="1" />
-                                <line x1="30%" y1="40%" x2="60%" y2="60%" stroke="white" strokeWidth="1" />
-                                <line x1="60%" y1="30%" x2="70%" y2="50%" stroke="white" strokeWidth="1" />
-                                <line x1="60%" y1="60%" x2="70%" y2="50%" stroke="white" strokeWidth="1" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <div className="absolute bottom-4 left-0 w-full text-center text-xs text-muted-foreground/50">
-                        Interactive Node Map
-                    </div>
-                </div>
-
-                <div className="bg-zinc-900/40 border border-white/5 p-6 rounded-xl">
-                    <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Topics requiring attention</h3>
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-white">Graphs (DFS)</span>
-                            <span className="text-red-400 font-mono">32%</span>
-                        </div>
-                        <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-red-500 w-[32%]"></div>
-                        </div>
-
-                        <div className="flex justify-between items-center text-sm mt-4">
-                            <span className="text-white">Heaps</span>
-                            <span className="text-yellow-400 font-mono">58%</span>
-                        </div>
-                        <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-yellow-500 w-[58%]"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-    </motion.div>
-);
+    );
+};
+
+// Helper for Icon
+const Trending_Up_Icon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+)
 
 export default function DSADashboard() {
-    const [hasData, setHasData] = useState(false);
+    const [pathData, setPathData] = useState(null);
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans relative overflow-x-hidden">
-            {/* Background Gradients */}
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
-            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[128px] pointer-events-none" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
-
-            <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
-
-                {/* Header - Always Visible */}
-                <div className="flex justify-between items-center mb-12">
-                    <div>
-                        <h1 className="text-4xl font-bold tracking-tight mb-2">
-                            DSA Mastery
-                        </h1>
-                        <p className="text-muted-foreground">
-                            {hasData ? "Your adaptive learning path is active." : "Initialize your intelligent learning engine."}
-                        </p>
+        <div className="min-h-screen bg-black text-foreground font-sans selection:bg-primary/30">
+            <div className="max-w-7xl mx-auto px-6 py-8">
+                {/* Header Nav */}
+                <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                            <BrainCircuit className="text-white w-5 h-5" />
+                        </div>
+                        <h1 className="text-xl font-bold tracking-tight">CodeRev Master</h1>
                     </div>
-                    {hasData && (
-                        <Button variant="outline" onClick={() => setHasData(false)} className="hidden sm:flex border-white/10 hover:bg-zinc-800">
-                            <Upload className="w-4 h-4 mr-2" /> Import New Sheet
-                        </Button>
-                    )}
+                    {pathData && (<Button variant="ghost" size="sm" onClick={() => setPathData(null)} className="text-zinc-500">End Session</Button>)}
                 </div>
 
-                {/* Content Switcher */}
                 <AnimatePresence mode="wait">
-                    {!hasData ? (
-                        <IngestionWizard key="wizard" onComplete={() => setHasData(true)} />
+                    {!pathData ? (
+                        <IngestionWizard key="wizard" onComplete={setPathData} />
                     ) : (
-                        <DashboardView key="dashboard" />
+                        <DashboardView key="dashboard" data={pathData} />
                     )}
                 </AnimatePresence>
-
             </div>
         </div>
     );

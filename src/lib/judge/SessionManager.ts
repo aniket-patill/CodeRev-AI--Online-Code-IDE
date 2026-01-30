@@ -11,6 +11,7 @@ interface ContainerSession {
     language: string;
     lastUsed: number;
     hostPath: string; // The temp path on the host mounted to /code
+    isExecuting: boolean;
 }
 
 // Global cache to persist across hot-reloads in dev
@@ -83,6 +84,7 @@ export class SessionManager {
             language,
             lastUsed: Date.now(),
             hostPath: tmpDir, // Store the native path for fs operations
+            isExecuting: false,
         };
 
         sessions.set(key, session);

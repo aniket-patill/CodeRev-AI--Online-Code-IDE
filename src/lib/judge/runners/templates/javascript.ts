@@ -1,4 +1,4 @@
-export const JAVASCRIPT_DRIVER_TEMPLATE = \`
+export const JAVASCRIPT_DRIVER_TEMPLATE = `
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
@@ -122,4 +122,4 @@ async function run() {
 }
 
 run();
-\`;
+`;

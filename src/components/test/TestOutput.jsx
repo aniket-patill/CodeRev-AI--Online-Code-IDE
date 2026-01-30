@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { Play, Loader2, Trash2, Terminal, Check, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { runTestCase } from "@/utils/execution/runTestCase";
-import { runSampleTestCases } from "@/utils/execution/runTestCases";
+import { judgeRun } from "@/lib/judge/client";
+import { useTest } from "@/context/TestContext";
 
 const TestOutput = ({ code, language = "javascript", question }) => {
+    const { currentParticipant, testId } = useTest();
     const [output, setOutput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState(null);
     const [runResult, setRunResult] = useState(null);
     const [expandedCase, setExpandedCase] = useState(null);
 
+    // Filter for visible sample cases
     const visibleTestCases = (question?.testCases || []).filter((tc) => !tc.hidden);
     const hasSampleCases = visibleTestCases.length > 0;
 
@@ -26,21 +28,52 @@ const TestOutput = ({ code, language = "javascript", question }) => {
         setExpandedCase(null);
 
         try {
-            if (hasSampleCases) {
-                const { results, passed, total } = await runSampleTestCases(code, language, question.testCases);
-                setRunResult({ results, passed, total });
+            // Prepare test cases
+            // We need to map the existing DB format to the new array-based input format
+            const casesToRun = hasSampleCases ? visibleTestCases : [];
+            const formattedCases = casesToRun.map(tc => ({
+                id: tc.id || String(Math.random()),
+                // Try to parse input if it's a string that looks like JSON, otherwise wrap as single arg
+                input: Array.isArray(tc.input) ? tc.input : [tc.input],
+                expectedOutput: tc.expectedOutput
+            }));
+
+            // Use the participant ID as userId for session isolation
+            const userId = currentParticipant?.id || "guest";
+            const sessionId = testId || "default";
+
+            const result = await judgeRun(code, language, formattedCases, userId, sessionId);
+
+            if (result.verdict === "Internal Error") {
+                setError(result.stderr || "Internal Error occurred");
+            } else if (result.testCaseResults && result.testCaseResults.length > 0) {
+                // Structured results from test cases
+                const passedCount = result.testCaseResults.filter(r => r.verdict === "Accepted").length;
+                setRunResult({
+                    results: result.testCaseResults.map(r => ({
+                        passed: r.verdict === "Accepted",
+                        input: r.actualOutput, // We might not get input back in result, handled below
+                        expected: r.expectedOutput,
+                        actual: r.actualOutput,
+                        error: r.stderr,
+                        verdict: r.verdict
+                    })),
+                    passed: passedCount,
+                    total: result.testCaseResults.length
+                });
+                // Also show global stdout if meaningful
+                if (result.stdout) setOutput(result.stdout);
             } else {
-                const result = await runTestCase(code, language, "");
-                if (result.error) {
-                    setError(result.error);
-                    setOutput(result.output || "");
+                // No test cases (direct run) OR compile error
+                if (result.verdict !== "Accepted" && result.stderr) {
+                    setError(result.stderr);
                 } else {
-                    setOutput(result.output || "No output returned");
+                    setOutput(result.stdout || "No output");
                 }
             }
         } catch (err) {
             console.error("Execution error:", err);
-            setError("Failed to execute code");
+            setError(err.message || "Failed to execute code");
         } finally {
             setIsRunning(false);
         }
@@ -97,31 +130,30 @@ const TestOutput = ({ code, language = "javascript", question }) => {
                                         <X size={14} className="text-red-400 shrink-0" />
                                     )}
                                     <span className={`text-xs font-medium ${r.passed ? "text-green-400" : "text-red-400"}`}>
-                                        {r.passed ? "Passed" : "Failed"}
+                                        {r.verdict}
                                     </span>
                                 </button>
                                 {expandedCase === i && (
-                                    <div className="px-3 pb-3 pt-0 space-y-2 text-xs border-t border-white/5">
-                                        <div>
-                                            <span className="text-zinc-500 block mb-0.5">Input</span>
-                                            <pre className="bg-zinc-950 p-2 rounded text-zinc-300 whitespace-pre-wrap break-all">
-                                                {r.input || "(empty)"}
-                                            </pre>
-                                        </div>
-                                        <div>
+                                    <div className="px-3 pb-3 pt-0 space-y-2 text-xs border-t border-white/5 bg-black/20">
+                                        <div className="mt-2">
                                             <span className="text-zinc-500 block mb-0.5">Expected</span>
-                                            <pre className="bg-zinc-950 p-2 rounded text-green-400/90 whitespace-pre-wrap break-all">
+                                            <pre className="bg-zinc-950 p-2 rounded text-green-400/90 whitespace-pre-wrap break-all border border-white/5">
                                                 {r.expected || "(empty)"}
                                             </pre>
                                         </div>
                                         <div>
-                                            <span className="text-zinc-500 block mb-0.5">Your output</span>
-                                            <pre className="bg-zinc-950 p-2 rounded text-amber-400/90 whitespace-pre-wrap break-all">
+                                            <span className="text-zinc-500 block mb-0.5">Actual Output</span>
+                                            <pre className="bg-zinc-950 p-2 rounded text-zinc-300 whitespace-pre-wrap break-all border border-white/5">
                                                 {r.actual || "(empty)"}
                                             </pre>
                                         </div>
                                         {r.error && (
-                                            <div className="text-red-400 text-xs">{r.error}</div>
+                                            <div>
+                                                <span className="text-red-400 block mb-0.5">Error</span>
+                                                <pre className="bg-red-950/20 text-red-400 p-2 rounded border border-red-900/20 whitespace-pre-wrap break-all">
+                                                    {r.error}
+                                                </pre>
+                                            </div>
                                         )}
                                     </div>
                                 )}
