@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { auth, db } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { LayoutDashboard, Users, Zap, BookOpen, LayoutGrid, Share2, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, Zap, BookOpen, LayoutGrid, Share2, HelpCircle, BrainCircuit } from "lucide-react";
 import { useWorkspaceSettings, MODES } from "@/context/WorkspaceSettingsContext";
 import PomodoroTimer from "./PomodoroTimer";
 import { updateOnboardingStatus } from "@/helpers/onboarding";
@@ -166,6 +166,16 @@ const Header = ({ workspaceId }) => {
             >
               <Users size={16} />
               Roadmap
+            </Link>
+            <Link
+              href="/dsa"
+              className={`text-sm font-medium transition-colors flex items-center gap-2 ${pathname === "/dsa"
+                ? "text-white"
+                : "text-zinc-400 hover:text-white"
+                }`}
+            >
+              <BrainCircuit size={16} />
+              DSA Mastery
             </Link>
           </nav>
         )}
