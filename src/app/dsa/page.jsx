@@ -25,7 +25,10 @@ import {
     Layers,
     Timer,
     Star,
-    MoreHorizontal
+    MoreHorizontal,
+    BrainCircuit,
+    ChevronRight,
+    TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,27 +58,25 @@ const Badge = ({ children, color = "zinc" }) => {
     );
 };
 
-// --- New Feature: Skill Radar (CSS Implementation) ---
-
+// --- New Feature: Skill Radar (Visual) ---
 const SkillRadar_CSS = () => (
     <div className="relative w-full h-[200px] flex items-center justify-center">
         {/* Radar Background grid */}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
             <div className="w-[140px] h-[140px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
             <div className="absolute w-[100px] h-[100px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
-            <div className="absolute w-[60px] h-[60px] border border-white transform rotate-0" style={{ clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)' }}></div>
         </div>
 
-        {/* The Data Shape (Simulated) */}
+        {/* The Data Shape */}
         <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1, type: "spring" }}
             className="w-[140px] h-[140px] bg-primary/20 border border-primary/50 absolute"
-            style={{ clipPath: 'polygon(50% 10%, 85% 35%, 80% 80%, 50% 90%, 20% 65%, 15% 30%)' }} // Irregular shape representing skills
+            style={{ clipPath: 'polygon(50% 10%, 85% 35%, 80% 80%, 50% 90%, 20% 65%, 15% 30%)' }}
         />
 
-        {/* Labels positioned manually for the hexagon */}
+        {/* Labels */}
         <span className="absolute top-2 text-[10px] text-zinc-400 font-mono">Arrays</span>
         <span className="absolute top-[25%] right-4 text-[10px] text-zinc-400 font-mono">DP</span>
         <span className="absolute bottom-[25%] right-4 text-[10px] text-zinc-400 font-mono">Trees</span>
@@ -85,62 +86,74 @@ const SkillRadar_CSS = () => (
     </div>
 );
 
-// --- New Feature: Activity Heatmap (Simulated) ---
+// --- New Feature: Activity Heatmap (Visual) ---
+const ActivityHeatmap = () => (
+    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide opacity-60">
+        {Array.from({ length: 14 }).map((_, week) => (
+            <div key={week} className="flex flex-col gap-1">
+                {Array.from({ length: 7 }).map((_, day) => {
+                    const active = Math.random() > 0.7;
+                    return (
+                        <div key={day} className={`w-2.5 h-2.5 rounded-sm ${active ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]' : 'bg-zinc-800'}`}></div>
+                    )
+                })}
+            </div>
+        ))}
+    </div>
+);
 
-const ActivityHeatmap = () => {
-    return (
-        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide opacity-60">
-            {Array.from({ length: 14 }).map((_, week) => (
-                <div key={week} className="flex flex-col gap-1">
-                    {Array.from({ length: 7 }).map((_, day) => {
-                        const active = Math.random() > 0.7; // Simulate random activity
-                        return (
-                            <div
-                                key={day}
-                                className={`w-2.5 h-2.5 rounded-sm ${active ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]' : 'bg-zinc-800'}`}
-                            ></div>
-                        )
-                    })}
-                </div>
-            ))}
-        </div>
-    );
-};
 
-// --- Ingestion Logic (Simplified for brevity as it works) ---
+// --- Ingestion Logic (Restored Real API) ---
+
 const IngestionWizard = ({ onComplete }) => {
-    // ... (Keeping logic same as previous step, just condensed implementation for file size) ...
-    // Assuming you want the previous working wizard. 
-    // I will copy the functional parts but focus on the new dashboard layout.
     const [mode, setMode] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [urlInput, setUrlInput] = useState("");
+    const [step, setStep] = useState("");
 
-    const startSim = () => {
+    const processIngestion = async (payload, type) => {
         setIsProcessing(true);
-        setTimeout(() => {
-            onComplete({ // Default mock data if API fails or for speed
-                totalProblems: 75,
-                estimatedHours: 40,
-                modules: [
-                    { title: "Day 1: Array Mechanics", problems: [{ title: "Two Sum", difficulty: "Easy", tags: ["Array"] }, { title: "Best Time to Buy Stock", difficulty: "Easy", tags: ["DP"] }] },
-                    { title: "Day 2: String Manipulation", problems: [{ title: "Valid Anagram", difficulty: "Easy", tags: ["String"] }, { title: "Group Anagrams", difficulty: "Medium", tags: ["Hash"] }] }
-                ]
+        setStep("Connecting to Knowledge Base...");
+
+        try {
+            const response = await fetch('/api/ingest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: payload, type })
             });
-        }, 2500);
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setStep("Optimizing Neural Graph...");
+                setTimeout(() => {
+                    onComplete(result.data);
+                }, 800);
+            } else {
+                toast.error(result.error || "Failed to process");
+                setIsProcessing(false);
+            }
+        } catch (error) {
+            toast.error("Network error");
+            setIsProcessing(false);
+        }
+    };
+
+    const handleMock = () => {
+        processIngestion("dummy", 'pdf'); // Trigger PDF flow which returns mock data in API
     };
 
     return (
         <div className="w-full max-w-xl mx-auto py-20 text-center space-y-8">
             {!isProcessing ? (
-                <>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                     <h1 className="text-4xl font-bold bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent">Initialize Learning OS</h1>
                     <div className="flex gap-4 justify-center">
-                        <button onClick={() => setMode('link')} className="p-8 bg-zinc-900 border border-white/10 rounded-2xl hover:border-primary/50 transition-all group">
+                        <button onClick={() => setMode('link')} className={`p-8 bg-zinc-900 border rounded-2xl transition-all group ${mode === 'link' ? 'border-primary ring-1 ring-primary' : 'border-white/10 hover:border-primary/50'}`}>
                             <LinkIcon className="mx-auto mb-4 text-blue-400 group-hover:scale-110 transition-transform" />
                             <span className="font-semibold text-zinc-300">Sync URL</span>
                         </button>
-                        <button onClick={startSim} className="p-8 bg-zinc-900 border border-white/10 rounded-2xl hover:border-primary/50 transition-all group">
+                        <button onClick={handleMock} className="p-8 bg-zinc-900 border border-white/10 rounded-2xl hover:border-primary/50 transition-all group">
                             <FileText className="mx-auto mb-4 text-purple-400 group-hover:scale-110 transition-transform" />
                             <span className="font-semibold text-zinc-300">Upload PDF</span>
                         </button>
@@ -149,29 +162,41 @@ const IngestionWizard = ({ onComplete }) => {
                         <motion.form
                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                             className="flex gap-2 max-w-sm mx-auto"
-                            onSubmit={(e) => { e.preventDefault(); startSim(); }}
+                            onSubmit={(e) => { e.preventDefault(); if (urlInput) processIngestion(urlInput, 'link'); }}
                         >
-                            <Input placeholder="Paste LeetCode List URL" className="bg-zinc-900 border-white/10" autoFocus />
-                            <Button>Go</Button>
+                            <Input
+                                placeholder="Paste LeetCode List URL"
+                                className="bg-zinc-900 border-white/10"
+                                value={urlInput}
+                                onChange={e => setUrlInput(e.target.value)}
+                                autoFocus
+                            />
+                            <Button type="submit">Go</Button>
                         </motion.form>
                     )}
-                </>
+                </motion.div>
             ) : (
-                <div className="space-y-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                     <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-zinc-500 animate-pulse">Constructing Neural Dependency Graph...</p>
-                </div>
+                    <p className="text-zinc-500 animate-pulse font-mono tracking-wider">{step}</p>
+                </motion.div>
             )}
         </div>
     );
 };
 
 
-// --- New Dashboard Layout ---
+// --- Dashboard Layout ---
 
 const DashboardView = ({ data }) => {
+    // Generate 'Daily Quests' from the first few problems of the first module
+    const dailyQuests = data?.modules?.[0]?.problems?.slice(0, 2) || [];
+
+    // Flatten all problems for the backlog
+    const allProblems = data?.modules?.flatMap(m => m.problems) || [];
+
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
             {/* 1. Weekly Overview & XP Header */}
             <div className="flex flex-col md:flex-row gap-6">
@@ -184,7 +209,7 @@ const DashboardView = ({ data }) => {
                             <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Weekly Focus</h2>
                             <div className="text-3xl font-bold text-white mb-2">350 XP</div>
                             <div className="flex items-center gap-2 text-sm text-green-400">
-                                <Trending_Up_Icon />
+                                <TrendingUp size={16} />
                                 <span>Top 5% of learners</span>
                             </div>
                         </div>
@@ -201,7 +226,7 @@ const DashboardView = ({ data }) => {
                 <GlassCard className="w-full md:w-[350px] p-6 flex flex-col justify-center items-center relative overflow-hidden">
                     <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest absolute top-4 left-4">Skill Topology</h3>
                     <SkillRadar_CSS />
-                    <Button variant="outline" size="xs" className="absolute bottom-4 right-4 text-xs border-white/10">View Analysis</Button>
+                    <Button variant="outline" size="sm" className="absolute bottom-4 right-4 text-xs h-7 border-white/10">View Analysis</Button>
                 </GlassCard>
             </div>
 
@@ -220,35 +245,31 @@ const DashboardView = ({ data }) => {
                             <span className="text-xs text-zinc-500">Refreshes in 12h</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <GlassCard className="p-4 hover:border-primary/50 transition-colors cursor-pointer group">
-                                <div className="flex justify-between items-start mb-3">
-                                    <Badge color="orange">Hard</Badge>
-                                    <Star className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" />
-                                </div>
-                                <h4 className="font-semibold text-lg mb-1">Trapping Rain Water</h4>
-                                <p className="text-sm text-zinc-500 mb-4">Master global vs local maxima patterns.</p>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-2">
-                                        <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">#TwoPointers</span>
+                            {dailyQuests.map((quest, i) => (
+                                <GlassCard key={i} className="p-4 hover:border-primary/50 transition-colors cursor-pointer group flex flex-col justify-between min-h-[140px]">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <Badge color={quest.difficulty === 'Hard' ? 'orange' : quest.difficulty === 'Medium' ? 'blue' : 'green'}>{quest.difficulty}</Badge>
+                                            <Star className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" />
+                                        </div>
+                                        <h4 className="font-semibold text-lg mb-1 truncate">{quest.title}</h4>
+                                        <p className="text-sm text-zinc-500 mb-2 line-clamp-1">{quest.tags?.[0] ? `Focus on ${quest.tags[0]} patterns.` : 'Master the core concepts.'}</p>
                                     </div>
-                                    <Button size="sm" className="h-7 text-xs">Start <ArrowRight className="w-3 h-3 ml-1" /></Button>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard className="p-4 hover:border-primary/50 transition-colors cursor-pointer group">
-                                <div className="flex justify-between items-start mb-3">
-                                    <Badge color="blue">Medium</Badge>
-                                    <Star className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" />
-                                </div>
-                                <h4 className="font-semibold text-lg mb-1">Product of Array Except Self</h4>
-                                <p className="text-sm text-zinc-500 mb-4">Prefix and suffix product optimization.</p>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-2">
-                                        <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">#Arrays</span>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="flex gap-2">
+                                            {quest.tags?.slice(0, 1).map(t => (
+                                                <span key={t} className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">#{t}</span>
+                                            ))}
+                                        </div>
+                                        <Button size="sm" className="h-7 text-xs">Start <ArrowRight className="w-3 h-3 ml-1" /></Button>
                                     </div>
-                                    <Button size="sm" className="h-7 text-xs">Start <ArrowRight className="w-3 h-3 ml-1" /></Button>
+                                </GlassCard>
+                            ))}
+                            {dailyQuests.length === 0 && (
+                                <div className="col-span-2 text-center text-zinc-500 py-8 border border-dashed border-white/10 rounded-xl">
+                                    No quests available. Import a sheet first!
                                 </div>
-                            </GlassCard>
+                            )}
                         </div>
                     </div>
 
@@ -263,7 +284,7 @@ const DashboardView = ({ data }) => {
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {data?.modules?.map((mod, i) => (
                                 <div key={i} className="space-y-2">
                                     <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider pl-1">
@@ -275,6 +296,7 @@ const DashboardView = ({ data }) => {
                                             <div key={j} className="flex items-center justify-between p-3 hover:bg-white/5 transition-colors group">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-5 h-5 rounded-full border border-zinc-700 group-hover:border-primary flex items-center justify-center cursor-pointer transition-colors">
+                                                        {/* Checkbox logic would go here */}
                                                         <div className="w-2.5 h-2.5 rounded-full bg-transparent group-hover:bg-primary/20"></div>
                                                     </div>
                                                     <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{p.title}</span>
@@ -283,7 +305,7 @@ const DashboardView = ({ data }) => {
                                                     <Badge color={p.difficulty === 'Hard' ? 'orange' : p.difficulty === 'Medium' ? 'blue' : 'green'}>
                                                         {p.difficulty}
                                                     </Badge>
-                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-600"><MoreHorizontal size={14} /></Button>
+                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-600 hover:text-white"><MoreHorizontal size={14} /></Button>
                                                 </div>
                                             </div>
                                         ))}
@@ -315,7 +337,7 @@ const DashboardView = ({ data }) => {
                                 <div key={i} className={`flex items-center justify-between p-2 rounded ${u.n === 'You' ? 'bg-white/5 border border-white/5' : ''}`}>
                                     <div className="flex items-center gap-3">
                                         <div className="text-xs font-bold text-zinc-500 w-4">#{u.r}</div>
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${u.r === 1 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${u.r === 1 ? 'bg-yellow-100 text-yellow-800' : 'bg-zinc-800 text-zinc-400'}`}>
                                             {u.n[0]}
                                         </div>
                                         <span className="text-sm">{u.n}</span>
@@ -331,13 +353,13 @@ const DashboardView = ({ data }) => {
 
                     {/* Shortcuts / Quick Actions */}
                     <div className="grid grid-cols-2 gap-3">
-                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors">
-                            <Timer className="w-6 h-6 text-purple-500" />
-                            <span className="text-xs font-medium">Speed Run</span>
+                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors group">
+                            <Timer className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs font-medium text-zinc-300">Speed Run</span>
                         </GlassCard>
-                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors">
-                            <Users className="w-6 h-6 text-blue-500" />
-                            <span className="text-xs font-medium">Pair Code</span>
+                        <GlassCard className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-white/5 cursor-pointer transition-colors group">
+                            <Users className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs font-medium text-zinc-300">Pair Code</span>
                         </GlassCard>
                     </div>
 
@@ -348,26 +370,21 @@ const DashboardView = ({ data }) => {
     );
 };
 
-// Helper for Icon
-const Trending_Up_Icon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-)
-
 export default function DSADashboard() {
     const [pathData, setPathData] = useState(null);
 
     return (
-        <div className="min-h-screen bg-black text-foreground font-sans selection:bg-primary/30">
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Header Nav */}
                 <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
                             <BrainCircuit className="text-white w-5 h-5" />
                         </div>
                         <h1 className="text-xl font-bold tracking-tight">CodeRev Master</h1>
                     </div>
-                    {pathData && (<Button variant="ghost" size="sm" onClick={() => setPathData(null)} className="text-zinc-500">End Session</Button>)}
+                    {pathData && (<Button variant="ghost" size="sm" onClick={() => setPathData(null)} className="text-zinc-500 hover:text-white">End Session</Button>)}
                 </div>
 
                 <AnimatePresence mode="wait">
