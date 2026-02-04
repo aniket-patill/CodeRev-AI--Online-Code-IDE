@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { Loader2 } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -24,6 +24,7 @@ const TestWorkspaceContent = ({ test }) => {
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
     const [hasStarted, setHasStarted] = useState(false);
+    const [startTime, setStartTime] = useState(null); // Track when test started
     const [questionProgress, setQuestionProgress] = useState({}); // Track progress for each question
     const [isDirty, setIsDirty] = useState(false);
     const saveTimeoutRef = useRef(null);
@@ -79,13 +80,138 @@ const TestWorkspaceContent = ({ test }) => {
     };
 
     const handleSubmit = async () => {
-        // Stop proctoring first to avoid "fullscreen exit" violation
+        // Stop proctoring first but don't redirect yet
         stopProctoring();
 
         // Save final changes
         if (activeFile && currentCode && isDirty) {
             await saveCurrentCode(activeFile, currentCode);
         }
+
+        // Execute code for ALL questions before submitting
+        const executionResults = [];
+        let totalScore = 0;
+        let totalPassedData = 0;
+        let totalTestcasesData = 0;
+
+        try {
+            // Loop through all questions
+            for (let i = 0; i < questions.length; i++) {
+                const question = questions[i];
+                const file = files[i]; // Assuming 1-to-1 mapping of file to question
+                const code = currentParticipant?.files?.[file?.name] || file?.content || "";
+
+                if (question.testcases && question.testcases.length > 0 && code.trim()) {
+                    // Get driver code
+                    const driverCode = question.codeSnippets?.python?.driver_code || "";
+                    const fullCode = driverCode ? `${code}\n\n${driverCode}` : code;
+
+                    // Execute code
+                    const response = await fetch('/api/execute-code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            code: fullCode,
+                            language: "python",
+                            testcases: question.testcases
+                        }),
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        executionResults.push({
+                            questionId: question.id,
+                            passed: result.summary.passed,
+                            total: result.summary.total,
+                            details: result.results
+                        });
+
+                        totalPassedData += result.summary.passed;
+                        totalTestcasesData += result.summary.total;
+                        
+                        // Calculate score for this question
+                        if (result.summary.total > 0) {
+                            const questionScore = (result.summary.passed / result.summary.total) * (question.points || 10);
+                            totalScore += questionScore;
+                        }
+                    }
+                }
+            }
+
+            // 1. Run AI Evaluation (Client calls API)
+            let aiEvaluation = null;
+            try {
+                const evalResponse = await fetch('/api/evaluate-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: JSON.stringify(currentParticipant?.files), // Send all code
+                        language: "python",
+                        problemTitle: questions[0]?.title || "Coding Problem",
+                        problemDescription: questions[0]?.description || "",
+                        testcasesPassed: totalPassedData,
+                        totalTestcases: totalTestcasesData,
+                    }),
+                });
+
+                if (evalResponse.ok) {
+                    aiEvaluation = await evalResponse.json();
+                }
+            } catch (evalErr) {
+                console.error("AI Evaluation failed:", evalErr);
+            }
+
+            // 2. Prepare Data
+            const timeTakenVal = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+            const submissionData = {
+                testId,
+                userId: currentParticipant?.id || "unknown",
+                userName: currentParticipant?.name || "Anonymous",
+                code: JSON.stringify(currentParticipant?.files),
+                language: "python",
+                executionResults,
+                score: Math.round(totalScore),
+                testcasesPassed: totalPassedData,
+                totalTestcases: totalTestcasesData,
+                timeTaken: timeTakenVal,
+                submittedAt: new Date(), // Use JS Date for client-side SDK (will be converted)
+                aiEvaluation: aiEvaluation || null,
+                aiScore: aiEvaluation?.totalAIScore || 0,
+            };
+
+            // 3. Write to Firestore (Client Side - Authenticated)
+            // Create submission record
+            await addDoc(collection(db, 'test_submissions'), submissionData);
+
+            // Update participant status
+            if (currentParticipant?.id) {
+                const participantRef = doc(db, `tests/${testId}/participants`, currentParticipant.id);
+                await updateDoc(participantRef, {
+                    status: 'submitted',
+                    score: Math.round(totalScore),
+                    testcasesPassed: totalPassedData,
+                    totalTestcases: totalTestcasesData,
+                    timeTaken: timeTakenVal,
+                    submittedAt: new Date(),
+                    aiScore: aiEvaluation?.totalAIScore || 0,
+                    aiEvaluation: aiEvaluation ? {
+                        approachScore: aiEvaluation.approachScore,
+                        timeComplexityScore: aiEvaluation.timeComplexityScore,
+                        spaceComplexityScore: aiEvaluation.spaceComplexityScore,
+                        codeQualityScore: aiEvaluation.codeQualityScore,
+                        timeComplexity: aiEvaluation.timeComplexity,
+                        spaceComplexity: aiEvaluation.spaceComplexity,
+                    } : null,
+                     // Derived grade
+                     grade: totalPassedData === totalTestcasesData ? 'passed' : 'failed'
+                });
+            }
+
+        } catch (err) {
+            console.error("Submission error:", err);
+            // Even if submission fails, we might want to redirect or show error
+        }
+
         await submitTest();
         // Exit fullscreen before redirect
         if (document.fullscreenElement) {
@@ -156,7 +282,10 @@ const TestWorkspaceContent = ({ test }) => {
             <ProctorStartScreen
                 testTitle={test?.title}
                 testStatus={test?.status}
-                onStart={() => setHasStarted(true)}
+                onStart={() => {
+                    setHasStarted(true);
+                    setStartTime(Date.now());
+                }}
             />
         );
     }
@@ -249,6 +378,45 @@ const TestWorkspaceContent = ({ test }) => {
                                                 {questions[activeFileIndex]?.description || "No description provided."}
                                             </p>
                                         </div>
+                                        
+                                        {/* Sample Testcases */}
+                                        {questions[activeFileIndex]?.testcases && questions[activeFileIndex].testcases.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-white/5">
+                                                <h4 className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+                                                    Sample Test Cases
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    {questions[activeFileIndex].testcases
+                                                        .filter(tc => !tc.is_hidden)
+                                                        .slice(0, 3)
+                                                        .map((tc, idx) => (
+                                                            <div key={idx} className="p-3 bg-zinc-800/50 border border-white/5 rounded-lg">
+                                                                <div className="text-xs text-zinc-400 mb-2">Test Case #{idx + 1}</div>
+                                                                <div className="space-y-2 text-xs font-mono">
+                                                                    <div className="grid grid-cols-[60px_1fr] gap-2">
+                                                                        <span className="text-zinc-500">Input:</span>
+                                                                        <pre className="text-blue-300 bg-zinc-900 px-2 py-1 rounded overflow-auto max-h-20">
+                                                                            {tc.input}
+                                                                        </pre>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-[60px_1fr] gap-2">
+                                                                        <span className="text-zinc-500">Output:</span>
+                                                                        <pre className="text-green-300 bg-zinc-900 px-2 py-1 rounded overflow-auto max-h-20">
+                                                                            {tc.expected_output}
+                                                                        </pre>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    }
+                                                </div>
+                                                {questions[activeFileIndex].testcases.filter(tc => !tc.is_hidden).length > 3 && (
+                                                    <p className="text-xs text-zinc-600 mt-2 italic">
+                                                        + {questions[activeFileIndex].testcases.filter(tc => !tc.is_hidden).length - 3} more test cases...
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </Panel>
@@ -305,7 +473,9 @@ const TestWorkspaceContent = ({ test }) => {
                                     <Panel defaultSize={30} minSize={10}>
                                         <TestOutput
                                             code={currentCode}
-                                            language={activeFile?.language || "javascript"}
+                                            language={activeFile?.language || "python"}
+                                            testcases={questions[activeFileIndex]?.testcases || []}
+                                            driverCode={questions[activeFileIndex]?.codeSnippets?.python?.driver_code || ""}
                                         />
                                     </Panel>
                                 </PanelGroup>

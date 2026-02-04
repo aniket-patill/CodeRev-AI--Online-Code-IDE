@@ -9,9 +9,10 @@ import { doc, getDoc, collection, setDoc, Timestamp } from "firebase/firestore";
  * @param {string} name - Participant's name
  * @param {string} password - Access password entered by the user
  * @param {string} email - Optional participant email
+ * @param {string} userId - Optional Firebase auth user ID for logged-in users
  * @returns {Promise<string>} - The ID of the newly created participant document
  */
-export const joinTestSession = async (db, testId, name, password, email = "") => {
+export const joinTestSession = async (db, testId, name, password, email = "", userId = null) => {
     if (!testId) throw new Error("No test ID provided");
     if (!name) throw new Error("Name is required");
     if (!password) throw new Error("Password is required");
@@ -43,6 +44,7 @@ export const joinTestSession = async (db, testId, name, password, email = "") =>
     let participantData = {
         name: name.trim(),
         email: email || "",
+        userId: userId || null, // Store Firebase auth user ID for logged-in users
         joinedAt: Timestamp.now(),
         lastActive: Timestamp.now(),
         status: "active",

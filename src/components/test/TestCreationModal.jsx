@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, FileText, Lock, Loader2, X, Plus, Trash2, Upload } from "lucide-react";
+import { Clock, FileText, Lock, Loader2, X, Plus, Trash2, Upload, Sparkles } from "lucide-react";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/config/firebase";
 import { toast } from "sonner";
@@ -21,6 +21,11 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     const user = auth.currentUser;
 
     const [isCreating, setIsCreating] = useState(false);
+    const [showAIDialog, setShowAIDialog] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState("");
+    const [aiDifficulty, setAiDifficulty] = useState("medium");
+    const [aiTestcaseCount, setAiTestcaseCount] = useState(5);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -28,8 +33,8 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         duration: "",
         randomizeQuestions: false,
         questionsCount: "",
-        files: [{ name: "main.js", language: "javascript", content: "// Write your solution here\n", readOnly: false }],
-        questions: [{ id: 1, title: "Question 1", description: "", points: 10 }],
+        files: [{ name: "solution.py", language: "python", content: "# Write your solution here\n", readOnly: false }],
+        questions: [{ id: 1, title: "Question 1", description: "", points: 10, testcases: [], codeSnippets: null }],
     });
 
     const updateField = (field, value) => {
@@ -61,7 +66,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     const addFile = () => {
         setFormData((prev) => ({
             ...prev,
-            files: [...prev.files, { name: "", language: "javascript", content: "", readOnly: false }],
+            files: [...prev.files, { name: "", language: "python", content: "", readOnly: false }],
         }));
     };
 
@@ -89,10 +94,92 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                 ...prev,
                 questions: [
                     ...prev.questions,
-                    { id: newId, title: `Question ${newId}`, description: "", points: 10 }
+                    { id: newId, title: `Question ${newId}`, description: "", points: 10, testcases: [], codeSnippets: null }
                 ]
             };
         });
+    };
+
+    const handleGenerateQuestion = async () => {
+        if (!aiPrompt.trim()) {
+            toast.error("Please enter a topic or description");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const response = await fetch('/api/generate-question', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: aiPrompt,
+                    difficulty: aiDifficulty,
+                    testcaseCount: aiTestcaseCount,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to generate question');
+            }
+
+            const result = await response.json();
+            
+            // Add generated question to the list
+            setFormData((prev) => {
+                const newId = Math.max(...prev.questions.map(q => q.id), 0) + 1;
+                
+                // Also update the corresponding file with starter code
+                // We map question index to file index (1-to-1)
+                const questionIndex = prev.questions.length; // Index of the new question
+                const newFiles = [...prev.files];
+                
+                // If we're adding the first question/file, update the first file
+                // Otherwise add a new file
+                const starterCode = result.code_snippets?.python?.starter_code || "# Code not generated\n";
+                
+                if (questionIndex === 0 && newFiles.length === 1) {
+                    newFiles[0] = {
+                        name: "solution.py",
+                        language: "python",
+                        content: starterCode,
+                        readOnly: false
+                    };
+                } else {
+                    newFiles.push({
+                        name: `solution_${newId}.py`,
+                        language: "python",
+                        content: starterCode,
+                        readOnly: false
+                    });
+                }
+
+                return {
+                    ...prev,
+                    files: newFiles,
+                    questions: [
+                        ...prev.questions,
+                        {
+                            id: newId,
+                            title: result.title,
+                            description: result.description,
+                            points: result.difficulty === 'easy' ? 50 : result.difficulty === 'medium' ? 100 : 150,
+                            testcases: result.testcases,
+                            codeSnippets: result.code_snippets,
+                        }
+                    ]
+                };
+            });
+
+            setShowAIDialog(false);
+            setAiPrompt("");
+            toast.success("Question generated successfully!");
+        } catch (err) {
+            console.error("AI Generation failed:", err);
+            toast.error(err.message || "Failed to generate question. Please try again.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const updateQuestion = (id, field, value) => {
@@ -241,15 +328,6 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         }
     };
 
-    const languageOptions = [
-        { value: "javascript", label: "JavaScript" },
-        { value: "python", label: "Python" },
-        { value: "java", label: "Java" },
-        { value: "cpp", label: "C++" },
-        { value: "c", label: "C" },
-        { value: "typescript", label: "TypeScript" },
-    ];
-
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto mx-auto">
@@ -379,6 +457,14 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                             </div>
                             <div className="flex gap-2">
                                 <Button
+                                    onClick={() => setShowAIDialog(true)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 px-3"
+                                >
+                                    <Sparkles size={14} className="mr-1" /> AI Generate
+                                </Button>
+                                <Button
                                     onClick={triggerFileInput}
                                     variant="ghost"
                                     size="sm"
@@ -441,6 +527,89 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                         onChange={(e) => updateQuestion(question.id, "description", e.target.value)}
                                         className="w-full bg-zinc-800 text-white border border-white/10 rounded-lg p-3 min-h-[80px] resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/20"
                                     />
+                                    
+                                    {/* Testcases Section */}
+                                    <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold">
+                                                Test Cases
+                                            </label>
+                                            <Button
+                                                onClick={() => {
+                                                    const newTestcases = [
+                                                        ...(question.testcases || []),
+                                                        { input: "", expected_output: "", is_hidden: false }
+                                                    ];
+                                                    updateQuestion(question.id, "testcases", newTestcases);
+                                                }}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2 text-xs"
+                                            >
+                                                <Plus size={12} className="mr-1" /> Add Testcase
+                                            </Button>
+                                        </div>
+                                        
+                                        {question.testcases && question.testcases.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {question.testcases.map((testcase, tcIndex) => (
+                                                    <div key={tcIndex} className="p-2 bg-zinc-800/50 border border-white/5 rounded-lg space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-xs text-zinc-400">Test Case #{tcIndex + 1}</span>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    const newTestcases = question.testcases.filter((_, idx) => idx !== tcIndex);
+                                                                    updateQuestion(question.id, "testcases", newTestcases);
+                                                                }}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-6 w-6 p-0"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </Button>
+                                                        </div>
+                                                        <Input
+                                                            placeholder='Input (JSON format, e.g., {"nums": [1,2], "target": 3})'
+                                                            value={testcase.input}
+                                                            onChange={(e) => {
+                                                                const newTestcases = [...question.testcases];
+                                                                newTestcases[tcIndex] = { ...newTestcases[tcIndex], input: e.target.value };
+                                                                updateQuestion(question.id, "testcases", newTestcases);
+                                                            }}
+                                                            className="bg-zinc-900 text-white border-white/10 h-8 text-xs rounded-md font-mono"
+                                                        />
+                                                        <Input
+                                                            placeholder="Expected Output (e.g., 3 or [1,2,3])"
+                                                            value={testcase.expected_output}
+                                                            onChange={(e) => {
+                                                                const newTestcases = [...question.testcases];
+                                                                newTestcases[tcIndex] = { ...newTestcases[tcIndex], expected_output: e.target.value };
+                                                                updateQuestion(question.id, "testcases", newTestcases);
+                                                            }}
+                                                            className="bg-zinc-900 text-white border-white/10 h-8 text-xs rounded-md font-mono"
+                                                        />
+                                                        <label className="flex items-center gap-2 text-xs text-zinc-400">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={testcase.is_hidden || false}
+                                                                onChange={(e) => {
+                                                                    const newTestcases = [...question.testcases];
+                                                                    newTestcases[tcIndex] = { ...newTestcases[tcIndex], is_hidden: e.target.checked };
+                                                                    updateQuestion(question.id, "testcases", newTestcases);
+                                                                }}
+                                                                className="rounded bg-zinc-800 border-white/10"
+                                                            />
+                                                            Hidden from students
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-zinc-600 italic p-2 text-center border border-dashed border-white/5 rounded-lg">
+                                                No test cases added yet. Use "AI Generate" or add manually.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -477,17 +646,9 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                         onChange={(e) => updateFile(index, "name", e.target.value)}
                                         className="bg-zinc-800 text-white border-white/10 h-10 rounded-lg flex-1"
                                     />
-                                    <select
-                                        value={file.language}
-                                        onChange={(e) => updateFile(index, "language", e.target.value)}
-                                        className="bg-zinc-800 text-white border border-white/10 h-10 rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500/50"
-                                    >
-                                        {languageOptions.map((lang) => (
-                                            <option key={lang.value} value={lang.value}>
-                                                {lang.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="bg-zinc-800 text-zinc-400 border border-white/10 h-10 rounded-lg px-3 text-sm flex items-center">
+                                        <span className="text-xs">Python</span>
+                                    </div>
                                     <label className="flex items-center gap-2 text-xs text-zinc-400">
                                         <input
                                             type="checkbox"
@@ -534,6 +695,98 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                     </div>
                 </div>
             </DialogContent>
+
+            {/* AI Generation Dialog - Following CodeRev's UI Theme */}
+            <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+                <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 p-0 overflow-hidden rounded-2xl w-[95%] max-w-md shadow-2xl mx-auto">
+                    <div className="p-4 md:p-6 border-b border-white/5 bg-indigo-900/10">
+                        <DialogTitle className="text-2xl font-bold text-white mb-1 flex items-center gap-3">
+                            <div className="p-2 bg-indigo-500/20 rounded-xl">
+                                <Sparkles className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            AI Question Generator
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Generate coding questions instantly using AI (powered by Groq)
+                        </DialogDescription>
+                    </div>
+
+                    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+                        {/* Topic Input */}
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
+                                What topic or problem?
+                            </label>
+                            <textarea
+                                placeholder="e.g., Binary Search Algorithm, Two Sum Problem, etc."
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                                className="w-full bg-zinc-900 text-white border border-white/10 focus:border-indigo-500/50 rounded-xl p-3 min-h-[100px] resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+                            />
+                        </div>
+
+                        {/* Difficulty and Testcase Count */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
+                                    Difficulty
+                                </label>
+                                <select
+                                    value={aiDifficulty}
+                                    onChange={(e) => setAiDifficulty(e.target.value)}
+                                    className="w-full bg-zinc-900 text-white border border-white/10 h-10 md:h-12 rounded-xl px-3 text-sm focus:outline-none focus:border-indigo-500/50"
+                                >
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
+                                    Test Cases
+                                </label>
+                                <Input
+                                    type="number"
+                                    min="3"
+                                    max="10"
+                                    value={aiTestcaseCount}
+                                    onChange={(e) => setAiTestcaseCount(parseInt(e.target.value) || 5)}
+                                    className="bg-zinc-900 text-white border-white/10 focus:border-indigo-500/50 h-10 md:h-12 rounded-xl"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3 pt-4 border-t border-white/5">
+                            <Button
+                                onClick={() => setShowAIDialog(false)}
+                                disabled={isGenerating}
+                                className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 h-10 md:h-12 rounded-xl font-medium"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleGenerateQuestion}
+                                disabled={isGenerating || !aiPrompt.trim()}
+                                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white h-10 md:h-12 rounded-xl font-semibold disabled:opacity-50 shadow-lg shadow-indigo-900/20"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="h-5 w-5 mr-2" />
+                                        Generate
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     );
 };

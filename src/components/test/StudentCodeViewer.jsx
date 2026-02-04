@@ -17,7 +17,9 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
 
     // Determine which files to show (assigned or test default)
     const files = participant?.assignedFiles || test?.files || [];
+    const questions = participant?.assignedQuestions || test?.questions || [];
     const activeFile = files[activeFileIndex];
+    const activeQuestion = questions[activeFileIndex]; // Assuming 1:1 mapping of files to questions
 
     // Load initial code
     useEffect(() => {
@@ -65,6 +67,12 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
                         <h3 className="font-bold text-sm text-white truncate">{participant.name}</h3>
                         <p className="text-xs text-zinc-500 truncate">{participant.email || "No email"}</p>
                     </div>
+                    {/* Show score if available */}
+                    {participant.score !== undefined && (
+                        <div className="ml-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-bold">
+                            Score: {participant.score}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -129,8 +137,8 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
                         {activeFile && (
                             <TestEditor
                                 file={{ ...activeFile, content: currentCode }} // Pass currentCode as content
-                                language={activeFile.language || "javascript"}
-                                readOnly={true} // Read only for teacher initially? Or allow edit? 
+                                language={activeFile.language || "python"}
+                                readOnly={false} // Allow teacher to edit and test
                                 onChange={handleCodeChange}
                             />
                         )}
@@ -143,7 +151,9 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
                     <Panel defaultSize={40} minSize={20}>
                         <TestOutput
                             code={currentCode}
-                            language={activeFile?.language || "javascript"}
+                            language={activeFile?.language || "python"}
+                            testcases={activeQuestion?.testcases || []}
+                            driverCode={activeQuestion?.codeSnippets?.python?.driver_code || ""}
                         />
                     </Panel>
                 </PanelGroup>

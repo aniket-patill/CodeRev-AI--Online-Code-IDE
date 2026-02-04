@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/config/firebase";
-import { Loader2, ArrowLeft, Copy, Play, Square, Link2, Users, Clock, Settings, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, Play, Square, Link2, Users, Clock, Settings, Trash2, Trophy, Send } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "sonner";
 
@@ -19,6 +19,8 @@ const ManageContent = ({ test, onUpdate }) => {
     const [isStarting, setIsStarting] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
     // Use ID for state so we can derive the fresh object from context
     const [selectedParticipantId, setSelectedParticipantId] = useState(null);
 
@@ -81,6 +83,28 @@ const ManageContent = ({ test, onUpdate }) => {
         }
     };
 
+    const publishResults = async () => {
+        if (!window.confirm("Are you sure you want to publish results? Students will be notified and can view their scores.")) {
+            return;
+        }
+        
+        setIsPublishing(true);
+        try {
+            const testRef = doc(db, "tests", test.id);
+            await updateDoc(testRef, {
+                status: "results_published",
+                resultsPublishedAt: Timestamp.now(),
+            });
+            onUpdate({ ...test, status: "results_published" });
+            toast.success("Results published! Students will be notified.");
+        } catch (err) {
+            console.error("Failed to publish results:", err);
+            toast.error("Failed to publish results");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
     const deleteCurrentTest = async () => {
         if (!window.confirm("Are you sure you want to delete this test? This action cannot be undone and will remove all participant data.")) {
             return;
@@ -99,10 +123,30 @@ const ManageContent = ({ test, onUpdate }) => {
         }
     };
 
+    // Calculate leaderboard - include any participant with score or testcases data
+    const leaderboard = participants
+        .filter(p => p.score !== undefined || p.testcasesPassed !== undefined || p.grade)
+        .sort((a, b) => {
+            // Sort by testcases passed first (descending)
+            const aTestcases = a.testcasesPassed || 0;
+            const bTestcases = b.testcasesPassed || 0;
+            if (bTestcases !== aTestcases) return bTestcases - aTestcases;
+            
+            // Then by score (descending)
+            const aScore = a.score || 0;
+            const bScore = b.score || 0;
+            if (bScore !== aScore) return bScore - aScore;
+            
+            // Then by time taken (ascending)
+            return (a.timeTaken || 0) - (b.timeTaken || 0);
+        })
+        .map((p, idx) => ({ ...p, rank: idx + 1 }));
+
     const getStatusColor = (status) => {
         switch (status) {
             case "active": return "bg-green-500/20 text-green-400 border-green-500/30";
             case "ended": return "bg-red-500/20 text-red-400 border-red-500/30";
+            case "results_published": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
             default: return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
         }
     };
@@ -168,7 +212,43 @@ const ManageContent = ({ test, onUpdate }) => {
                         </Button>
                     )}
 
-                    {(test.status === "ended" || test.status === "draft") && (
+                    {test.status === "ended" && (
+                        <>
+                            <Button
+                                onClick={publishResults}
+                                disabled={isPublishing}
+                                className="bg-purple-600 hover:bg-purple-500 text-white h-9 px-4"
+                            >
+                                {isPublishing ? (
+                                    <Loader2 size={16} className="mr-2 animate-spin" />
+                                ) : (
+                                    <Send size={16} className="mr-2" />
+                                )}
+                                Publish Results
+                            </Button>
+                            <Button
+                                onClick={() => setShowLeaderboard(!showLeaderboard)}
+                                variant="outline"
+                                className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 h-9 px-4"
+                            >
+                                <Trophy size={16} className="mr-2" />
+                                {showLeaderboard ? "Hide Leaderboard" : "View Leaderboard"}
+                            </Button>
+                        </>
+                    )}
+
+                    {test.status === "results_published" && (
+                        <Button
+                            onClick={() => setShowLeaderboard(!showLeaderboard)}
+                            variant="outline"
+                            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 h-9 px-4"
+                        >
+                            <Trophy size={16} className="mr-2" />
+                            {showLeaderboard ? "Hide Leaderboard" : "View Leaderboard"}
+                        </Button>
+                    )}
+
+                    {(test.status === "ended" || test.status === "draft" || test.status === "results_published") && (
                         <Button
                             onClick={deleteCurrentTest}
                             disabled={isDeleting}
@@ -197,6 +277,107 @@ const ManageContent = ({ test, onUpdate }) => {
                                 test={test}
                                 onClose={() => setSelectedParticipantId(null)}
                             />
+                        ) : showLeaderboard ? (
+                            /* Leaderboard View */
+                            <div className="h-full overflow-y-auto p-6 space-y-6">
+                                <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-5">
+                                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <Trophy size={20} className="text-yellow-400" />
+                                        Leaderboard
+                                    </h2>
+                                    
+                                    {leaderboard.length === 0 ? (
+                                        <div className="text-center py-8 text-zinc-500">
+                                            <Trophy size={40} className="mx-auto mb-3 opacity-30" />
+                                            <p>No submissions yet</p>
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="text-xs text-zinc-500 uppercase tracking-wider border-b border-white/10">
+                                                        <th className="text-left px-3 py-3 w-16">Rank</th>
+                                                        <th className="text-left px-3 py-3">Student</th>
+                                                        <th className="text-center px-3 py-3 w-20">Tests</th>
+                                                        <th className="text-center px-3 py-3 w-20">Score</th>
+                                                        <th className="text-center px-3 py-3 w-20">AI</th>
+                                                        <th className="text-right px-3 py-3 w-16">Time</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {leaderboard.map((entry) => (
+                                                        <tr 
+                                                            key={entry.id}
+                                                            className={`cursor-pointer transition-colors hover:bg-zinc-800/50 ${
+                                                                entry.rank === 1 ? 'bg-yellow-500/10' :
+                                                                entry.rank === 2 ? 'bg-zinc-400/5' :
+                                                                entry.rank === 3 ? 'bg-orange-500/10' :
+                                                                ''
+                                                            }`}
+                                                            onClick={() => setSelectedParticipantId(entry.id)}
+                                                        >
+                                                            <td className={`px-3 py-3 text-lg font-bold ${
+                                                                entry.rank === 1 ? 'text-yellow-400' :
+                                                                entry.rank === 2 ? 'text-zinc-300' :
+                                                                entry.rank === 3 ? 'text-orange-400' :
+                                                                'text-zinc-500'
+                                                            }`}>
+                                                                #{entry.rank}
+                                                            </td>
+                                                            <td className="px-3 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-white font-medium">{entry.name}</span>
+                                                                    {entry.grade && (
+                                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                                                                            entry.grade === 'passed' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                                                        }`}>
+                                                                            {entry.grade}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-3 py-3 text-center text-blue-400 font-mono text-sm">
+                                                                {entry.testcasesPassed ?? 0}/{entry.totalTestcases ?? '?'}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-center text-green-400 font-mono font-bold">
+                                                                {entry.score || 0}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-center text-purple-400 font-mono text-sm">
+                                                                {entry.aiScore || '-'}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-right text-zinc-400 text-sm">
+                                                                {entry.timeTaken ? `${Math.floor(entry.timeTaken / 60)}m` : '-'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Stats Summary */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
+                                        <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Total Submissions</div>
+                                        <p className="text-2xl font-bold text-white">{leaderboard.length}</p>
+                                    </div>
+                                    <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
+                                        <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Avg Score</div>
+                                        <p className="text-2xl font-bold text-green-400">
+                                            {leaderboard.length > 0 
+                                                ? Math.round(leaderboard.reduce((sum, e) => sum + (e.score || 0), 0) / leaderboard.length)
+                                                : 0}
+                                        </p>
+                                    </div>
+                                    <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
+                                        <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Highest Score</div>
+                                        <p className="text-2xl font-bold text-yellow-400">
+                                            {leaderboard.length > 0 ? leaderboard[0].score || 0 : 0}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
                             <div className="h-full overflow-y-auto p-6 space-y-6">
                                 {/* Share Section */}

@@ -104,11 +104,11 @@ export default function TestSubmittedPage() {
                 )}
 
                 <Button
-                    onClick={() => router.push("/")}
+                    onClick={() => router.push("/dashboard")}
                     className="w-full bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-semibold animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300"
                 >
                     <Home size={18} className="mr-2" />
-                    Go to Homepage
+                    Back to Dashboard
                 </Button>
             </div>
         </div>

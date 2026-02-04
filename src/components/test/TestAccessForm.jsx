@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, Loader2, AlertCircle } from "lucide-react";
-import { db } from "@/config/firebase";
+import { db, auth } from "@/config/firebase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,15 +26,10 @@ const TestAccessForm = ({ testId, testTitle, testDescription, onSuccess }) => {
         setError("");
 
         try {
-            // Import the utility dynamically or assumption it's top-level
-            // But since we are replacing the block, let's assume we add the import at the top too.
-            // Wait, I cannot add imports with replace_file_content easily if I only target this block.
-            // I should use multi_replace or ensure I update imports too.
-            // Let's use multi_replace to handle both imports and the function body.
-
-            // This logic is just for the function body:
             const { joinTestSession } = await import("@/utils/testUtils");
-            const participantId = await joinTestSession(db, testId, name, password);
+            // Pass the current user's ID if logged in, for tracking attempted tests
+            const userId = auth.currentUser?.uid || null;
+            const participantId = await joinTestSession(db, testId, name, password, "", userId);
 
             // Store participant ID in session storage for this test
             sessionStorage.setItem(`test_participant_${testId}`, participantId);

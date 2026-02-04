@@ -47,6 +47,7 @@ const Dashboard = () => {
   // State management
   const [workspaces, setWorkspaces] = useState([]);
   const [tests, setTests] = useState([]);
+  const [attemptedTests, setAttemptedTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -57,7 +58,7 @@ const Dashboard = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState(null);
   const [deletingWorkspaceId, setDeletingWorkspaceId] = useState(null);
-  const [activeTab, setActiveTab] = useState("spaces"); // "spaces" or "tests"
+  const [activeTab, setActiveTab] = useState("spaces"); // "spaces", "tests", or "attempted"
 
   // Fetch workspaces on mount
   useEffect(() => {
@@ -110,7 +111,45 @@ const Dashboard = () => {
       }
     };
 
-    Promise.all([fetchWorkspaces(), fetchTests()]).finally(() => {
+    // Fetch tests where user participated (as student)
+    const fetchAttemptedTests = async () => {
+      try {
+        const testsSnapshot = await getDocs(collection(db, "tests"));
+        const attempted = [];
+        
+        for (const testDoc of testsSnapshot.docs) {
+          const testData = { id: testDoc.id, ...testDoc.data() };
+          
+          // Skip tests created by this user (they're hosts, not students)
+          if (testData.createdBy === user.uid) continue;
+          
+          // Check if user is a participant in this test
+          const participantsRef = collection(db, `tests/${testDoc.id}/participants`);
+          const participantsSnapshot = await getDocs(participantsRef);
+          
+          const userParticipation = participantsSnapshot.docs.find(
+            (doc) => doc.data().userId === user.uid
+          );
+          
+          if (userParticipation) {
+            const participantData = userParticipation.data();
+            attempted.push({
+              ...testData,
+              participantStatus: participantData.status,
+              score: participantData.score,
+              submittedAt: participantData.submittedAt,
+              resultsAvailable: testData.status === "results_published",
+            });
+          }
+        }
+        
+        setAttemptedTests(attempted);
+      } catch (error) {
+        console.error("Error fetching attempted tests:", error);
+      }
+    };
+
+    Promise.all([fetchWorkspaces(), fetchTests(), fetchAttemptedTests()]).finally(() => {
       setLoading(false);
     });
   }, [user, router]);
@@ -258,6 +297,21 @@ const Dashboard = () => {
             >
               Tests ({tests.length})
             </button>
+            <button
+              id="dashboard-attempted-tab"
+              onClick={() => setActiveTab("attempted")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all relative ${activeTab === "attempted"
+                ? "bg-white text-black"
+                : "text-zinc-400 hover:text-white"
+                }`}
+            >
+              Attempted ({attemptedTests.length})
+              {attemptedTests.filter(t => t.resultsAvailable).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {attemptedTests.filter(t => t.resultsAvailable).length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -343,7 +397,7 @@ const Dashboard = () => {
               ))
             )}
           </div>
-        ) : (
+        ) : activeTab === "tests" ? (
           /* Tests Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tests.length === 0 ? (
@@ -373,7 +427,86 @@ const Dashboard = () => {
               ))
             )}
           </div>
-        )}
+        ) : activeTab === "attempted" ? (
+          /* Attempted Tests Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {attemptedTests.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center h-[400px] text-center border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
+                <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                  <FileText className="w-8 h-8 text-zinc-500 opacity-50" />
+                </div>
+                <p className="text-zinc-300 text-xl font-medium mb-2">No tests attempted yet</p>
+                <p className="text-zinc-500 mb-6 max-w-sm">Join a test using the test code provided by your instructor to see it here.</p>
+                <Button
+                  onClick={() => setIsJoinModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium"
+                >
+                  Join a Test
+                </Button>
+              </div>
+            ) : (
+              attemptedTests.map((test) => (
+                <Card
+                  key={test.id}
+                  className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all cursor-pointer group"
+                  onClick={() => router.push(`/test/${test.id}/results`)}
+                >
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                          {test.title}
+                        </h3>
+                        
+                        {/* Status Badges */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            test.participantStatus === 'submitted' 
+                              ? 'bg-green-500/20 text-green-400' 
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {test.participantStatus === 'submitted' ? 'Submitted' : 'In Progress'}
+                          </span>
+                          
+                          {test.resultsAvailable && (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-500/20 text-purple-400 animate-pulse">
+                              🎉 Results Available!
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Score Badge */}
+                      {test.score !== undefined && test.resultsAvailable && (
+                        <div className="ml-3 text-right">
+                          <div className="text-xs text-zinc-500 uppercase">Score</div>
+                          <div className="text-2xl font-bold text-green-400">{test.score}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {test.description && (
+                      <p className="text-zinc-500 text-sm mb-3 line-clamp-2">{test.description}</p>
+                    )}
+                    
+                    <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center text-xs text-zinc-500">
+                      <span>
+                        {test.submittedAt 
+                          ? `Submitted ${new Date(test.submittedAt?.toDate?.() || test.submittedAt).toLocaleDateString()}` 
+                          : 'Not submitted yet'}
+                      </span>
+                      {test.resultsAvailable ? (
+                        <span className="text-purple-400 font-medium">View Results →</span>
+                      ) : (
+                        <span className="text-zinc-600">Results pending...</span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Create Workspace Dialog */}
