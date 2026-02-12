@@ -41,6 +41,14 @@ JSON Structure:
     "javascript": {{
       "starter_code": "function functionName(params) {{\\\\n    // Your code here\\\\n}}",
       "driver_code": "const input = require('fs').readFileSync(0, 'utf-8');\\\\nconst data = JSON.parse(input);\\\\nconsole.log(functionName(data.param1, data.param2));"
+    }},
+    "java": {{
+      "starter_code": "public class Solution {{\\\\n    public int functionName(int[] params) {{\\\\n        // Your code here\\\\n        return 0;\\\\n    }}\\\\n}}",
+      "driver_code": "import java.util.*;\\\\npublic class Main {{\\\\n    public static void main(String[] args) {{\\\\n        Scanner scanner = new Scanner(System.in);\\\\n        // Parse input and call Solution.functionName\\\\n    }}\\\\n}}"
+    }},
+    "cpp": {{
+      "starter_code": "class Solution {{\\\\npublic:\\\\n    int functionName(vector<int>& params) {{\\\\n        // Your code here\\\\n        return 0;\\\\n    }}\\\\n}};",
+      "driver_code": "#include <iostream>\\\\n#include <vector>\\\\nusing namespace std;\\\\nint main() {{\\\\n    // Parse input and call Solution.functionName\\\\n    return 0;\\\\n}}"
     }}
   }}
 }}
@@ -53,7 +61,7 @@ REQUIREMENTS:
 5.  **Starter Code**: MUST be INCOMPLETE placeholder code. Only include function signature with \`pass\` or a comment like \`// Your code here\`. DO NOT include any algorithm implementation, loops, conditionals, or solution logic.
 6.  **Driver Code**: ONLY parse JSON/input, call the named function, print result. NO algorithm logic.
 7.  **Parameters**: Ensure starter code parameters match testcase structure.
-8.  **Languages**: Provide both Python and JavaScript code snippets.
+8.  **Languages**: Provide Python, JavaScript, Java, and C++ code snippets.
 
 CRITICAL: The starter_code must NOT contain the solution. It should only have the function signature and a placeholder.`;
 
@@ -118,14 +126,42 @@ export async function POST(request) {
           throw new Error('Invalid response structure from AI');
         }
 
+        // Ensure both Python and JavaScript snippets exist for tests
+        const snippets = result.code_snippets;
+        if (!snippets.python) {
+          snippets.python = {
+            starter_code: '# Write your solution here\n',
+            driver_code: 'import sys\nimport json\nif __name__ == \'__main__\':\n    data = json.loads(sys.stdin.read())\n    pass  # call your function and print result\n',
+          };
+        }
+        if (!snippets.javascript) {
+          snippets.javascript = {
+            starter_code: '// Write your solution here\n',
+            driver_code: 'const input = require(\'fs\').readFileSync(0, \'utf-8\');\nconst data = JSON.parse(input);\n// call your function and console.log result\n',
+          };
+        }
+        if (!snippets.java) {
+          snippets.java = {
+            starter_code: 'public class Solution {\n    // Implement your method here\n}\n',
+            driver_code: '// Driver code not generated\n',
+          };
+        }
+        if (!snippets.cpp) {
+          snippets.cpp = {
+            starter_code: '// Write your solution here\n',
+            driver_code: '// Driver code not generated\n',
+          };
+        }
+        result.code_snippets = snippets;
+
         console.log(`[AI Generation] Success on attempt ${attempt + 1}`);
-        
+
         return NextResponse.json(result);
 
       } catch (err) {
         console.error(`[AI Generation] Attempt ${attempt + 1} failed:`, err.message);
         lastError = err;
-        
+
         if (attempt < maxRetries - 1) {
           // Wait before retry (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));

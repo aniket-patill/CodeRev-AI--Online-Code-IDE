@@ -6,6 +6,10 @@ import { useTerminal } from '@/hooks/useTerminal';
 import { createRuntime, supportsWasmRuntime } from '@/lib/runtime/RuntimeManager';
 import { executeCode as executeCodeAPI } from '@/api';
 
+const UNIFIED_RUNTIME_LANGUAGES = ['python', 'cpp', 'java'];
+const supportsUnifiedRuntime = (lang) =>
+  UNIFIED_RUNTIME_LANGUAGES.includes((lang || '').toLowerCase());
+
 /**
  * Terminal Component - VS Code-like interactive terminal for code execution.
  * 
@@ -78,8 +82,9 @@ const TerminalPanel = ({ editorRef, language }) => {
         write(`\x1b[36m$ Running ${language}...\x1b[0m\r\n`);
         write(`\x1b[90m${'─'.repeat(40)}\x1b[0m\r\n\r\n`);
 
-        // Check if we can use WASM runtime
-        if (supportsWasmRuntime(language)) {
+        if (supportsUnifiedRuntime(language)) {
+            await runWithUnifiedRuntime(sourceCode);
+        } else if (supportsWasmRuntime(language)) {
             await runWithWasm(sourceCode);
         } else {
             await runWithPiston(sourceCode);
@@ -151,6 +156,27 @@ const TerminalPanel = ({ editorRef, language }) => {
     };
 
     /**
+     * Run code using unified runtime (Python/C++/Java): 2s timeout, structured result.
+     * @param {string} code
+     */
+    const runWithUnifiedRuntime = async (code) => {
+        setIsLoading(true);
+        try {
+            const { executeCode: run } = await import('@/runtime/executeCode');
+            const result = await run(language, code, undefined);
+            if (result.output) write(result.output);
+            if (result.error) writeError(result.error);
+            write(`\r\n\x1b[90m${'─'.repeat(40)}\x1b[0m\r\n`);
+            write(`\x1b[${result.success ? '32' : '31'}m✓ ${result.success ? 'Completed' : 'Failed'} (${result.executionTime}ms)\x1b[0m\r\n`);
+        } catch (err) {
+            writeError(`\r\n✗ Execution error: ${err?.message || err}\r\n`);
+        } finally {
+            setIsLoading(false);
+            setIsRunning(false);
+        }
+    };
+
+    /**
      * Run code using Piston API (fallback).
      * @param {string} code
      */
@@ -210,7 +236,11 @@ const TerminalPanel = ({ editorRef, language }) => {
                 <div className="flex items-center gap-2">
                     <TerminalIcon size={14} className="text-zinc-400" />
                     <span className="text-xs font-medium text-zinc-300">Terminal</span>
-                    {supportsWasmRuntime(language) ? (
+                    {supportsUnifiedRuntime(language) ? (
+                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">
+                            Runtime
+                        </span>
+                    ) : supportsWasmRuntime(language) ? (
                         <span className="text-[10px] px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
                             WASM
                         </span>

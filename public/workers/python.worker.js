@@ -12,6 +12,8 @@ let pyodide = null;
 let inputBuffer = null;
 let signalArray = null;
 let dataArray = null;
+/** Pre-fed stdin lines (when provided in run message). Consumed by input(). */
+let stdinLines = [];
 
 const SIGNAL_INDEX = 0;
 
@@ -23,10 +25,14 @@ async function initPyodide() {
         pyodide = await loadPyodide({
             indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.2/full/',
             stdout: (text) => {
-                self.postMessage({ type: 'stdout', data: text + '\n' });
+                for (let i = 0; i < text.length; i++) {
+                    self.postMessage({ type: 'stdout', data: text[i] });
+                }
             },
             stderr: (text) => {
-                self.postMessage({ type: 'stderr', data: text + '\n' });
+                for (let i = 0; i < text.length; i++) {
+                    self.postMessage({ type: 'stderr', data: text[i] });
+                }
             },
         });
 
@@ -44,34 +50,25 @@ async function initPyodide() {
 }
 
 /**
- * Read input from SharedArrayBuffer (blocking).
+ * Read input: from pre-fed stdin lines if available, else SharedArrayBuffer.
  * @returns {string}
  */
 function readInput() {
+    if (stdinLines.length > 0) {
+        return stdinLines.shift() + '\n';
+    }
     if (!signalArray || !dataArray) {
-        // Fallback: return empty string if SharedArrayBuffer not available
         return '';
     }
-
-    // Signal that we need input
     self.postMessage({ type: 'input_request' });
-
-    // Wait for input (blocking)
-    Atomics.store(signalArray, SIGNAL_INDEX, 2); // 2 = requesting input
-
-    // Wait until signal becomes 1 (input ready)
+    Atomics.store(signalArray, SIGNAL_INDEX, 2);
     while (Atomics.load(signalArray, SIGNAL_INDEX) !== 1) {
         Atomics.wait(signalArray, SIGNAL_INDEX, 2, 100);
     }
-
-    // Read the input data
     const length = new DataView(inputBuffer).getUint32(4, true);
     const decoder = new TextDecoder();
     const text = decoder.decode(dataArray.subarray(4, 4 + length));
-
-    // Reset signal
     Atomics.store(signalArray, SIGNAL_INDEX, 0);
-
     return text;
 }
 
@@ -98,11 +95,13 @@ async function runCode(code) {
  * Handle messages from the main thread.
  */
 self.onmessage = async function (event) {
-    const { type, code, inputBuffer: buffer } = event.data;
+    const { type, code, inputBuffer: buffer, stdin } = event.data;
 
     switch (type) {
         case 'run':
-            // Store input buffer reference
+            stdinLines = typeof stdin === 'string' && stdin.length > 0
+                ? stdin.split('\n').map(function (line) { return line; })
+                : [];
             if (buffer) {
                 inputBuffer = buffer;
                 signalArray = new Int32Array(inputBuffer, 0, 1);
@@ -111,7 +110,6 @@ self.onmessage = async function (event) {
             await runCode(code);
             break;
         case 'init':
-            // Already initializing on load
             break;
     }
 };

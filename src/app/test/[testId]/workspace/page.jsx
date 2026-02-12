@@ -6,6 +6,10 @@ import { doc, getDoc, collection, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { Loader2 } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 import { TestProvider, useTest } from "@/context/TestContext";
 import { ProctorProvider, useProctor } from "@/context/ProctorContext";
@@ -18,8 +22,13 @@ import ProctorStartScreen from "@/components/test/ProctorStartScreen";
 const TestWorkspaceContent = ({ test }) => {
     const router = useRouter();
     const { testId } = useParams();
-    const { submitTest, leaveTest, updateCode, currentParticipant, getCurrentParticipantFiles, getCurrentParticipantQuestions } = useTest();
+    const { submitTest, leaveTest, updateCode, currentParticipant, getCurrentParticipantFiles, getCurrentParticipantQuestions, addParticipantFile } = useTest();
     const { isProctorActive, stopProctoring } = useProctor();
+
+    const [isAddFileOpen, setIsAddFileOpen] = useState(false);
+    const [newFileName, setNewFileName] = useState("");
+    const [newFileLang, setNewFileLang] = useState("python");
+    const [isAddingFile, setIsAddingFile] = useState(false);
 
     const [activeFileIndex, setActiveFileIndex] = useState(0);
     const [currentCode, setCurrentCode] = useState("");
@@ -32,6 +41,9 @@ const TestWorkspaceContent = ({ test }) => {
     const files = getCurrentParticipantFiles();
     const questions = getCurrentParticipantQuestions();
     const activeFile = files[activeFileIndex];
+    const filesPerQuestion = questions.length > 0 ? Math.max(1, Math.floor(files.length / questions.length)) : 1;
+    const currentQuestionIndex = Math.min(Math.floor(activeFileIndex / filesPerQuestion), Math.max(0, questions.length - 1));
+    const activeQuestion = questions[currentQuestionIndex];
 
     // Safe save function
     const saveCurrentCode = async (file, code) => {
@@ -95,24 +107,36 @@ const TestWorkspaceContent = ({ test }) => {
         let totalTestcasesData = 0;
 
         try {
-            // Loop through all questions
+            const filesPerQuestion = questions.length > 0 ? Math.max(1, Math.floor(files.length / questions.length)) : 1;
+
             for (let i = 0; i < questions.length; i++) {
                 const question = questions[i];
-                const file = files[i]; // Assuming 1-to-1 mapping of file to question
-                const code = currentParticipant?.files?.[file?.name] || file?.content || "";
+                const startIdx = i * filesPerQuestion;
+                const endIdx = Math.min(startIdx + filesPerQuestion, files.length);
+                let code = "";
+                let fileLang = "python";
+                let driverCode = question.codeSnippets?.python?.driver_code || "";
+
+                for (let f = startIdx; f < endIdx; f++) {
+                    const file = files[f];
+                    const candidateCode = currentParticipant?.files?.[file?.name] || file?.content || "";
+                    if (candidateCode.trim()) {
+                        code = candidateCode;
+                        fileLang = file?.language || "python";
+                        driverCode = question.codeSnippets?.[fileLang]?.driver_code || "";
+                        break;
+                    }
+                }
 
                 if (question.testcases && question.testcases.length > 0 && code.trim()) {
-                    // Get driver code
-                    const driverCode = question.codeSnippets?.python?.driver_code || "";
                     const fullCode = driverCode ? `${code}\n\n${driverCode}` : code;
 
-                    // Execute code
                     const response = await fetch('/api/execute-code', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             code: fullCode,
-                            language: "python",
+                            language: fileLang,
                             testcases: question.testcases
                         }),
                     });
@@ -128,8 +152,7 @@ const TestWorkspaceContent = ({ test }) => {
 
                         totalPassedData += result.summary.passed;
                         totalTestcasesData += result.summary.total;
-                        
-                        // Calculate score for this question
+
                         if (result.summary.total > 0) {
                             const questionScore = (result.summary.passed / result.summary.total) * (question.points || 10);
                             totalScore += questionScore;
@@ -145,8 +168,8 @@ const TestWorkspaceContent = ({ test }) => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        code: JSON.stringify(currentParticipant?.files), // Send all code
-                        language: "python",
+                        code: JSON.stringify(currentParticipant?.files),
+                        language: activeFile?.language || "python",
                         problemTitle: questions[0]?.title || "Coding Problem",
                         problemDescription: questions[0]?.description || "",
                         testcasesPassed: totalPassedData,
@@ -168,7 +191,7 @@ const TestWorkspaceContent = ({ test }) => {
                 userId: currentParticipant?.id || "unknown",
                 userName: currentParticipant?.name || "Anonymous",
                 code: JSON.stringify(currentParticipant?.files),
-                language: "python",
+                language: activeFile?.language || "python",
                 executionResults,
                 score: Math.round(totalScore),
                 testcasesPassed: totalPassedData,
@@ -202,8 +225,8 @@ const TestWorkspaceContent = ({ test }) => {
                         timeComplexity: aiEvaluation.timeComplexity,
                         spaceComplexity: aiEvaluation.spaceComplexity,
                     } : null,
-                     // Derived grade
-                     grade: totalPassedData === totalTestcasesData ? 'passed' : 'failed'
+                    // Derived grade
+                    grade: totalPassedData === totalTestcasesData ? 'passed' : 'failed'
                 });
             }
 
@@ -246,7 +269,7 @@ const TestWorkspaceContent = ({ test }) => {
 
         // Update question progress when code changes
         if (activeFile) {
-            const currentQuestion = questions[activeFileIndex];
+            const currentQuestion = questions[Math.floor(activeFileIndex / filesPerQuestion)];
             if (currentQuestion) {
                 setQuestionProgress(prev => ({
                     ...prev,
@@ -267,6 +290,36 @@ const TestWorkspaceContent = ({ test }) => {
             await document.exitFullscreen();
         }
         router.push(`/test/${testId}/submitted?auto=true`);
+    };
+
+    const handleAddFile = async () => {
+        if (!newFileName.trim()) return;
+
+        try {
+            setIsAddingFile(true);
+            let lang = newFileLang;
+            // Auto-detect language from extension if possible, or force extension
+            if (newFileName.endsWith(".js")) lang = "javascript";
+            else if (newFileName.endsWith(".py")) lang = "python";
+            else if (newFileName.endsWith(".java")) lang = "java";
+            else if (newFileName.endsWith(".cpp") || newFileName.endsWith(".cc")) lang = "cpp";
+
+            // Initial content
+            let content = "";
+            if (lang === "python") content = "# Write your code here\n";
+            else if (lang === "javascript") content = "// Write your code here\n";
+            else if (lang === "java") content = "public class Solution {\n    public static void main(String[] args) {\n        \n    }\n}";
+            else if (lang === "cpp") content = "#include <iostream>\n\nint main() {\n    return 0;\n}";
+
+            await addParticipantFile(newFileName, lang, content);
+            setIsAddFileOpen(false);
+            setNewFileName("");
+        } catch (error) {
+            console.error("Failed to add file:", error);
+            alert("Failed to add file: " + error.message);
+        } finally {
+            setIsAddingFile(false);
+        }
     };
 
     // Watch for test ending or status changes
@@ -295,6 +348,55 @@ const TestWorkspaceContent = ({ test }) => {
             {/* Proctor Warning Modal */}
             <ProctorWarningModal />
 
+            <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
+                <DialogContent className="bg-zinc-900 border border-white/10 text-white sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Create New File</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Add a new file to your workspace.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <label htmlFor="filename" className="text-sm font-medium text-zinc-300">
+                                Filename
+                            </label>
+                            <Input
+                                id="filename"
+                                value={newFileName}
+                                onChange={(e) => setNewFileName(e.target.value)}
+                                placeholder="e.g., utils.py"
+                                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-blue-500"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="language" className="text-sm font-medium text-zinc-300">
+                                Language
+                            </label>
+                            <select
+                                id="language"
+                                value={newFileLang}
+                                onChange={(e) => setNewFileLang(e.target.value)}
+                                className="w-full flex h-9 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 text-white"
+                            >
+                                <option value="python">Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                            </select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsAddFileOpen(false)} className="text-zinc-400 hover:text-white hover:bg-zinc-800">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleAddFile} disabled={!newFileName.trim() || isAddingFile} className="bg-blue-600 hover:bg-blue-500 text-white">
+                            {isAddingFile ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Create File"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="h-screen flex flex-col bg-black text-white overflow-hidden">
                 {/* Header */}
                 <TestHeader
@@ -317,34 +419,30 @@ const TestWorkspaceContent = ({ test }) => {
 
                         <div className="flex items-center gap-2">
                             {questions.map((question, index) => {
-                                // Calculate status based on code submission for this question
-                                const hasCode = Object.keys(currentParticipant?.files || {}).some(
-                                    fileName => {
-                                        const fileContent = currentParticipant.files[fileName];
-                                        return typeof fileContent === 'string' && fileContent.trim() !== '';
-                                    }
+                                const qFileStart = index * filesPerQuestion;
+                                const hasCode = files.slice(qFileStart, qFileStart + filesPerQuestion).some(
+                                    file => (currentParticipant?.files?.[file?.name] || file?.content || "").trim() !== ""
                                 );
-
-                                // Get progress status for this question
                                 const questionId = question.id || index;
                                 const progress = questionProgress[questionId];
+                                const isActive = currentQuestionIndex === index;
 
-                                let statusColor = "bg-zinc-800 text-zinc-400 border-zinc-700"; // Default
+                                let statusColor = "bg-zinc-800 text-zinc-400 border-zinc-700";
                                 if (progress?.completed) {
-                                    statusColor = "bg-green-500/10 text-green-400 border-green-500/20"; // Completed
-                                } else if (activeFileIndex === index) {
-                                    statusColor = "bg-blue-500 text-white border-blue-600"; // Active
+                                    statusColor = "bg-green-500/10 text-green-400 border-green-500/20";
+                                } else if (isActive) {
+                                    statusColor = "bg-blue-500 text-white border-blue-600";
                                 }
 
                                 return (
                                     <button
                                         key={question.id || index}
-                                        onClick={() => handleSwitchFile(index)}
+                                        onClick={() => handleSwitchFile(qFileStart)}
                                         className={`
                                             flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all
                                             whitespace-nowrap
                                             ${statusColor}
-                                            ${activeFileIndex === index ? 'shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'hover:bg-zinc-800 hover:text-zinc-200'}
+                                            ${isActive ? 'shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'hover:bg-zinc-800 hover:text-zinc-200'}
                                         `}
                                     >
                                         <span className="opacity-70 text-[10px] uppercase tracking-wider">Q{index + 1}</span>
@@ -364,29 +462,34 @@ const TestWorkspaceContent = ({ test }) => {
                                 <div className="h-full bg-zinc-900/50 flex flex-col border-r border-white/5">
                                     <div className="p-4 border-b border-white/5 bg-zinc-900/80">
                                         <h3 className="text-lg font-bold text-white mb-1">
-                                            {questions[activeFileIndex]?.title || `Question ${activeFileIndex + 1}`}
+                                            {activeQuestion?.title || `Question ${currentQuestionIndex + 1}`}
                                         </h3>
-                                        <div className="flex gap-2 text-xs text-zinc-500">
+                                        <div className="flex gap-2 text-xs text-zinc-500 flex-wrap items-center">
                                             <span className="px-2 py-0.5 rounded bg-zinc-800 border border-white/5">
-                                                {questions[activeFileIndex]?.points || 0} Points
+                                                {activeQuestion?.points || 0} Points
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                {activeFile?.language === "javascript" ? "JavaScript" :
+                                                    activeFile?.language === "python" ? "Python" :
+                                                        activeFile?.language === "java" ? "Java" : "C++"}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4">
                                         <div className="prose prose-invert prose-sm max-w-none">
                                             <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                                                {questions[activeFileIndex]?.description || "No description provided."}
+                                                {activeQuestion?.description || "No description provided."}
                                             </p>
                                         </div>
-                                        
+
                                         {/* Sample Testcases */}
-                                        {questions[activeFileIndex]?.testcases && questions[activeFileIndex].testcases.length > 0 && (
+                                        {activeQuestion?.testcases && activeQuestion.testcases.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-white/5">
                                                 <h4 className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
                                                     Sample Test Cases
                                                 </h4>
                                                 <div className="space-y-3">
-                                                    {questions[activeFileIndex].testcases
+                                                    {activeQuestion.testcases
                                                         .filter(tc => !tc.is_hidden)
                                                         .slice(0, 3)
                                                         .map((tc, idx) => (
@@ -410,9 +513,9 @@ const TestWorkspaceContent = ({ test }) => {
                                                         ))
                                                     }
                                                 </div>
-                                                {questions[activeFileIndex].testcases.filter(tc => !tc.is_hidden).length > 3 && (
+                                                {activeQuestion.testcases.filter(tc => !tc.is_hidden).length > 3 && (
                                                     <p className="text-xs text-zinc-600 mt-2 italic">
-                                                        + {questions[activeFileIndex].testcases.filter(tc => !tc.is_hidden).length - 3} more test cases...
+                                                        + {activeQuestion.testcases.filter(tc => !tc.is_hidden).length - 3} more test cases...
                                                     </p>
                                                 )}
                                             </div>
@@ -443,6 +546,15 @@ const TestWorkspaceContent = ({ test }) => {
                                                             }`}
                                                     >
                                                         <span>{file.name}</span>
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold 
+                                                            ${file.language === "javascript" ? "bg-amber-500/20 text-amber-400" :
+                                                                file.language === "python" ? "bg-emerald-500/20 text-emerald-400" :
+                                                                    file.language === "java" ? "bg-orange-500/20 text-orange-400" :
+                                                                        "bg-blue-500/20 text-blue-400"}`}>
+                                                            {file.language === "javascript" ? "JS" :
+                                                                file.language === "python" ? "Py" :
+                                                                    file.language === "java" ? "Java" : "C++"}
+                                                        </span>
                                                         {file.readOnly && (
                                                             <span className="text-[10px] text-yellow-500/80 uppercase tracking-wider font-bold">
                                                                 RO
@@ -450,13 +562,20 @@ const TestWorkspaceContent = ({ test }) => {
                                                         )}
                                                     </button>
                                                 ))}
+                                                <button
+                                                    onClick={() => setIsAddFileOpen(true)}
+                                                    className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
+                                                    title="Add File"
+                                                >
+                                                    <Plus size={14} />
+                                                </button>
                                             </div>
 
                                             <div className="flex-1 relative">
                                                 {activeFile && (
                                                     <TestEditor
                                                         file={activeFile}
-                                                        language={activeFile.language || "javascript"}
+                                                        language={activeFile.language || "python"}
                                                         readOnly={activeFile.readOnly}
                                                         onChange={handleCodeChange}
                                                     />
@@ -474,8 +593,8 @@ const TestWorkspaceContent = ({ test }) => {
                                         <TestOutput
                                             code={currentCode}
                                             language={activeFile?.language || "python"}
-                                            testcases={questions[activeFileIndex]?.testcases || []}
-                                            driverCode={questions[activeFileIndex]?.codeSnippets?.python?.driver_code || ""}
+                                            testcases={activeQuestion?.testcases || []}
+                                            driverCode={activeQuestion?.codeSnippets?.[activeFile?.language]?.driver_code || ""}
                                         />
                                     </Panel>
                                 </PanelGroup>

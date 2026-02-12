@@ -1,32 +1,35 @@
 import { NextResponse } from "next/server";
+import { executeCode } from "@/lib/execution-client";
 
 export async function POST(req) {
-    try {
-        const { code, language } = await req.json();
+  try {
+    const { code, language, input = "" } = await req.json();
 
-        // MOCK EXECUTION FOR NOW
-        // In a real app, you would send this to Piston API or similar
-
-        let output = "";
-
-        if (language === "javascript") {
-            try {
-                // Warning: This is extremely unsafe for production but fine for a demo/mock
-                // In production, use an isolated sandbox environment
-                // output = eval(code); 
-                // Since this is server-side, we can't just eval. 
-
-                output = "Code execution simulated.\n\nOutput:\nHello World!";
-            } catch (e) {
-                output = e.message;
-            }
-        } else {
-            output = `Execution for ${language} is simulating...\nNo output returned.`;
-        }
-
-        return NextResponse.json({ output });
-
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to execute code" }, { status: 500 });
+    if (!code || !language) {
+      return NextResponse.json(
+        { error: "Missing required fields: code, language" },
+        { status: 400 }
+      );
     }
+
+    console.log(`[Code Execution] Running ${language} code`);
+
+    const result = await executeCode({
+      code,
+      language,
+      input,
+      timeout: 5000
+    });
+
+    console.log(`[Code Execution] Completed`);
+
+    return NextResponse.json(result);
+
+  } catch (error) {
+    console.error('[Code Execution] Error:', error);
+    return NextResponse.json(
+      { error: error.message || "Failed to execute code" },
+      { status: 500 }
+    );
+  }
 }

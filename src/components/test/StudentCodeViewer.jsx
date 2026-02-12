@@ -153,7 +153,7 @@ const StudentCodeViewer = ({ participant, test, onClose }) => {
                             code={currentCode}
                             language={activeFile?.language || "python"}
                             testcases={activeQuestion?.testcases || []}
-                            driverCode={activeQuestion?.codeSnippets?.python?.driver_code || ""}
+                            driverCode={activeQuestion?.codeSnippets?.[activeFile?.language]?.driver_code || activeQuestion?.codeSnippets?.python?.driver_code || ""}
                         />
                     </Panel>
                 </PanelGroup>

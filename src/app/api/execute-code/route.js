@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { executeCode } from '@/lib/code-executor';
+import { executeMultiple } from '@/lib/execution-client';
 
 export async function POST(request) {
   try {
@@ -8,11 +8,10 @@ export async function POST(request) {
       code,
       language,
       testcases,
-      timeout = 10000, // 10 seconds
-      memoryLimit = 256, // MB
+      timeout = 10000,
+      memoryLimit = 256,
     } = body;
 
-    // Validate required fields
     if (!code || !language || !testcases || !Array.isArray(testcases)) {
       return NextResponse.json(
         { error: 'Missing required fields: code, language, testcases' },
@@ -20,7 +19,6 @@ export async function POST(request) {
       );
     }
 
-    // Validate testcases structure
     for (const tc of testcases) {
       if (!tc.input || tc.expected_output === undefined) {
         return NextResponse.json(
@@ -32,10 +30,9 @@ export async function POST(request) {
 
     console.log(`[Code Execution] Running ${language} code with ${testcases.length} testcases`);
 
-    // Execute code
-    const result = await executeCode(code, language, testcases, {
-      timeout: Math.min(timeout, 30000), // Cap at 30 seconds
-      memoryLimit: Math.min(memoryLimit, 512), // Cap at 512 MB
+    const result = await executeMultiple(code, language, testcases, {
+      timeout: Math.min(timeout, 30000),
+      memoryLimit: Math.min(memoryLimit, 512),
     });
 
     console.log(`[Code Execution] Completed: ${result.summary.passed}/${result.summary.total} passed`);

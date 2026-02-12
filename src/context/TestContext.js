@@ -101,10 +101,10 @@ export const TestProvider = ({ children, testId, participantId }) => {
         if (!testId || !participantId) return;
 
         const participantRef = doc(db, `tests/${testId}/participants`, participantId);
-        await updateDoc(participantRef,
-            new FieldPath("files", fileName), code,
-            "lastActive", Timestamp.now()
-        );
+        await updateDoc(participantRef, {
+            [`files.${fileName}`]: code,
+            lastActive: Timestamp.now()
+        });
     };
 
     // Submit test
@@ -150,6 +150,39 @@ export const TestProvider = ({ children, testId, participantId }) => {
             gradingFeedback: feedback,
             gradedAt: Timestamp.now(),
         });
+    };
+
+    // Add a new file for the participant
+    const addParticipantFile = async (fileName, language, content = "") => {
+        if (!testId || !participantId) return;
+
+        // Get current participant data to append to assignedFiles
+        const participantRef = doc(db, `tests/${testId}/participants`, participantId);
+        const participantSnap = await getDoc(participantRef);
+
+        if (participantSnap.exists()) {
+            const data = participantSnap.data();
+            const currentFiles = data.assignedFiles || test?.files || [];
+
+            // Check if file already exists
+            if (currentFiles.some(f => f.name === fileName)) {
+                throw new Error("File already exists");
+            }
+
+            const newFile = {
+                name: fileName,
+                language: language,
+                content: content,
+                readOnly: false
+            };
+
+            await updateDoc(participantRef, {
+                assignedFiles: [...currentFiles, newFile],
+                lastActive: Timestamp.now()
+            });
+
+            return newFile;
+        }
     };
 
     // Format time remaining
@@ -220,6 +253,7 @@ export const TestProvider = ({ children, testId, participantId }) => {
                 leaveTest,
                 changeParticipantStatus,
                 gradeParticipant,
+                addParticipantFile,
                 deleteTest,
                 getCurrentParticipantFiles,
                 getCurrentParticipantQuestions,
@@ -248,6 +282,7 @@ export const useTest = () => {
             leaveTest: () => Promise.resolve(),
             changeParticipantStatus: () => Promise.reject("Provider missing"),
             gradeParticipant: () => Promise.resolve(),
+            addParticipantFile: () => Promise.resolve(),
             getCurrentParticipantFiles: () => [],
             getCurrentParticipantQuestions: () => [],
         };

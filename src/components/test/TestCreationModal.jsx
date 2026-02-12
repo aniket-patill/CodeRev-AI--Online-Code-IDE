@@ -33,7 +33,10 @@ const TestCreationModal = ({ isOpen, onClose }) => {
         duration: "",
         randomizeQuestions: false,
         questionsCount: "",
-        files: [{ name: "solution.py", language: "python", content: "# Write your solution here\n", readOnly: false }],
+        allowedLanguages: ["python", "javascript", "java", "cpp"],
+        files: [
+            { name: "main.py", language: "python", content: "# Write your solution here\n", readOnly: false },
+        ],
         questions: [{ id: 1, title: "Question 1", description: "", points: 10, testcases: [], codeSnippets: null }],
     });
 
@@ -66,7 +69,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     const addFile = () => {
         setFormData((prev) => ({
             ...prev,
-            files: [...prev.files, { name: "", language: "python", content: "", readOnly: false }],
+            files: [...prev.files, { name: "", language: prev.allowedLanguages?.[0] || "python", content: "", readOnly: false }],
         }));
     };
 
@@ -80,7 +83,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     };
 
     const removeFile = (index) => {
-        if (formData.files.length <= 1) return;
+        if (formData.files.length <= 2) return; // Keep at least one file per language (py + js)
         setFormData((prev) => ({
             ...prev,
             files: prev.files.filter((_, i) => i !== index)
@@ -90,8 +93,16 @@ const TestCreationModal = ({ isOpen, onClose }) => {
     const addQuestion = () => {
         setFormData((prev) => {
             const newId = Math.max(...prev.questions.map(q => q.id), 0) + 1;
+            const langs = prev.allowedLanguages || ["python", "javascript"];
+            const newFiles = [{
+                name: `solution_${newId}.py`,
+                language: "python",
+                content: "# Write your solution here\n",
+                readOnly: false,
+            }];
             return {
                 ...prev,
+                files: [...prev.files, ...newFiles],
                 questions: [
                     ...prev.questions,
                     { id: newId, title: `Question ${newId}`, description: "", points: 10, testcases: [], codeSnippets: null }
@@ -124,34 +135,29 @@ const TestCreationModal = ({ isOpen, onClose }) => {
             }
 
             const result = await response.json();
-            
-            // Add generated question to the list
+            const snippets = result.code_snippets || {};
+            const pyStarter = snippets.python?.starter_code || "# Code not generated\n";
+            const jsStarter = snippets.javascript?.starter_code || "// Code not generated\n";
+            const javaStarter = snippets.java?.starter_code || "// Code not generated\npublic class Solution {\n    public static void main(String[] args) {\n        // Your code here\n    }\n}\n";
+            const cppStarter = snippets.cpp?.starter_code || "// Code not generated\n#include <iostream>\n\nint main() {\n    // Your code here\n    return 0;\n}\n";
+
+            // Add generated question with one file per allowed language (Python + JavaScript + Java + C++)
             setFormData((prev) => {
                 const newId = Math.max(...prev.questions.map(q => q.id), 0) + 1;
-                
-                // Also update the corresponding file with starter code
-                // We map question index to file index (1-to-1)
-                const questionIndex = prev.questions.length; // Index of the new question
+                const questionIndex = prev.questions.length;
                 const newFiles = [...prev.files];
-                
-                // If we're adding the first question/file, update the first file
-                // Otherwise add a new file
-                const starterCode = result.code_snippets?.python?.starter_code || "# Code not generated\n";
-                
-                if (questionIndex === 0 && newFiles.length === 1) {
-                    newFiles[0] = {
-                        name: "solution.py",
-                        language: "python",
-                        content: starterCode,
-                        readOnly: false
-                    };
+
+                if (questionIndex === 0 && newFiles.length >= 1) {
+                    // First question: overwrite initial solution files
+                    newFiles[0] = { name: "solution.py", language: "python", content: pyStarter, readOnly: false };
+                    // Remove other default files if they exist (cleanup from old multi-file default)
+                    if (newFiles.length > 1) {
+                        newFiles.splice(1);
+                    }
                 } else {
-                    newFiles.push({
-                        name: `solution_${newId}.py`,
-                        language: "python",
-                        content: starterCode,
-                        readOnly: false
-                    });
+                    newFiles.push(
+                        { name: `solution_${newId}.py`, language: "python", content: pyStarter, readOnly: false }
+                    );
                 }
 
                 return {
@@ -527,7 +533,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                         onChange={(e) => updateQuestion(question.id, "description", e.target.value)}
                                         className="w-full bg-zinc-800 text-white border border-white/10 rounded-lg p-3 min-h-[80px] resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/20"
                                     />
-                                    
+
                                     {/* Testcases Section */}
                                     <div className="mt-3 space-y-2">
                                         <div className="flex items-center justify-between">
@@ -549,7 +555,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                                 <Plus size={12} className="mr-1" /> Add Testcase
                                             </Button>
                                         </div>
-                                        
+
                                         {question.testcases && question.testcases.length > 0 ? (
                                             <div className="space-y-2">
                                                 {question.testcases.map((testcase, tcIndex) => (
@@ -622,7 +628,7 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                 <label className="text-xs uppercase tracking-wider text-zinc-500 font-semibold ml-1">
                                     Starter Files
                                 </label>
-                                <p className="text-xs text-zinc-500 mt-1">Provide starter code files for the questions</p>
+                                <p className="text-xs text-zinc-500 mt-1">Python & JavaScript supported. AI Generate adds both for each question.</p>
                             </div>
                             <Button
                                 onClick={addFile}
@@ -638,18 +644,25 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                             {formData.files.map((file, index) => (
                                 <div
                                     key={index}
-                                    className="flex gap-3 p-3 bg-zinc-900/50 border border-white/5 rounded-xl"
+                                    className="flex flex-wrap gap-3 p-3 bg-zinc-900/50 border border-white/5 rounded-xl items-center"
                                 >
                                     <Input
-                                        placeholder="filename.js"
+                                        placeholder={file.language === "javascript" ? "filename.js" : "filename.py"}
                                         value={file.name}
                                         onChange={(e) => updateFile(index, "name", e.target.value)}
-                                        className="bg-zinc-800 text-white border-white/10 h-10 rounded-lg flex-1"
+                                        className="bg-zinc-800 text-white border-white/10 h-10 rounded-lg flex-1 min-w-[140px]"
                                     />
-                                    <div className="bg-zinc-800 text-zinc-400 border border-white/10 h-10 rounded-lg px-3 text-sm flex items-center">
-                                        <span className="text-xs">Python</span>
-                                    </div>
-                                    <label className="flex items-center gap-2 text-xs text-zinc-400">
+                                    <select
+                                        value={file.language || "python"}
+                                        onChange={(e) => updateFile(index, "language", e.target.value)}
+                                        className="bg-zinc-800 text-white border border-white/10 h-10 rounded-lg px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 min-w-[120px]"
+                                    >
+                                        <option value="python">Python</option>
+                                        <option value="javascript">JavaScript</option>
+                                        <option value="cpp">C++</option>
+                                        <option value="java">Java</option>
+                                    </select>
+                                    <label className="flex items-center gap-2 text-xs text-zinc-400 shrink-0">
                                         <input
                                             type="checkbox"
                                             checked={file.readOnly}
@@ -658,12 +671,12 @@ const TestCreationModal = ({ isOpen, onClose }) => {
                                         />
                                         Read-only
                                     </label>
-                                    {formData.files.length > 1 && (
+                                    {formData.files.length > 2 && (
                                         <Button
                                             onClick={() => removeFile(index)}
                                             variant="ghost"
                                             size="icon"
-                                            className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-10 w-10"
+                                            className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-10 w-10 shrink-0"
                                         >
                                             <Trash2 size={16} />
                                         </Button>
